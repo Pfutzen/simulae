@@ -1,12 +1,30 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+
+import React from "react";
+import SimulatorForm from "@/components/SimulatorForm";
 
 const Index = () => {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4">Welcome to Your Blank App</h1>
-        <p className="text-xl text-gray-600">Start building your amazing project here!</p>
-      </div>
+    <div className="min-h-screen flex flex-col bg-slate-50">
+      <header className="bg-white py-6 shadow-sm">
+        <div className="container mx-auto px-4">
+          <h1 className="text-3xl md:text-4xl font-bold text-simulae-800">
+            Simulae
+          </h1>
+          <p className="text-slate-600 mt-2">
+            Simulador de investimento imobiliário para imóveis na planta
+          </p>
+        </div>
+      </header>
+      
+      <main className="flex-grow container mx-auto px-4 py-8">
+        <SimulatorForm />
+      </main>
+      
+      <footer className="bg-white py-6 border-t border-slate-200">
+        <div className="container mx-auto px-4 text-center text-slate-500 text-sm">
+          © 2025 Simulae. Todos os direitos reservados.
+        </div>
+      </footer>
     </div>
   );
 };
