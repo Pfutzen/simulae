@@ -21,6 +21,7 @@ interface ChartData {
   month: number;
   propertyValue: number;
   totalPaid: number;
+  balance: number;
   profit: number;
 }
 
@@ -30,7 +31,8 @@ const ResultsChart: React.FC<ResultsChartProps> = ({ schedule, resaleMonth }) =>
     month: item.month,
     propertyValue: item.propertyValue,
     totalPaid: item.totalPaid,
-    profit: item.propertyValue - item.totalPaid
+    balance: item.balance,
+    profit: item.propertyValue - item.totalPaid - item.balance
   }));
 
   return (
@@ -63,6 +65,15 @@ const ResultsChart: React.FC<ResultsChartProps> = ({ schedule, resaleMonth }) =>
           dataKey="totalPaid" 
           name="Total Investido" 
           stroke="#475569" 
+          strokeWidth={2} 
+          dot={false}
+          activeDot={{ r: 6 }}
+        />
+        <Line 
+          type="monotone" 
+          dataKey="balance" 
+          name="Saldo Devedor" 
+          stroke="#ef4444" 
           strokeWidth={2} 
           dot={false}
           activeDot={{ r: 6 }}

@@ -13,6 +13,7 @@ interface SimulationResultsProps {
   propertyValue: number;
   profit: number;
   profitPercentage: number;
+  remainingBalance: number;
 }
 
 const SimulationResults: React.FC<SimulationResultsProps> = ({
@@ -22,6 +23,7 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
   propertyValue,
   profit,
   profitPercentage,
+  remainingBalance
 }) => {
   const resaleData = schedule.find(item => item.month === resaleMonth);
 
@@ -33,7 +35,7 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
     <div className="space-y-8">
       <h2 className="text-2xl font-bold mt-8">Resultado da Simulação</h2>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <Card className="card-shadow">
           <CardHeader className="pb-2">
             <CardTitle className="text-xl">Total Investido</CardTitle>
@@ -55,6 +57,20 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
           <CardContent>
             <p className="text-3xl font-bold text-simulae-700">
               {formatCurrency(propertyValue)}
+            </p>
+            <p className="text-sm text-muted-foreground">
+              No mês {resaleMonth}
+            </p>
+          </CardContent>
+        </Card>
+        
+        <Card className="card-shadow">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-xl">Saldo Devedor</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-3xl font-bold text-simulae-700">
+              {formatCurrency(remainingBalance)}
             </p>
             <p className="text-sm text-muted-foreground">
               No mês {resaleMonth}

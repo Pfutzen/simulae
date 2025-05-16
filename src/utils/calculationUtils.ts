@@ -148,6 +148,7 @@ export const calculateResaleProfit = (schedule: PaymentType[], resaleMonth: numb
   propertyValue: number;
   profit: number;
   profitPercentage: number;
+  remainingBalance: number;
 } => {
   const resaleData = schedule.find(item => item.month === resaleMonth);
   
@@ -156,19 +157,24 @@ export const calculateResaleProfit = (schedule: PaymentType[], resaleMonth: numb
       investmentValue: 0,
       propertyValue: 0,
       profit: 0,
-      profitPercentage: 0
+      profitPercentage: 0,
+      remainingBalance: 0
     };
   }
   
   const investmentValue = resaleData.totalPaid;
   const propertyValue = resaleData.propertyValue;
-  const profit = propertyValue - investmentValue;
-  const profitPercentage = (profit / investmentValue) * 100;
+  const remainingBalance = resaleData.balance;
+  
+  // Profit is now property value minus what was paid and what is still owed
+  const profit = propertyValue - investmentValue - remainingBalance;
+  const profitPercentage = investmentValue > 0 ? (profit / investmentValue) * 100 : 0;
   
   return {
     investmentValue,
     propertyValue,
     profit,
-    profitPercentage
+    profitPercentage,
+    remainingBalance
   };
 };

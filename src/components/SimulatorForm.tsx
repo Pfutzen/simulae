@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -45,7 +44,8 @@ const SimulatorForm: React.FC = () => {
     investmentValue: 0,
     propertyValue: 0,
     profit: 0,
-    profitPercentage: 0
+    profitPercentage: 0,
+    remainingBalance: 0
   });
 
   // Calculate total percentage whenever relevant form values change
@@ -292,7 +292,9 @@ const SimulatorForm: React.FC = () => {
                   min={1}
                 />
               </div>
-              
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-6">
                 <PercentageValueInput
                   label="Reforços"
