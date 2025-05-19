@@ -63,23 +63,17 @@ const NumberInput: React.FC<NumberInputProps> = ({
       <Label htmlFor={id} className="text-base font-medium">
         {label}
       </Label>
-      <div className="relative">
-        <Input
-          id={id}
-          ref={inputRef}
-          type="text"
-          value={internalValue}
-          onChange={handleChange}
-          onFocus={handleFocus}
-          className="text-right pr-8"
-          disabled={disabled}
-        />
-        {suffix && (
-          <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-muted-foreground">
-            {suffix}
-          </div>
-        )}
-      </div>
+      <Input
+        id={id}
+        ref={inputRef}
+        type="text"
+        value={internalValue}
+        onChange={handleChange}
+        onFocus={handleFocus}
+        className="text-right"
+        disabled={disabled}
+        suffix={suffix}
+      />
     </div>
   );
 };

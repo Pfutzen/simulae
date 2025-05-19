@@ -36,22 +36,18 @@ const PropertyValueInput: React.FC<PropertyValueInputProps> = ({
   return (
     <div className="space-y-2">
       <Label htmlFor="property-value" className="text-base font-medium">
-        Valor Total do Imóvel (R$)
+        Valor Total do Imóvel
       </Label>
-      <div className="relative">
-        <Input
-          id="property-value"
-          ref={inputRef}
-          type="text"
-          value={internalValue}
-          onChange={handleChange}
-          onFocus={handleFocus}
-          className="text-right pr-6"
-        />
-        <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-muted-foreground">
-          R$
-        </div>
-      </div>
+      <Input
+        id="property-value"
+        ref={inputRef}
+        type="text"
+        value={internalValue}
+        onChange={handleChange}
+        onFocus={handleFocus}
+        className="text-right"
+        suffix="R$"
+      />
     </div>
   );
 };

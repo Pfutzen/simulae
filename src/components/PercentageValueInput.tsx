@@ -79,27 +79,24 @@ const PercentageValueInput: React.FC<PercentageValueInputProps> = ({
             onFocus={handleFocus}
             className="text-right"
             disabled={disabled}
+            suffix="R$"
           />
         </div>
         <div className="space-y-1">
           <Label htmlFor={`${label}-percentage`} className="text-sm text-muted-foreground">
             {percentageLabel}
           </Label>
-          <div className="relative">
-            <Input
-              id={`${label}-percentage`}
-              ref={percentageInputRef}
-              type="text"
-              value={internalPercentage}
-              onChange={handlePercentageChange}
-              onFocus={handleFocus}
-              className="text-right pr-6"
-              disabled={disabled}
-            />
-            <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-muted-foreground">
-              %
-            </div>
-          </div>
+          <Input
+            id={`${label}-percentage`}
+            ref={percentageInputRef}
+            type="text"
+            value={internalPercentage}
+            onChange={handlePercentageChange}
+            onFocus={handleFocus}
+            className="text-right"
+            disabled={disabled}
+            suffix="%"
+          />
         </div>
       </div>
     </div>
