@@ -39,7 +39,7 @@ const SimulatorForm: React.FC = () => {
     keysPercentage: 15,
     correctionMode: "manual",
     correctionIndex: 0.5,
-    appreciationIndex: 0.8,
+    appreciationIndex: 1.35, // Changed from 0.8 to 1.35
     resaleMonth: 24
   });
 

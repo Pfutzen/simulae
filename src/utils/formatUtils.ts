@@ -1,4 +1,3 @@
-
 /**
  * Formats a number to Brazilian currency format (1.000,00)
  */
@@ -50,7 +49,28 @@ export const formatNumberWithCursor = (
   currentCursorPosition: number,
   newChar: string | null
 ): { formattedValue: string; cursorPosition: number } => {
-  // Remove all formatting characters first to work with raw numbers
+  // Handle decimal separator input (convert . to ,)
+  inputValue = inputValue.replace(/\./g, ',');
+  
+  // If there's a comma in the input, we need special handling
+  if (inputValue.includes(',')) {
+    const parts = inputValue.split(',');
+    if (parts.length > 2) {
+      // Keep only the first comma
+      inputValue = parts[0] + ',' + parts.slice(1).join('');
+    }
+    
+    // Ensure we have exactly 2 digits after the comma
+    if (parts.length === 2) {
+      const decimalPart = parts[1].replace(/\D/g, '');
+      if (decimalPart.length > 2) {
+        parts[1] = decimalPart.substring(0, 2);
+        inputValue = parts.join(',');
+      }
+    }
+  }
+  
+  // Remove all formatting characters to work with raw numbers
   let cleanValue = inputValue.replace(/\D/g, '');
   
   // If the clean value is empty, return zero
@@ -98,7 +118,7 @@ export const formatNumberWithCursor = (
       newCursorPosition = formattedInteger.length;
     }
   } else {
-    // For deletions or other operations, maintain cursor relative position
+    // For deletions or other operations, maintain relative position
     newCursorPosition = Math.min(currentCursorPosition, formattedValue.length - 3);
   }
   

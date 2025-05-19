@@ -102,7 +102,7 @@ const NumberInput: React.FC<NumberInputProps> = ({
     // Allow only numbers, backspace, delete, arrow keys, tab
     const allowedKeys = [
       'Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab', 'Home', 'End',
-      '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'
+      '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', ',', '.'
     ];
     
     if (!allowedKeys.includes(e.key)) {
@@ -123,7 +123,8 @@ const NumberInput: React.FC<NumberInputProps> = ({
         onFocus={handleFocus}
         onKeyDown={handleKeyDown}
         disabled={disabled} 
-        suffix={suffix} 
+        suffix={suffix}
+        className="text-right" 
       />
     </div>;
 };
