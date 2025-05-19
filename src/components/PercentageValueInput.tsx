@@ -1,7 +1,8 @@
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { formatToBrazilianNumber, parseBrazilianNumber } from "@/utils/formatUtils";
 
 interface PercentageValueInputProps {
   label: string;
@@ -26,23 +27,25 @@ const PercentageValueInput: React.FC<PercentageValueInputProps> = ({
   onPercentageChange,
   disabled = false,
 }) => {
-  const [internalValue, setInternalValue] = useState<string>(value.toString());
-  const [internalPercentage, setInternalPercentage] = useState<string>(percentage.toFixed(2));
+  const [internalValue, setInternalValue] = useState<string>("");
+  const [internalPercentage, setInternalPercentage] = useState<string>("");
+  const valueInputRef = useRef<HTMLInputElement>(null);
+  const percentageInputRef = useRef<HTMLInputElement>(null);
 
   // Update internal state when props change
   useEffect(() => {
-    setInternalValue(value.toFixed(2));
+    setInternalValue(formatToBrazilianNumber(value));
   }, [value]);
 
   useEffect(() => {
-    setInternalPercentage(percentage.toFixed(2));
+    setInternalPercentage(formatToBrazilianNumber(percentage));
   }, [percentage]);
 
   const handleValueChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value;
     setInternalValue(newValue);
     
-    const numericValue = parseFloat(newValue) || 0;
+    const numericValue = parseBrazilianNumber(newValue);
     onValueChange(numericValue);
   };
 
@@ -50,8 +53,13 @@ const PercentageValueInput: React.FC<PercentageValueInputProps> = ({
     const newPercentage = e.target.value;
     setInternalPercentage(newPercentage);
     
-    const numericPercentage = parseFloat(newPercentage) || 0;
+    const numericPercentage = parseBrazilianNumber(newPercentage);
     onPercentageChange(numericPercentage);
+  };
+
+  const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
+    // Select all text on focus for better UX
+    e.target.select();
   };
 
   return (
@@ -64,9 +72,11 @@ const PercentageValueInput: React.FC<PercentageValueInputProps> = ({
           </Label>
           <Input
             id={`${label}-value`}
-            type="number"
+            ref={valueInputRef}
+            type="text"
             value={internalValue}
             onChange={handleValueChange}
+            onFocus={handleFocus}
             className="text-right"
             disabled={disabled}
           />
@@ -75,17 +85,21 @@ const PercentageValueInput: React.FC<PercentageValueInputProps> = ({
           <Label htmlFor={`${label}-percentage`} className="text-sm text-muted-foreground">
             {percentageLabel}
           </Label>
-          <Input
-            id={`${label}-percentage`}
-            type="number"
-            value={internalPercentage}
-            onChange={handlePercentageChange}
-            className="text-right"
-            min={0}
-            max={100}
-            step={0.01}
-            disabled={disabled}
-          />
+          <div className="relative">
+            <Input
+              id={`${label}-percentage`}
+              ref={percentageInputRef}
+              type="text"
+              value={internalPercentage}
+              onChange={handlePercentageChange}
+              onFocus={handleFocus}
+              className="text-right pr-6"
+              disabled={disabled}
+            />
+            <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-muted-foreground">
+              %
+            </div>
+          </div>
         </div>
       </div>
     </div>

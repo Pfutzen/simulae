@@ -1,7 +1,8 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { formatToBrazilianNumber, parseBrazilianNumber } from "@/utils/formatUtils";
 
 interface PropertyValueInputProps {
   value: number;
@@ -12,18 +13,24 @@ const PropertyValueInput: React.FC<PropertyValueInputProps> = ({
   value,
   onChange,
 }) => {
-  const [internalValue, setInternalValue] = useState<string>(value.toString());
+  const [internalValue, setInternalValue] = useState<string>("");
+  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    setInternalValue(value.toFixed(2));
+    setInternalValue(formatToBrazilianNumber(value));
   }, [value]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value;
     setInternalValue(newValue);
     
-    const numericValue = parseFloat(newValue) || 0;
+    const numericValue = parseBrazilianNumber(newValue);
     onChange(numericValue);
+  };
+
+  const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
+    // Select all text on focus for better UX
+    e.target.select();
   };
 
   return (
@@ -31,14 +38,20 @@ const PropertyValueInput: React.FC<PropertyValueInputProps> = ({
       <Label htmlFor="property-value" className="text-base font-medium">
         Valor Total do Imóvel (R$)
       </Label>
-      <Input
-        id="property-value"
-        type="number"
-        value={internalValue}
-        onChange={handleChange}
-        className="text-right"
-        min={0}
-      />
+      <div className="relative">
+        <Input
+          id="property-value"
+          ref={inputRef}
+          type="text"
+          value={internalValue}
+          onChange={handleChange}
+          onFocus={handleFocus}
+          className="text-right pr-6"
+        />
+        <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-muted-foreground">
+          R$
+        </div>
+      </div>
     </div>
   );
 };
