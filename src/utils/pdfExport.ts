@@ -3,28 +3,6 @@ import jsPDF from 'jspdf';
 import { SavedSimulation } from './simulationHistoryUtils';
 import { formatCurrency, formatPercentage } from './calculationUtils';
 
-// Define a more specific interface for the internal property
-interface JsPDFInternal {
-  events: any;
-  scaleFactor: number;
-  pageSize: {
-    width: number;
-    getWidth: () => number;
-    height: number;
-    getHeight: () => number;
-  };
-  pages: number[];
-  getNumberOfPages: () => number;
-  getEncryptor: (objectId: number) => (data: string) => string;
-}
-
-// Extend jsPDF using declaration merging
-declare module 'jspdf' {
-  interface jsPDF {
-    internal: JsPDFInternal;
-  }
-}
-
 // Function to format date
 const formatDate = (timestamp: number): string => {
   const date = new Date(timestamp);
@@ -170,13 +148,12 @@ export const exportToPdf = (simulation: SavedSimulation): void => {
     y += 10;
   }
   
-  // Footer
-  const totalPages = doc.internal.getNumberOfPages();
-  for (let i = 1; i <= totalPages; i++) {
+  // Footer with page numbers
+  for (let i = 1; i <= doc.getNumberOfPages(); i++) {
     doc.setPage(i);
     doc.setFontSize(smallSize);
     doc.setFont('helvetica', 'italic');
-    doc.text(`Simulae - Página ${i} de ${totalPages}`, margin, pageWidth - 10);
+    doc.text(`Simulae - Página ${i} de ${doc.getNumberOfPages()}`, margin, pageWidth - 10);
     doc.text(`Gerado em ${formatDate(Date.now())}`, pageWidth - margin - 50, pageWidth - 10, { align: 'right' });
   }
   
