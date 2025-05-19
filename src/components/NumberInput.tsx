@@ -14,6 +14,7 @@ interface NumberInputProps {
   step?: number;
   suffix?: string;
   disabled?: boolean;
+  noDecimals?: boolean; // New prop to control decimal display
 }
 
 const NumberInput: React.FC<NumberInputProps> = ({
@@ -25,7 +26,8 @@ const NumberInput: React.FC<NumberInputProps> = ({
   max,
   step = 1,
   suffix = "",
-  disabled = false
+  disabled = false,
+  noDecimals = false // Default to showing decimals
 }) => {
   const [internalValue, setInternalValue] = useState<string>("");
   const [cursorPosition, setCursorPosition] = useState<number | null>(null);
@@ -33,8 +35,12 @@ const NumberInput: React.FC<NumberInputProps> = ({
 
   useEffect(() => {
     // Format the value when it changes externally
-    setInternalValue(formatToBrazilianNumber(value));
-  }, [value]);
+    if (noDecimals) {
+      setInternalValue(Math.round(value).toLocaleString('pt-BR'));
+    } else {
+      setInternalValue(formatToBrazilianNumber(value));
+    }
+  }, [value, noDecimals]);
 
   useEffect(() => {
     // Set cursor position after the component updates
@@ -47,23 +53,44 @@ const NumberInput: React.FC<NumberInputProps> = ({
     const newValue = e.target.value;
     const selectionStart = e.target.selectionStart || 0;
     
-    // Determine if we're adding or removing characters
-    const isAdding = newValue.length > internalValue.length;
-    const newChar = isAdding ? newValue.charAt(selectionStart - 1) : null;
-    
-    // Format the number with appropriate cursor position
-    const { formattedValue, cursorPosition: newCursorPosition } = formatNumberWithCursor(
-      newValue,
-      selectionStart,
-      newChar
-    );
-    
-    setInternalValue(formattedValue);
-    setCursorPosition(newCursorPosition);
-    
-    // Parse the value and pass it to parent component
-    const numericValue = parseBrazilianNumber(formattedValue);
-    onChange(numericValue);
+    // For fields without decimals, use a simpler formatting approach
+    if (noDecimals) {
+      // Remove non-numeric characters
+      const cleanValue = newValue.replace(/\D/g, '');
+      
+      // Parse as integer
+      const numericValue = parseInt(cleanValue) || 0;
+      
+      // Format with thousand separators but without decimals
+      const formattedValue = numericValue.toLocaleString('pt-BR');
+      
+      // Calculate new cursor position (accounting for thousand separators)
+      const thousandSepCount = (formattedValue.match(/\./g) || []).length;
+      const newCursorPos = Math.min(
+        selectionStart + (formattedValue.length - newValue.length),
+        formattedValue.length
+      );
+      
+      setInternalValue(formattedValue);
+      setCursorPosition(newCursorPos);
+      onChange(numericValue);
+    } else {
+      // Use existing formatting logic for decimal numbers
+      const isAdding = newValue.length > internalValue.length;
+      const newChar = isAdding ? newValue.charAt(selectionStart - 1) : null;
+      
+      const { formattedValue, cursorPosition: newCursorPosition } = formatNumberWithCursor(
+        newValue,
+        selectionStart,
+        newChar
+      );
+      
+      setInternalValue(formattedValue);
+      setCursorPosition(newCursorPosition);
+      
+      const numericValue = parseBrazilianNumber(formattedValue);
+      onChange(numericValue);
+    }
   };
 
   const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {

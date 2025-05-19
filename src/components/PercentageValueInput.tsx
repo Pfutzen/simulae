@@ -14,6 +14,7 @@ interface PercentageValueInputProps {
   onValueChange: (value: number) => void;
   onPercentageChange: (percentage: number) => void;
   disabled?: boolean;
+  noDecimalsForPercentage?: boolean;
 }
 
 const PercentageValueInput: React.FC<PercentageValueInputProps> = ({
@@ -26,6 +27,7 @@ const PercentageValueInput: React.FC<PercentageValueInputProps> = ({
   onValueChange,
   onPercentageChange,
   disabled = false,
+  noDecimalsForPercentage = false,
 }) => {
   const [internalValue, setInternalValue] = useState<string>("");
   const [internalPercentage, setInternalPercentage] = useState<string>("");
@@ -40,8 +42,12 @@ const PercentageValueInput: React.FC<PercentageValueInputProps> = ({
   }, [value]);
 
   useEffect(() => {
-    setInternalPercentage(formatToBrazilianNumber(percentage));
-  }, [percentage]);
+    if (noDecimalsForPercentage) {
+      setInternalPercentage(Math.round(percentage).toLocaleString('pt-BR'));
+    } else {
+      setInternalPercentage(formatToBrazilianNumber(percentage));
+    }
+  }, [percentage, noDecimalsForPercentage]);
 
   useEffect(() => {
     // Set cursor position after the component updates
@@ -83,22 +89,45 @@ const PercentageValueInput: React.FC<PercentageValueInputProps> = ({
     const newPercentage = e.target.value;
     const selectionStart = e.target.selectionStart || 0;
     
-    // Determine if we're adding or removing characters
-    const isAdding = newPercentage.length > internalPercentage.length;
-    const newChar = isAdding ? newPercentage.charAt(selectionStart - 1) : null;
-    
-    // Format the number with appropriate cursor position
-    const { formattedValue, cursorPosition: newCursorPosition } = formatNumberWithCursor(
-      newPercentage,
-      selectionStart,
-      newChar
-    );
-    
-    setInternalPercentage(formattedValue);
-    setPercentageCursorPosition(newCursorPosition);
-    
-    const numericPercentage = parseBrazilianNumber(formattedValue);
-    onPercentageChange(numericPercentage);
+    if (noDecimalsForPercentage) {
+      // Remove non-numeric characters
+      const cleanValue = newPercentage.replace(/\D/g, '');
+      
+      // Parse as integer
+      const numericValue = parseInt(cleanValue) || 0;
+      
+      // Format with thousand separators but without decimals
+      const formattedValue = numericValue.toLocaleString('pt-BR');
+      
+      // Calculate new cursor position (accounting for thousand separators)
+      const thousandSepCount = (formattedValue.match(/\./g) || []).length;
+      const newCursorPos = Math.min(
+        selectionStart + (formattedValue.length - newPercentage.length),
+        formattedValue.length
+      );
+      
+      setInternalPercentage(formattedValue);
+      setPercentageCursorPosition(newCursorPos);
+      onPercentageChange(numericValue);
+    } else {
+      // Use existing formatting logic for decimal numbers
+      // Determine if we're adding or removing characters
+      const isAdding = newPercentage.length > internalPercentage.length;
+      const newChar = isAdding ? newPercentage.charAt(selectionStart - 1) : null;
+      
+      // Format the number with appropriate cursor position
+      const { formattedValue, cursorPosition: newCursorPosition } = formatNumberWithCursor(
+        newPercentage,
+        selectionStart,
+        newChar
+      );
+      
+      setInternalPercentage(formattedValue);
+      setPercentageCursorPosition(newCursorPosition);
+      
+      const numericPercentage = parseBrazilianNumber(formattedValue);
+      onPercentageChange(numericPercentage);
+    }
   };
 
   const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {

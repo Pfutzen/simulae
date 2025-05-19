@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -312,6 +311,7 @@ const SimulatorForm: React.FC = () => {
                 totalValue={formData.propertyValue}
                 onValueChange={handleDownPaymentValueChange}
                 onPercentageChange={handleDownPaymentPercentageChange}
+                noDecimalsForPercentage={true}
               />
               
               <div className="space-y-6">
@@ -323,6 +323,7 @@ const SimulatorForm: React.FC = () => {
                   totalValue={formData.propertyValue}
                   onValueChange={handleInstallmentsValueChange}
                   onPercentageChange={handleInstallmentsPercentageChange}
+                  noDecimalsForPercentage={true}
                 />
                 <NumberInput
                   id="installments-count"
@@ -330,6 +331,7 @@ const SimulatorForm: React.FC = () => {
                   value={formData.installmentsCount}
                   onChange={handleInstallmentsCountChange}
                   min={1}
+                  noDecimals={true}
                 />
               </div>
             </div>
@@ -344,6 +346,7 @@ const SimulatorForm: React.FC = () => {
                   totalValue={formData.propertyValue}
                   onValueChange={handleReinforcementsValueChange}
                   onPercentageChange={handleReinforcementsPercentageChange}
+                  noDecimalsForPercentage={true}
                 />
                 <NumberInput
                   id="reinforcement-frequency"
@@ -352,6 +355,7 @@ const SimulatorForm: React.FC = () => {
                   onChange={handleReinforcementFrequencyChange}
                   min={0}
                   suffix="meses"
+                  noDecimals={true}
                 />
                 {reinforcementMonths.length > 0 && (
                   <div className="text-sm text-blue-600 mt-1">
@@ -367,6 +371,7 @@ const SimulatorForm: React.FC = () => {
                 totalValue={formData.propertyValue}
                 onValueChange={handleKeysValueChange}
                 onPercentageChange={handleKeysPercentageChange}
+                noDecimalsForPercentage={true}
               />
             </div>
             
@@ -411,6 +416,7 @@ const SimulatorForm: React.FC = () => {
                   min={1}
                   max={formData.installmentsCount}
                   suffix="mês"
+                  noDecimals={true}
                 />
               </div>
             </div>
