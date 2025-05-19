@@ -1,8 +1,7 @@
-
 import React, { useState, useEffect, useRef } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { formatToBrazilianNumber, parseBrazilianNumber, formatNumberWithCursor } from "@/utils/formatUtils";
+import { formatToBrazilianNumber, parseBrazilianNumber } from "@/utils/formatUtils";
 
 interface PropertyValueInputProps {
   value: number;
@@ -14,69 +13,40 @@ const PropertyValueInput: React.FC<PropertyValueInputProps> = ({
   onChange,
 }) => {
   const [internalValue, setInternalValue] = useState<string>("");
-  const [cursorPosition, setCursorPosition] = useState<number | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const [isTextSelected, setIsTextSelected] = useState(false);
 
+  // Update internal display value when prop value changes
   useEffect(() => {
     setInternalValue(formatToBrazilianNumber(value));
   }, [value]);
 
-  useEffect(() => {
-    // Set cursor position after the component updates
-    if (inputRef.current && cursorPosition !== null) {
-      inputRef.current.setSelectionRange(cursorPosition, cursorPosition);
-    }
-  }, [internalValue, cursorPosition]);
-
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value;
-    const selectionStart = e.target.selectionStart || 0;
     
-    // Determine if we're adding or removing characters
-    const isAdding = newValue.length > internalValue.length;
-    const newChar = isAdding ? newValue.charAt(selectionStart - 1) : null;
+    // Keep raw input value to preserve typing experience
+    setInternalValue(newValue);
     
-    // Format the number with appropriate cursor position
-    const { formattedValue, cursorPosition: newCursorPosition } = formatNumberWithCursor(
-      newValue,
-      selectionStart,
-      newChar,
-      isTextSelected
-    );
-    
-    setInternalValue(formattedValue);
-    setCursorPosition(newCursorPosition);
-    setIsTextSelected(false);
-    
-    const numericValue = parseBrazilianNumber(formattedValue);
+    // Only parse and update parent component if the value is meaningful
+    if (newValue.trim()) {
+      // Clean the input from non-numeric chars except for decimal separators
+      const cleanedValue = newValue.replace(/[^\d.,]/g, '');
+      if (cleanedValue) {
+        // Convert Brazilian format to standard number
+        const numericValue = parseBrazilianNumber(cleanedValue);
+        onChange(numericValue);
+      }
+    }
+  };
+
+  const handleBlur = () => {
+    // Format properly on blur
+    const numericValue = parseBrazilianNumber(internalValue);
+    setInternalValue(formatToBrazilianNumber(numericValue));
     onChange(numericValue);
   };
 
   const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
-    // Select all text on focus for better UX
     e.target.select();
-    setIsTextSelected(true);
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    // Allow only numbers, backspace, delete, arrow keys, tab
-    const allowedKeys = [
-      'Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab', 'Home', 'End',
-      '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'
-    ];
-    
-    if (!allowedKeys.includes(e.key)) {
-      e.preventDefault();
-    }
-  };
-
-  const handleSelect = () => {
-    setIsTextSelected(true);
-  };
-
-  const handleBlur = () => {
-    setIsTextSelected(false);
   };
 
   return (
@@ -90,10 +60,8 @@ const PropertyValueInput: React.FC<PropertyValueInputProps> = ({
         type="text"
         value={internalValue}
         onChange={handleChange}
-        onFocus={handleFocus}
-        onKeyDown={handleKeyDown}
-        onSelect={handleSelect}
         onBlur={handleBlur}
+        onFocus={handleFocus}
         className="text-right font-bold bg-purple-50 border-purple-200 hover:border-purple-300 focus-visible:ring-purple-400 text-xl"
         suffix="R$"
       />
