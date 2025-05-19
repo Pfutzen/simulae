@@ -2,18 +2,23 @@
 import React from "react";
 import SimulatorForm from "@/components/SimulatorForm";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { Image } from "lucide-react";
 
 const Index = () => {
   return (
     <div className="min-h-screen flex flex-col bg-slate-50">
       <header className="bg-white py-6 shadow-sm">
         <div className="container mx-auto px-4">
-          <h1 className="text-3xl md:text-4xl font-bold text-simulae-800">
-            Simulae
-          </h1>
-          <p className="text-slate-600 mt-2">
-            Simulador de investimento imobiliário para imóveis na planta
-          </p>
+          <div className="flex flex-col items-center md:items-start">
+            <img 
+              src="/lovable-uploads/e8e576bb-04f1-435e-8340-69508d489877.png" 
+              alt="Simulae Logo" 
+              className="h-16 md:h-20 mb-2"
+            />
+            <p className="text-slate-600 mt-1">
+              Simulador de investimento imobiliário para imóveis na planta
+            </p>
+          </div>
         </div>
       </header>
       
