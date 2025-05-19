@@ -81,6 +81,8 @@ const SimulatorForm: React.FC = () => {
     maxRoi: 0,
     maxRoiProfit: 0
   });
+  
+  const [currentSimulation, setCurrentSimulation] = useState<SavedSimulation | undefined>(undefined);
 
   // Load saved simulations on component mount
   useEffect(() => {
@@ -306,6 +308,9 @@ const SimulatorForm: React.FC = () => {
     const bestResale = calculateBestResaleMonth(paymentSchedule);
     setBestResaleInfo(bestResale);
     
+    // Reset current simulation when running a new simulation
+    setCurrentSimulation(undefined);
+    
     toast({
       title: "Simulação realizada com sucesso",
       description: "Veja os resultados abaixo"
@@ -342,6 +347,7 @@ const SimulatorForm: React.FC = () => {
 
     // Update local state with the new simulation
     setSimulations([simulation, ...simulations]);
+    setCurrentSimulation(simulation);
     
     toast({
       title: "Simulação salva",
@@ -356,6 +362,7 @@ const SimulatorForm: React.FC = () => {
     setResaleResults(simulation.results);
     setBestResaleInfo(simulation.bestResaleInfo);
     setSimulationName(`Cópia de: ${simulation.name}`);
+    setCurrentSimulation(simulation);
     setActiveTab("simulator");
 
     toast({
@@ -372,6 +379,7 @@ const SimulatorForm: React.FC = () => {
     setBestResaleInfo(simulation.bestResaleInfo);
     setSimulationName(`Cópia de: ${simulation.name}`);
     setActiveTab("simulator");
+    setCurrentSimulation(undefined); // Reset current simulation when duplicating
 
     toast({
       title: "Simulação duplicada",
@@ -600,6 +608,7 @@ const SimulatorForm: React.FC = () => {
               schedule={schedule}
               resaleMonth={formData.resaleMonth}
               bestResaleInfo={bestResaleInfo}
+              simulationData={currentSimulation}
               {...resaleResults}
             />
           )}

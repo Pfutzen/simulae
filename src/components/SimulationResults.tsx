@@ -1,11 +1,13 @@
-
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PaymentType, formatCurrency, formatPercentage } from "@/utils/calculationUtils";
+import { Button } from "@/components/ui/button";
 import ResultsChart from "./ResultsChart";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { LightbulbIcon } from "lucide-react";
+import { LightbulbIcon, FileText, Download } from "lucide-react";
+import { exportToPdf } from "@/utils/pdfExport";
+import { SavedSimulation } from "@/utils/simulationHistoryUtils";
 
 interface SimulationResultsProps {
   schedule: PaymentType[];
@@ -26,6 +28,7 @@ interface SimulationResultsProps {
     earlyProfit?: number;
     earlyProfitPercentage?: number;
   };
+  simulationData?: SavedSimulation;
 }
 
 const SimulationResults: React.FC<SimulationResultsProps> = ({
@@ -36,7 +39,8 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
   profit,
   profitPercentage,
   remainingBalance,
-  bestResaleInfo
+  bestResaleInfo,
+  simulationData
 }) => {
   const resaleData = schedule.find(item => item.month === resaleMonth);
 
@@ -44,9 +48,28 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
     return null;
   }
 
+  const handleExportPdf = () => {
+    if (simulationData) {
+      exportToPdf(simulationData);
+    }
+  };
+
   return (
     <div className="space-y-8">
-      <h2 className="text-2xl font-bold mt-8">Resultado da Simulação</h2>
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-bold mt-8">Resultado da Simulação</h2>
+        
+        {simulationData && (
+          <Button 
+            onClick={handleExportPdf}
+            variant="outline" 
+            className="flex items-center gap-2"
+          >
+            <FileText size={18} />
+            Exportar PDF
+          </Button>
+        )}
+      </div>
       
       {(bestResaleInfo.bestProfitMonth > 0 || bestResaleInfo.bestRoiMonth > 0) && (
         <Card className="border-l-4 border-l-yellow-400 bg-yellow-50">
