@@ -2,7 +2,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { formatToBrazilianNumber, parseBrazilianNumber } from "@/utils/formatUtils";
+import { formatToBrazilianNumber, parseBrazilianNumber, formatNumberWithCursor } from "@/utils/formatUtils";
 
 interface PercentageValueInputProps {
   label: string;
@@ -29,6 +29,8 @@ const PercentageValueInput: React.FC<PercentageValueInputProps> = ({
 }) => {
   const [internalValue, setInternalValue] = useState<string>("");
   const [internalPercentage, setInternalPercentage] = useState<string>("");
+  const [valueCursorPosition, setValueCursorPosition] = useState<number | null>(null);
+  const [percentageCursorPosition, setPercentageCursorPosition] = useState<number | null>(null);
   const valueInputRef = useRef<HTMLInputElement>(null);
   const percentageInputRef = useRef<HTMLInputElement>(null);
 
@@ -41,25 +43,79 @@ const PercentageValueInput: React.FC<PercentageValueInputProps> = ({
     setInternalPercentage(formatToBrazilianNumber(percentage));
   }, [percentage]);
 
+  useEffect(() => {
+    // Set cursor position after the component updates
+    if (valueInputRef.current && valueCursorPosition !== null) {
+      valueInputRef.current.setSelectionRange(valueCursorPosition, valueCursorPosition);
+    }
+  }, [internalValue, valueCursorPosition]);
+
+  useEffect(() => {
+    // Set cursor position after the component updates
+    if (percentageInputRef.current && percentageCursorPosition !== null) {
+      percentageInputRef.current.setSelectionRange(percentageCursorPosition, percentageCursorPosition);
+    }
+  }, [internalPercentage, percentageCursorPosition]);
+
   const handleValueChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value;
-    setInternalValue(newValue);
+    const selectionStart = e.target.selectionStart || 0;
     
-    const numericValue = parseBrazilianNumber(newValue);
+    // Determine if we're adding or removing characters
+    const isAdding = newValue.length > internalValue.length;
+    const newChar = isAdding ? newValue.charAt(selectionStart - 1) : null;
+    
+    // Format the number with appropriate cursor position
+    const { formattedValue, cursorPosition: newCursorPosition } = formatNumberWithCursor(
+      newValue,
+      selectionStart,
+      newChar
+    );
+    
+    setInternalValue(formattedValue);
+    setValueCursorPosition(newCursorPosition);
+    
+    const numericValue = parseBrazilianNumber(formattedValue);
     onValueChange(numericValue);
   };
 
   const handlePercentageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newPercentage = e.target.value;
-    setInternalPercentage(newPercentage);
+    const selectionStart = e.target.selectionStart || 0;
     
-    const numericPercentage = parseBrazilianNumber(newPercentage);
+    // Determine if we're adding or removing characters
+    const isAdding = newPercentage.length > internalPercentage.length;
+    const newChar = isAdding ? newPercentage.charAt(selectionStart - 1) : null;
+    
+    // Format the number with appropriate cursor position
+    const { formattedValue, cursorPosition: newCursorPosition } = formatNumberWithCursor(
+      newPercentage,
+      selectionStart,
+      newChar
+    );
+    
+    setInternalPercentage(formattedValue);
+    setPercentageCursorPosition(newCursorPosition);
+    
+    const numericPercentage = parseBrazilianNumber(formattedValue);
     onPercentageChange(numericPercentage);
   };
 
   const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
     // Select all text on focus for better UX
     e.target.select();
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    // Allow only numbers, backspace, delete, arrow keys, tab
+    const allowedKeys = [
+      'Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab', 'Home', 'End',
+      '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'
+    ];
+    
+    if (!allowedKeys.includes(e.key)) {
+      e.preventDefault();
+    }
   };
 
   return (
@@ -77,6 +133,7 @@ const PercentageValueInput: React.FC<PercentageValueInputProps> = ({
             value={internalValue}
             onChange={handleValueChange}
             onFocus={handleFocus}
+            onKeyDown={handleKeyDown}
             className="text-right"
             disabled={disabled}
             suffix="R$"
@@ -93,6 +150,7 @@ const PercentageValueInput: React.FC<PercentageValueInputProps> = ({
             value={internalPercentage}
             onChange={handlePercentageChange}
             onFocus={handleFocus}
+            onKeyDown={handleKeyDown}
             className="text-right"
             disabled={disabled}
             suffix="%"
