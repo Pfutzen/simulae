@@ -2,7 +2,8 @@
 import React, { useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { PaymentType, formatCurrency, formatPercentage, CorrectionMode } from "@/utils/calculationUtils";
+import { PaymentType, CorrectionMode } from "@/utils/calculationUtils";
+import { formatCurrency, formatPercentage } from "@/utils/formatUtils";
 import ResultsChart from "./ResultsChart";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -17,6 +18,7 @@ interface SimulationResultsProps {
   profit: number;
   profitPercentage: number;
   remainingBalance: number;
+  simulationName: string;
   bestResaleInfo: {
     bestProfitMonth: number;
     maxProfit: number;
@@ -52,6 +54,7 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
   profit,
   profitPercentage,
   remainingBalance,
+  simulationName,
   bestResaleInfo,
   // Additional props
   correctionMode,
@@ -77,6 +80,7 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
 
   const handleExportToPdf = async () => {
     await exportSimulationPdf({
+      simulationName: simulationName,
       date: new Date(),
       propertyValue: propertyValue,
       correctionMode: correctionMode === 'manual' ? 'manual' : 'CUB/SC',
