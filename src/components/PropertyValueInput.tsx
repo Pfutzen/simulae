@@ -23,18 +23,19 @@ const PropertyValueInput: React.FC<PropertyValueInputProps> = ({
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value;
     
-    // Keep raw input value to preserve typing experience
-    setInternalValue(newValue);
+    // Remove all formatting except digits, comma and period
+    const cleanedValue = newValue.replace(/[^\d.,]/g, '');
+    
+    // Keep raw input, but ensure it has proper format
+    setInternalValue(cleanedValue);
     
     // Only parse and update parent component if the value is meaningful
-    if (newValue.trim()) {
-      // Clean the input from non-numeric chars except for decimal separators
-      const cleanedValue = newValue.replace(/[^\d.,]/g, '');
-      if (cleanedValue) {
-        // Convert Brazilian format to standard number
-        const numericValue = parseBrazilianNumber(cleanedValue);
-        onChange(numericValue);
-      }
+    if (cleanedValue) {
+      // Convert Brazilian format to standard number
+      const numericValue = parseBrazilianNumber(cleanedValue);
+      onChange(numericValue);
+    } else {
+      onChange(0);
     }
   };
 
@@ -46,6 +47,7 @@ const PropertyValueInput: React.FC<PropertyValueInputProps> = ({
   };
 
   const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
+    // On focus, select all text for easier editing
     e.target.select();
   };
 
