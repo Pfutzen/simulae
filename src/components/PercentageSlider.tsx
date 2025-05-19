@@ -72,8 +72,15 @@ const PercentageSlider: React.FC<PercentageSliderProps> = ({
   };
   
   const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
-    // Select all text on focus for better UX
-    e.target.select();
+    // Position cursor at beginning of number rather than after decimal
+    if (e.target.value.includes(',')) {
+      const commaPosition = e.target.value.indexOf(',');
+      setTimeout(() => {
+        e.target.setSelectionRange(0, 0);
+      }, 0);
+    } else {
+      e.target.select();
+    }
   };
 
   return (

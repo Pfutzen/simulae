@@ -137,9 +137,18 @@ const PercentageValueInput: React.FC<PercentageValueInputProps> = ({
     }
   };
 
-  const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
-    // Select all text on focus for better UX
-    e.target.select();
+  const handleValueFocus = (e: React.FocusEvent<HTMLInputElement>) => {
+    // Position cursor at beginning of number rather than after decimal
+    setTimeout(() => {
+      e.target.setSelectionRange(0, 0);
+    }, 0);
+  };
+
+  const handlePercentageFocus = (e: React.FocusEvent<HTMLInputElement>) => {
+    // Position cursor at beginning of number rather than after decimal
+    setTimeout(() => {
+      e.target.setSelectionRange(0, 0);
+    }, 0);
   };
 
   return (
@@ -156,7 +165,7 @@ const PercentageValueInput: React.FC<PercentageValueInputProps> = ({
             type="text"
             value={internalValue}
             onChange={handleValueChange}
-            onFocus={handleFocus}
+            onFocus={handleValueFocus}
             className="text-right"
             disabled={disabled}
             suffix="R$"
@@ -172,7 +181,7 @@ const PercentageValueInput: React.FC<PercentageValueInputProps> = ({
             type="text"
             value={internalPercentage}
             onChange={handlePercentageChange}
-            onFocus={handleFocus}
+            onFocus={handlePercentageFocus}
             className="text-right"
             disabled={disabled}
             suffix="%"
