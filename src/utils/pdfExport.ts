@@ -162,7 +162,7 @@ export const exportSimulationPdf = async (data: PdfExportData) => {
   yPos = addInfoRow('Saldo devedor no mês:', formatCurrency(data.remainingBalance), yPos);
   yPos = addInfoRow(
     'Lucro líquido estimado:', 
-    `${formatCurrency(data.profit)} (${formatPercentage(data.profitPercentage)})`, 
+    `${formatCurrency(data.profit)} (${formatPercentage(data.profitPercentage > 0 ? data.profitPercentage : Math.abs(data.profitPercentage))})`, 
     yPos
   );
 
@@ -241,33 +241,40 @@ export const exportSimulationPdf = async (data: PdfExportData) => {
   ]);
 
   // Add table with autotable
-  pdf.autoTable({
-    head: [tableHeaders],
-    body: tableBody,
-    startY: yPos,
-    margin: { left: margin, right: margin },
-    headStyles: {
-      fillColor: [41, 128, 185],
-      textColor: 255,
-      fontStyle: 'bold'
-    },
-    alternateRowStyles: {
-      fillColor: [240, 240, 240]
-    },
-    styles: {
-      fontSize: 8,
-      cellPadding: 3
-    },
-    columnStyles: {
-      0: { cellWidth: 30 },
-      1: { cellWidth: 60 },
-      2: { cellWidth: 65 },
-      3: { cellWidth: 70 },
-      4: { cellWidth: 70 },
-      5: { cellWidth: 70 },
-      6: { cellWidth: 65 }
-    }
-  });
+  if (typeof pdf.autoTable === 'function') {
+    pdf.autoTable({
+      head: [tableHeaders],
+      body: tableBody,
+      startY: yPos,
+      margin: { left: margin, right: margin },
+      headStyles: {
+        fillColor: [41, 128, 185],
+        textColor: 255,
+        fontStyle: 'bold'
+      },
+      alternateRowStyles: {
+        fillColor: [240, 240, 240]
+      },
+      styles: {
+        fontSize: 8,
+        cellPadding: 3
+      },
+      columnStyles: {
+        0: { cellWidth: 30 },
+        1: { cellWidth: 60 },
+        2: { cellWidth: 65 },
+        3: { cellWidth: 70 },
+        4: { cellWidth: 70 },
+        5: { cellWidth: 70 },
+        6: { cellWidth: 65 }
+      }
+    });
+  } else {
+    console.error('autoTable function is not available');
+    // Fallback to simple text for the table
+    yPos += 20;
+    pdf.text('O cronograma de pagamentos não pode ser exibido', margin, yPos);
+  }
 
   // Add footer on each page
   const addFooter = (pdf: jsPDF) => {
