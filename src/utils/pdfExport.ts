@@ -3,22 +3,25 @@ import jsPDF from 'jspdf';
 import { SavedSimulation } from './simulationHistoryUtils';
 import { formatCurrency, formatPercentage } from './calculationUtils';
 
-// Extend jsPDF types to include the getNumberOfPages method
+// Define a more specific interface for the internal property
+interface JsPDFInternal {
+  events: any;
+  scaleFactor: number;
+  pageSize: {
+    width: number;
+    getWidth: () => number;
+    height: number;
+    getHeight: () => number;
+  };
+  pages: number[];
+  getNumberOfPages: () => number;
+  getEncryptor: (objectId: number) => (data: string) => string;
+}
+
+// Extend jsPDF using declaration merging
 declare module 'jspdf' {
   interface jsPDF {
-    internal: {
-      events: any;
-      scaleFactor: number;
-      pageSize: {
-        width: number;
-        getWidth: () => number;
-        height: number;
-        getHeight: () => number;
-      },
-      pages: number[];
-      getNumberOfPages: () => number;
-      getEncryptor: (objectId: number) => (data: string) => string;
-    }
+    internal: JsPDFInternal;
   }
 }
 
