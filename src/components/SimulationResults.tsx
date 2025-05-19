@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -139,7 +140,7 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
             <CardTitle className="text-xl">Total Investido</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-bold text-simulae-700">
+            <p className="text-2xl md:text-2xl font-bold text-simulae-700 truncate">
               {formatCurrency(investmentValue)}
             </p>
             <p className="text-sm text-muted-foreground">
@@ -153,7 +154,7 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
             <CardTitle className="text-xl">Valor do Imóvel</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-bold text-simulae-700">
+            <p className="text-2xl md:text-2xl font-bold text-simulae-700 truncate">
               {formatCurrency(propertyValue)}
             </p>
             <p className="text-sm text-muted-foreground">
@@ -167,7 +168,7 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
             <CardTitle className="text-xl">Saldo Devedor</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-bold text-simulae-700">
+            <p className="text-2xl md:text-2xl font-bold text-simulae-700 truncate">
               {formatCurrency(remainingBalance)}
             </p>
             <p className="text-sm text-muted-foreground">
@@ -181,7 +182,7 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
             <CardTitle className="text-xl">Lucro na Revenda</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-bold text-simulae-700">
+            <p className="text-2xl md:text-2xl font-bold text-simulae-700 truncate">
               {formatCurrency(profit)}
             </p>
             <p className="text-sm text-muted-foreground">
