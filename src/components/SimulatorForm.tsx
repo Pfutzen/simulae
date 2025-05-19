@@ -18,6 +18,7 @@ import {
 import PropertyValueInput from "./PropertyValueInput";
 import PercentageValueInput from "./PercentageValueInput";
 import NumberInput from "./NumberInput";
+import PercentageSlider from "./PercentageSlider";
 import CorrectionSelector from "./CorrectionSelector";
 import SimulationResults from "./SimulationResults";
 import { CheckCircle, AlertCircle } from "lucide-react";
@@ -398,12 +399,13 @@ const SimulatorForm: React.FC = () => {
               </div>
               
               <div className="space-y-6">
-                <NumberInput
+                <PercentageSlider
                   id="appreciation-index"
                   label="Índice de valorização mensal"
                   value={formData.appreciationIndex}
                   onChange={handleAppreciationIndexChange}
                   min={0}
+                  max={5}
                   step={0.01}
                   suffix="%"
                 />
