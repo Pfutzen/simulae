@@ -1,4 +1,3 @@
-
 import React, { useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -6,7 +5,9 @@ import { PaymentType, CorrectionMode } from "@/utils/calculationUtils";
 import { formatCurrency, formatPercentage } from "@/utils/formatUtils";
 import ResultsChart from "./ResultsChart";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { LightbulbIcon } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { LightbulbIcon, FileText } from "lucide-react";
+import { exportSimulationPdf } from "@/utils/pdfExport";
 
 interface SimulationResultsProps {
   schedule: PaymentType[];
@@ -76,11 +77,46 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
     return null;
   }
 
+  const handleExportToPdf = async () => {
+    await exportSimulationPdf({
+      simulationName: simulationName,
+      date: new Date(),
+      propertyValue: propertyValue,
+      correctionMode: correctionMode === 'manual' ? 'manual' : 'CUB/SC',
+      correctionIndex,
+      appreciationIndex,
+      downPaymentValue,
+      downPaymentPercentage,
+      installmentsValue,
+      installmentsPercentage,
+      installmentsCount,
+      reinforcementsValue,
+      reinforcementsPercentage,
+      reinforcementFrequency,
+      keysValue,
+      keysPercentage,
+      investmentValue,
+      currentPropertyValue: propertyValue,
+      remainingBalance,
+      profit,
+      profitPercentage,
+      resaleMonth,
+      schedule,
+      bestResaleInfo,
+      chartRef
+    });
+  };
+
   return (
     <div className="space-y-8">
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold mt-8">Resultado da Simulação</h2>
-        {/* Export button removed */}
+        <Button 
+          onClick={handleExportToPdf}
+          className="bg-simulae-600 hover:bg-simulae-700 text-white"
+        >
+          <FileText className="mr-2 h-5 w-5" /> Exportar Simulação em PDF
+        </Button>
       </div>
       
       {(bestResaleInfo.bestProfitMonth > 0 || bestResaleInfo.bestRoiMonth > 0) && (

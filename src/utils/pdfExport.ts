@@ -1,3 +1,4 @@
+
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import html2canvas from 'html2canvas';
@@ -53,6 +54,12 @@ interface PdfExportData {
     bestProfitMonth: number;
     maxProfit: number;
     maxProfitPercentage: number;
+    bestRoiMonth?: number;
+    maxRoi?: number;
+    maxRoiProfit?: number;
+    earlyMonth?: number;
+    earlyProfit?: number;
+    earlyProfitPercentage?: number;
   };
   chartRef?: React.RefObject<HTMLDivElement>;
 }
