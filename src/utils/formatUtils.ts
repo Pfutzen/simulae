@@ -41,20 +41,35 @@ export const parseBrazilianNumber = (value: string): number => {
  * Formats user input as a Brazilian number, preserving cursor position
  * @param inputValue The current text value in the input field
  * @param currentCursorPosition The current cursor position
- * @param newChar The new character being added (or null if deleting)
- * @returns Object with formatted value and new cursor position
+ * @returns Object with formatted value, new cursor position, and numeric value
  */
 export const formatNumberWithCursor = (
   inputValue: string,
-  currentCursorPosition: number,
-  newChar: string | null
-): { formattedValue: string; cursorPosition: number } => {
+  currentCursorPosition: number
+): { formattedValue: string; cursorPosition: number; numericValue: number } => {
+  // Keep track of the original input to calculate proper cursor position later
+  const originalInput = inputValue;
+  
   // Handle decimal separator input (convert . to ,)
   inputValue = inputValue.replace(/\./g, ',');
   
+  // Store if cursor is before or after decimal separator
+  const parts = inputValue.split(',');
+  const cursorInIntegerPart = parts.length === 1 || 
+    (parts.length > 1 && currentCursorPosition <= parts[0].length);
+  
+  // Calculate position relative to decimal point
+  const positionBeforeDecimal = parts.length > 1 && currentCursorPosition <= parts[0].length 
+    ? currentCursorPosition 
+    : parts[0].length;
+  
+  // Save integer part's digits before any formatting
+  const originalDigitsBeforeCursor = parts[0]
+    .replace(/\D/g, '')
+    .substring(0, positionBeforeDecimal);
+  
   // If there's a comma in the input, we need special handling
   if (inputValue.includes(',')) {
-    const parts = inputValue.split(',');
     if (parts.length > 2) {
       // Keep only the first comma
       inputValue = parts[0] + ',' + parts.slice(1).join('');
@@ -75,7 +90,7 @@ export const formatNumberWithCursor = (
   
   // If the clean value is empty, return zero
   if (!cleanValue) {
-    return { formattedValue: '0,00', cursorPosition: 1 };
+    return { formattedValue: '0,00', cursorPosition: 1, numericValue: 0 };
   }
   
   // Always treat the last two digits as decimal places
@@ -102,25 +117,39 @@ export const formatNumberWithCursor = (
   // Combine parts with decimal separator
   const formattedValue = formattedInteger + ',' + decimalPart;
   
-  // Calculate new cursor position - improved logic to ensure cursor stays in integer part
+  // Calculate numeric value
+  const numericValue = parseBrazilianNumber(formattedValue);
+  
+  // Calculate new cursor position based on formatting changes
   let newCursorPosition;
   
-  if (newChar !== null) {
-    // For additions, we need to count how many thousand separators are before the cursor
-    const beforeCursorClean = cleanValue.substring(0, currentCursorPosition);
-    const thousandSepCount = Math.floor((beforeCursorClean.length - 1) / 3);
+  if (cursorInIntegerPart) {
+    // Count how many thousand separators were added before the cursor
+    const formattedDigitsSoFar = formattedInteger.replace(/\./g, '');
+    const originalDigitsCount = originalDigitsBeforeCursor.length;
     
-    // Adjust cursor position based on separators
-    newCursorPosition = currentCursorPosition + thousandSepCount;
+    // Find position in formatted value that contains the same number of digits
+    let digitCount = 0;
+    let newPos = 0;
     
-    // Make sure the cursor doesn't go past the decimal separator
-    if (newCursorPosition > formattedInteger.length) {
-      newCursorPosition = formattedInteger.length;
+    for (let i = 0; i < formattedInteger.length; i++) {
+      if (/\d/.test(formattedInteger[i])) {
+        digitCount++;
+      }
+      if (digitCount === originalDigitsCount) {
+        newPos = i + 1; // +1 because we want the position after this digit
+        break;
+      }
     }
+    
+    newCursorPosition = newPos;
   } else {
-    // For deletions or other operations, maintain relative position
-    newCursorPosition = Math.min(currentCursorPosition, formattedValue.length - 3);
+    // If cursor is in decimal part, adjust based on decimal point position
+    newCursorPosition = formattedInteger.length + 1 + (currentCursorPosition - parts[0].length - 1);
+    
+    // Make sure we don't exceed the length of the formatted value
+    newCursorPosition = Math.min(newCursorPosition, formattedValue.length);
   }
   
-  return { formattedValue, cursorPosition: newCursorPosition };
+  return { formattedValue, cursorPosition: newCursorPosition, numericValue };
 };

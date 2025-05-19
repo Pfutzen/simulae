@@ -14,7 +14,7 @@ interface NumberInputProps {
   step?: number;
   suffix?: string;
   disabled?: boolean;
-  noDecimals?: boolean; // New prop to control decimal display
+  noDecimals?: boolean;
 }
 
 const NumberInput: React.FC<NumberInputProps> = ({
@@ -27,7 +27,7 @@ const NumberInput: React.FC<NumberInputProps> = ({
   step = 1,
   suffix = "",
   disabled = false,
-  noDecimals = false // Default to showing decimals
+  noDecimals = false
 }) => {
   const [internalValue, setInternalValue] = useState<string>("");
   const [cursorPosition, setCursorPosition] = useState<number | null>(null);
@@ -65,30 +65,24 @@ const NumberInput: React.FC<NumberInputProps> = ({
       const formattedValue = numericValue.toLocaleString('pt-BR');
       
       // Calculate new cursor position (accounting for thousand separators)
-      const thousandSepCount = (formattedValue.match(/\./g) || []).length;
-      const newCursorPos = Math.min(
-        selectionStart + (formattedValue.length - newValue.length),
-        formattedValue.length
-      );
+      const newThousandSepCount = (formattedValue.match(/\./g) || []).length;
+      const oldThousandSepCount = (newValue.match(/\./g) || []).length;
+      const thousandSepDiff = newThousandSepCount - oldThousandSepCount;
+      
+      const newCursorPos = selectionStart + thousandSepDiff;
       
       setInternalValue(formattedValue);
       setCursorPosition(newCursorPos);
       onChange(numericValue);
     } else {
-      // Use existing formatting logic for decimal numbers
-      const isAdding = newValue.length > internalValue.length;
-      const newChar = isAdding ? newValue.charAt(selectionStart - 1) : null;
-      
-      const { formattedValue, cursorPosition: newCursorPosition } = formatNumberWithCursor(
+      // Use improved formatting logic for decimal numbers
+      const { formattedValue, cursorPosition: newCursorPosition, numericValue } = formatNumberWithCursor(
         newValue,
-        selectionStart,
-        newChar
+        selectionStart
       );
       
       setInternalValue(formattedValue);
       setCursorPosition(newCursorPosition);
-      
-      const numericValue = parseBrazilianNumber(formattedValue);
       onChange(numericValue);
     }
   };
@@ -124,7 +118,7 @@ const NumberInput: React.FC<NumberInputProps> = ({
         onKeyDown={handleKeyDown}
         disabled={disabled} 
         suffix={suffix}
-        className="text-right" 
+        className="text-right font-medium" 
       />
     </div>;
 };
