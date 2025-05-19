@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -31,17 +32,17 @@ const SimulatorForm: React.FC = () => {
     propertyValue: 500000,
     downPaymentValue: 50000,
     downPaymentPercentage: 10,
-    installmentsValue: 6875,
-    installmentsPercentage: 55,
+    installmentsValue: 2500, // Updated based on 20% over 40 installments
+    installmentsPercentage: 20, // Changed from 55% to 20%
     installmentsCount: 40,
-    reinforcementsValue: 25000,
-    reinforcementsPercentage: 20,
+    reinforcementsValue: 16666.67, // Adjusted for 20% over typically 6 reinforcements
+    reinforcementsPercentage: 20, // Changed from 20% to 20% (unchanged)
     reinforcementFrequency: 6,
-    keysValue: 75000,
-    keysPercentage: 15,
+    keysValue: 250000, // Changed to reflect 50% of property value
+    keysPercentage: 50, // Changed from 15% to 50%
     correctionMode: "manual",
     correctionIndex: 0.5,
-    appreciationIndex: 1.35, // Changed from 0.8 to 1.35
+    appreciationIndex: 1.35,
     resaleMonth: 24
   });
 
