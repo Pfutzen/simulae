@@ -1,3 +1,4 @@
+
 /**
  * Formats a number to Brazilian currency format (1.000,00)
  */
@@ -81,16 +82,23 @@ export const formatNumberWithCursor = (
   // Combine parts with decimal separator
   const formattedValue = formattedInteger + ',' + decimalPart;
   
-  // Calculate the new cursor position based on the formatted value
-  // Position should be in the integer part, not after the decimal
-  let newCursorPosition = 0;
+  // Calculate new cursor position - improved logic to ensure cursor stays in integer part
+  let newCursorPosition;
+  
   if (newChar !== null) {
-    // For additions, place cursor right after the inserted digit
-    // but account for thousands separators
-    const totalThousandSeparators = Math.floor((integerPart.length - 1) / 3);
-    newCursorPosition = integerPart.length + totalThousandSeparators;
+    // For additions, we need to count how many thousand separators are before the cursor
+    const beforeCursorClean = cleanValue.substring(0, currentCursorPosition);
+    const thousandSepCount = Math.floor((beforeCursorClean.length - 1) / 3);
+    
+    // Adjust cursor position based on separators
+    newCursorPosition = currentCursorPosition + thousandSepCount;
+    
+    // Make sure the cursor doesn't go past the decimal separator
+    if (newCursorPosition > formattedInteger.length) {
+      newCursorPosition = formattedInteger.length;
+    }
   } else {
-    // For deletions, keep the cursor at the current position or adjust if needed
+    // For deletions or other operations, maintain cursor relative position
     newCursorPosition = Math.min(currentCursorPosition, formattedValue.length - 3);
   }
   

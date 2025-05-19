@@ -80,7 +80,7 @@ const PropertyValueInput: React.FC<PropertyValueInputProps> = ({
         onChange={handleChange}
         onFocus={handleFocus}
         onKeyDown={handleKeyDown}
-        className="text-right"
+        className="text-right font-bold bg-purple-50 border-purple-200 hover:border-purple-300 focus-visible:ring-purple-400 text-xl"
         suffix="R$"
       />
     </div>
