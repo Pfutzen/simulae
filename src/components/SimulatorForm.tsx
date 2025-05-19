@@ -302,6 +302,17 @@ const SimulatorForm: React.FC = () => {
     return `Reforços nos meses: ${reinforcementMonths.join(", ")}`;
   };
 
+  // Calculate difference from 100%
+  const calculateDifference = (): string => {
+    const difference = totalPercentage - 100;
+    if (difference === 0) return "";
+    
+    const formattedDifference = Math.abs(difference).toFixed(2);
+    return difference > 0 
+      ? `(${formattedDifference}% acima)` 
+      : `(${formattedDifference}% abaixo)`;
+  };
+
   return (
     <div className="space-y-8">
       <Card className="shadow">
@@ -323,7 +334,11 @@ const SimulatorForm: React.FC = () => {
                 )}
                 <AlertDescription className={totalPercentage === 100 ? "text-green-800" : "text-amber-800"}>
                   Total atual: {totalPercentage.toFixed(2)}%
-                  {totalPercentage !== 100 && " (deve totalizar exatamente 100%)"}
+                  {totalPercentage !== 100 && (
+                    <span className="font-medium ml-1">
+                      {calculateDifference()}
+                    </span>
+                  )}
                 </AlertDescription>
               </div>
             </Alert>
