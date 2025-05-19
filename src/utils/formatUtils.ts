@@ -41,11 +41,13 @@ export const parseBrazilianNumber = (value: string): number => {
  * Formats user input as a Brazilian number, preserving cursor position
  * @param inputValue The current text value in the input field
  * @param currentCursorPosition The current cursor position
+ * @param newChar Optional new character that was added (used for cursor positioning)
  * @returns Object with formatted value, new cursor position, and numeric value
  */
 export const formatNumberWithCursor = (
   inputValue: string,
-  currentCursorPosition: number
+  currentCursorPosition: number,
+  newChar?: string | null
 ): { formattedValue: string; cursorPosition: number; numericValue: number } => {
   // Keep track of the original input to calculate proper cursor position later
   const originalInput = inputValue;
