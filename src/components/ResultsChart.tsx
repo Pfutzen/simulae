@@ -153,8 +153,12 @@ const ResultsChart: React.FC<ResultsChartProps> = ({ schedule, resaleMonth }) =>
             height={36}
             iconType="circle"
             iconSize={8}
-            formatter={(value, entry, index) => {
-              const dataKey = entry.dataKey as keyof typeof chartConfig;
+            formatter={(value, entry) => {
+              // Cast entry to a more appropriate type
+              // The error was happening because dataKey doesn't exist on the type
+              const dataKey = entry && 'dataKey' in entry ? 
+                entry.dataKey as keyof typeof chartConfig : value;
+              
               return <span className="text-sm ml-1">{chartConfig[dataKey]?.label}</span>;
             }}
           />
@@ -218,3 +222,4 @@ const ResultsChart: React.FC<ResultsChartProps> = ({ schedule, resaleMonth }) =>
 };
 
 export default ResultsChart;
+
