@@ -11,6 +11,7 @@ import {
   calculateResaleProfit,
   calculateMaxReinforcementCount,
   getReinforcementMonths,
+  calculateBestResaleMonth,
   SimulationFormData,
   PaymentType,
   CorrectionMode
@@ -54,6 +55,14 @@ const SimulatorForm: React.FC = () => {
     remainingBalance: 0
   });
   const [reinforcementMonths, setReinforcementMonths] = useState<number[]>([]);
+  const [bestResaleInfo, setBestResaleInfo] = useState<{
+    bestMonth: number;
+    maxProfit: number;
+    maxProfitPercentage: number;
+    earlyMonth?: number;
+    earlyProfit?: number;
+    earlyProfitPercentage?: number;
+  }>({ bestMonth: 0, maxProfit: 0, maxProfitPercentage: 0 });
 
   // Calculate total percentage whenever relevant form values change
   useEffect(() => {
@@ -264,6 +273,10 @@ const SimulatorForm: React.FC = () => {
     const results = calculateResaleProfit(paymentSchedule, formData.resaleMonth);
     setResaleResults(results);
     
+    // Calculate best resale month
+    const bestResale = calculateBestResaleMonth(paymentSchedule);
+    setBestResaleInfo(bestResale);
+    
     toast({
       title: "Simulação realizada com sucesso",
       description: "Veja os resultados abaixo"
@@ -440,6 +453,7 @@ const SimulatorForm: React.FC = () => {
         <SimulationResults 
           schedule={schedule}
           resaleMonth={formData.resaleMonth}
+          bestResaleInfo={bestResaleInfo}
           {...resaleResults}
         />
       )}

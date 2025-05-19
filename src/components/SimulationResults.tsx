@@ -5,6 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PaymentType, formatCurrency, formatPercentage } from "@/utils/calculationUtils";
 import ResultsChart from "./ResultsChart";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { LightbulbIcon } from "lucide-react";
 
 interface SimulationResultsProps {
   schedule: PaymentType[];
@@ -14,6 +15,14 @@ interface SimulationResultsProps {
   profit: number;
   profitPercentage: number;
   remainingBalance: number;
+  bestResaleInfo: {
+    bestMonth: number;
+    maxProfit: number;
+    maxProfitPercentage: number;
+    earlyMonth?: number;
+    earlyProfit?: number;
+    earlyProfitPercentage?: number;
+  };
 }
 
 const SimulationResults: React.FC<SimulationResultsProps> = ({
@@ -23,7 +32,8 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
   propertyValue,
   profit,
   profitPercentage,
-  remainingBalance
+  remainingBalance,
+  bestResaleInfo
 }) => {
   const resaleData = schedule.find(item => item.month === resaleMonth);
 
@@ -34,6 +44,50 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
   return (
     <div className="space-y-8">
       <h2 className="text-2xl font-bold mt-8">Resultado da Simulação</h2>
+      
+      {bestResaleInfo.bestMonth > 0 && (
+        <Card className="border-l-4 border-l-yellow-400 bg-yellow-50">
+          <CardContent className="p-4">
+            <div className="flex items-start gap-3">
+              <LightbulbIcon className="h-6 w-6 text-yellow-500 mt-1 flex-shrink-0" />
+              <div>
+                <h3 className="text-lg font-semibold text-slate-800">Melhor mês para revenda:</h3>
+                <div className="mt-2 grid gap-y-2">
+                  <div className="flex items-center">
+                    <div className="px-3 py-1 bg-simulae-100 text-simulae-800 font-medium rounded-lg mr-3 w-20 text-center">
+                      Mês {bestResaleInfo.bestMonth}
+                    </div>
+                    <div>
+                      <span className="font-medium text-lg text-simulae-800">
+                        {formatCurrency(bestResaleInfo.maxProfit)}
+                      </span>
+                      <span className="text-slate-600 ml-2">
+                        (valorização de {formatPercentage(bestResaleInfo.maxProfitPercentage)})
+                      </span>
+                    </div>
+                  </div>
+
+                  {bestResaleInfo.earlyMonth && (
+                    <div className="flex items-center mt-1">
+                      <div className="px-3 py-1 bg-green-100 text-green-800 font-medium rounded-lg mr-3 w-20 text-center">
+                        Mês {bestResaleInfo.earlyMonth}
+                      </div>
+                      <div>
+                        <span className="font-medium text-green-800">
+                          {formatCurrency(bestResaleInfo.earlyProfit || 0)}
+                        </span>
+                        <span className="text-slate-600 ml-2">
+                          (lucro menor, mas mais cedo: {formatPercentage(bestResaleInfo.earlyProfitPercentage || 0)})
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <Card className="card-shadow">
@@ -130,7 +184,15 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
                   </TableHeader>
                   <TableBody>
                     {schedule.map((payment) => (
-                      <TableRow key={payment.month} className={payment.month === resaleMonth ? "bg-simulae-50" : ""}>
+                      <TableRow key={payment.month} className={
+                        payment.month === bestResaleInfo.bestMonth 
+                          ? "bg-yellow-50" 
+                          : payment.month === resaleMonth 
+                            ? "bg-simulae-50"
+                            : payment.month === bestResaleInfo.earlyMonth
+                              ? "bg-green-50"
+                              : ""
+                      }>
                         <TableCell>{payment.month}</TableCell>
                         <TableCell>{payment.description}</TableCell>
                         <TableCell className="text-right">{formatCurrency(payment.amount)}</TableCell>
