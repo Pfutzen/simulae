@@ -1,3 +1,4 @@
+
 import React, { useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -233,7 +234,9 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
               {formatCurrency(profit)}
             </p>
             <p className="text-sm text-muted-foreground">
-              {formatPercentage(profitPercentage)} de retorno
+              {profitPercentage > 0 
+                ? `${formatPercentage(profitPercentage)} de retorno`
+                : `${formatPercentage(Math.abs(profitPercentage))} de prejuízo`}
             </p>
           </CardContent>
         </Card>
