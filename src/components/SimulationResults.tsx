@@ -16,9 +16,12 @@ interface SimulationResultsProps {
   profitPercentage: number;
   remainingBalance: number;
   bestResaleInfo: {
-    bestMonth: number;
+    bestProfitMonth: number;
     maxProfit: number;
     maxProfitPercentage: number;
+    bestRoiMonth: number;
+    maxRoi: number;
+    maxRoiProfit: number;
     earlyMonth?: number;
     earlyProfit?: number;
     earlyProfitPercentage?: number;
@@ -45,39 +48,57 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
     <div className="space-y-8">
       <h2 className="text-2xl font-bold mt-8">Resultado da Simulação</h2>
       
-      {bestResaleInfo.bestMonth > 0 && (
+      {(bestResaleInfo.bestProfitMonth > 0 || bestResaleInfo.bestRoiMonth > 0) && (
         <Card className="border-l-4 border-l-yellow-400 bg-yellow-50">
           <CardContent className="p-4">
             <div className="flex items-start gap-3">
               <LightbulbIcon className="h-6 w-6 text-yellow-500 mt-1 flex-shrink-0" />
-              <div>
-                <h3 className="text-lg font-semibold text-slate-800">Melhor mês para revenda:</h3>
-                <div className="mt-2 grid gap-y-2">
-                  <div className="flex items-center">
-                    <div className="px-3 py-1 bg-simulae-100 text-simulae-800 font-medium rounded-lg mr-3 w-20 text-center">
-                      Mês {bestResaleInfo.bestMonth}
+              <div className="w-full">
+                <h3 className="text-lg font-semibold text-slate-800">Melhores meses para revenda:</h3>
+                <div className="mt-2 grid gap-y-4">
+                  {bestResaleInfo.bestProfitMonth > 0 && (
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                      <div className="px-3 py-1 bg-simulae-100 text-simulae-800 font-medium rounded-lg text-center whitespace-nowrap">
+                        💰 Maior lucro
+                      </div>
+                      <div>
+                        <span className="font-medium text-lg text-simulae-800">
+                          Mês {bestResaleInfo.bestProfitMonth}: {formatCurrency(bestResaleInfo.maxProfit)}
+                        </span>
+                        <span className="text-slate-600 block sm:inline sm:ml-2">
+                          (retorno de {formatPercentage(bestResaleInfo.maxProfitPercentage)})
+                        </span>
+                      </div>
                     </div>
-                    <div>
-                      <span className="font-medium text-lg text-simulae-800">
-                        {formatCurrency(bestResaleInfo.maxProfit)}
-                      </span>
-                      <span className="text-slate-600 ml-2">
-                        (valorização de {formatPercentage(bestResaleInfo.maxProfitPercentage)})
-                      </span>
+                  )}
+
+                  {bestResaleInfo.bestRoiMonth > 0 && (
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                      <div className="px-3 py-1 bg-blue-100 text-blue-800 font-medium rounded-lg text-center whitespace-nowrap">
+                        📈 Maior ROI
+                      </div>
+                      <div>
+                        <span className="font-medium text-lg text-blue-800">
+                          Mês {bestResaleInfo.bestRoiMonth}: {formatCurrency(bestResaleInfo.maxRoiProfit)}
+                        </span>
+                        <span className="text-slate-600 block sm:inline sm:ml-2">
+                          (retorno de {formatPercentage(bestResaleInfo.maxRoi)})
+                        </span>
+                      </div>
                     </div>
-                  </div>
+                  )}
 
                   {bestResaleInfo.earlyMonth && (
-                    <div className="flex items-center mt-1">
-                      <div className="px-3 py-1 bg-green-100 text-green-800 font-medium rounded-lg mr-3 w-20 text-center">
-                        Mês {bestResaleInfo.earlyMonth}
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                      <div className="px-3 py-1 bg-green-100 text-green-800 font-medium rounded-lg text-center whitespace-nowrap">
+                        🕒 Mais cedo
                       </div>
                       <div>
                         <span className="font-medium text-green-800">
-                          {formatCurrency(bestResaleInfo.earlyProfit || 0)}
+                          Mês {bestResaleInfo.earlyMonth}: {formatCurrency(bestResaleInfo.earlyProfit || 0)}
                         </span>
-                        <span className="text-slate-600 ml-2">
-                          (lucro menor, mas mais cedo: {formatPercentage(bestResaleInfo.earlyProfitPercentage || 0)})
+                        <span className="text-slate-600 block sm:inline sm:ml-2">
+                          (retorno de {formatPercentage(bestResaleInfo.earlyProfitPercentage || 0)})
                         </span>
                       </div>
                     </div>
@@ -185,13 +206,15 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
                   <TableBody>
                     {schedule.map((payment) => (
                       <TableRow key={payment.month} className={
-                        payment.month === bestResaleInfo.bestMonth 
-                          ? "bg-yellow-50" 
-                          : payment.month === resaleMonth 
-                            ? "bg-simulae-50"
+                        payment.month === bestResaleInfo.bestProfitMonth 
+                          ? "bg-simulae-50" 
+                          : payment.month === bestResaleInfo.bestRoiMonth 
+                            ? "bg-blue-50"
                             : payment.month === bestResaleInfo.earlyMonth
                               ? "bg-green-50"
-                              : ""
+                              : payment.month === resaleMonth
+                                ? "bg-amber-50"
+                                : ""
                       }>
                         <TableCell>{payment.month}</TableCell>
                         <TableCell>{payment.description}</TableCell>

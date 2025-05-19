@@ -56,13 +56,23 @@ const SimulatorForm: React.FC = () => {
   });
   const [reinforcementMonths, setReinforcementMonths] = useState<number[]>([]);
   const [bestResaleInfo, setBestResaleInfo] = useState<{
-    bestMonth: number;
+    bestProfitMonth: number;
     maxProfit: number;
     maxProfitPercentage: number;
+    bestRoiMonth: number;
+    maxRoi: number;
+    maxRoiProfit: number;
     earlyMonth?: number;
     earlyProfit?: number;
     earlyProfitPercentage?: number;
-  }>({ bestMonth: 0, maxProfit: 0, maxProfitPercentage: 0 });
+  }>({ 
+    bestProfitMonth: 0, 
+    maxProfit: 0, 
+    maxProfitPercentage: 0,
+    bestRoiMonth: 0,
+    maxRoi: 0,
+    maxRoiProfit: 0
+  });
 
   // Calculate total percentage whenever relevant form values change
   useEffect(() => {

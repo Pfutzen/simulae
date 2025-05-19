@@ -273,27 +273,37 @@ export const generatePaymentSchedule = (data: SimulationFormData): PaymentType[]
 };
 
 /**
- * Calculate the best month for resale based on maximum profit
+ * Calculate the best months for resale based on maximum profit and ROI
  */
 export const calculateBestResaleMonth = (schedule: PaymentType[]): {
-  bestMonth: number;
+  bestProfitMonth: number;
   maxProfit: number;
   maxProfitPercentage: number;
+  bestRoiMonth: number;
+  maxRoi: number;
+  maxRoiProfit: number;
   earlyMonth?: number;
   earlyProfit?: number;
   earlyProfitPercentage?: number;
 } => {
   if (schedule.length <= 1) {
     return {
-      bestMonth: 0,
+      bestProfitMonth: 0,
       maxProfit: 0,
-      maxProfitPercentage: 0
+      maxProfitPercentage: 0,
+      bestRoiMonth: 0,
+      maxRoi: 0,
+      maxRoiProfit: 0
     };
   }
   
-  let bestMonth = 0;
+  let bestProfitMonth = 0;
   let maxProfit = -Infinity;
   let maxProfitPercentage = 0;
+  
+  let bestRoiMonth = 0;
+  let maxRoi = -Infinity;
+  let maxRoiProfit = 0;
   
   // Skip month 0 (down payment) and start from month 1
   for (let i = 1; i < schedule.length; i++) {
@@ -303,10 +313,18 @@ export const calculateBestResaleMonth = (schedule: PaymentType[]): {
     const profit = payment.propertyValue - (payment.totalPaid + payment.balance);
     const profitPercentage = payment.totalPaid > 0 ? (profit / payment.totalPaid) * 100 : 0;
     
+    // Track maximum absolute profit
     if (profit > maxProfit) {
       maxProfit = profit;
-      bestMonth = payment.month;
+      bestProfitMonth = payment.month;
       maxProfitPercentage = profitPercentage;
+    }
+    
+    // Track maximum ROI
+    if (profitPercentage > maxRoi && profit > 0) {
+      maxRoi = profitPercentage;
+      bestRoiMonth = payment.month;
+      maxRoiProfit = profit;
     }
   }
   
@@ -314,20 +332,20 @@ export const calculateBestResaleMonth = (schedule: PaymentType[]): {
   // but only if we found a best month and we have more than 10 months in the schedule
   let earlyMonth, earlyProfit, earlyProfitPercentage;
   
-  if (maxProfit > 0 && schedule.length > 10 && bestMonth > 12) {
+  if (maxProfit > 0 && schedule.length > 10 && bestProfitMonth > 12) {
     const profitThreshold = maxProfit * 0.7; // 70% of max profit
     
     for (let i = 1; i < schedule.length; i++) {
       const payment = schedule[i];
       
       // Skip if this is the best month or after it
-      if (payment.month >= bestMonth) break;
+      if (payment.month >= bestProfitMonth) break;
       
       const profit = payment.propertyValue - (payment.totalPaid + payment.balance);
       const profitPercentage = payment.totalPaid > 0 ? (profit / payment.totalPaid) * 100 : 0;
       
       // If we found a month with profit above threshold
-      if (profit > profitThreshold && payment.month < bestMonth - 3) {
+      if (profit > profitThreshold && payment.month < bestProfitMonth - 3) {
         earlyMonth = payment.month;
         earlyProfit = profit;
         earlyProfitPercentage = profitPercentage;
@@ -337,9 +355,12 @@ export const calculateBestResaleMonth = (schedule: PaymentType[]): {
   }
   
   return {
-    bestMonth,
+    bestProfitMonth,
     maxProfit,
     maxProfitPercentage,
+    bestRoiMonth,
+    maxRoi,
+    maxRoiProfit,
     ...(earlyMonth ? { earlyMonth, earlyProfit, earlyProfitPercentage } : {})
   };
 };
