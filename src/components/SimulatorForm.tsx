@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -481,6 +480,20 @@ const SimulatorForm: React.FC = () => {
           resaleMonth={formData.resaleMonth}
           bestResaleInfo={bestResaleInfo}
           {...resaleResults}
+          // Additional props for PDF export
+          correctionMode={formData.correctionMode}
+          correctionIndex={formData.correctionIndex}
+          appreciationIndex={formData.appreciationIndex}
+          downPaymentValue={formData.downPaymentValue}
+          downPaymentPercentage={formData.downPaymentPercentage}
+          installmentsValue={formData.installmentsValue}
+          installmentsPercentage={formData.installmentsPercentage}
+          installmentsCount={formData.installmentsCount}
+          reinforcementsValue={formData.reinforcementsValue}
+          reinforcementsPercentage={formData.reinforcementsPercentage}
+          reinforcementFrequency={formData.reinforcementFrequency}
+          keysValue={formData.keysValue}
+          keysPercentage={formData.keysPercentage}
         />
       )}
     </div>

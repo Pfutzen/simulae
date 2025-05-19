@@ -1,11 +1,13 @@
 
-import React from "react";
+import React, { useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { PaymentType, formatCurrency, formatPercentage } from "@/utils/calculationUtils";
+import { PaymentType, formatCurrency, formatPercentage, CorrectionMode } from "@/utils/calculationUtils";
 import ResultsChart from "./ResultsChart";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { LightbulbIcon } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { LightbulbIcon, FilePdf } from "lucide-react";
+import { exportSimulationPdf } from "@/utils/pdfExport";
 
 interface SimulationResultsProps {
   schedule: PaymentType[];
@@ -26,6 +28,20 @@ interface SimulationResultsProps {
     earlyProfit?: number;
     earlyProfitPercentage?: number;
   };
+  // Additional props for PDF export
+  correctionMode: CorrectionMode;
+  correctionIndex?: number;
+  appreciationIndex: number;
+  downPaymentValue: number;
+  downPaymentPercentage: number;
+  installmentsValue: number;
+  installmentsPercentage: number;
+  installmentsCount: number;
+  reinforcementsValue: number;
+  reinforcementsPercentage: number;
+  reinforcementFrequency: number;
+  keysValue: number;
+  keysPercentage: number;
 }
 
 const SimulationResults: React.FC<SimulationResultsProps> = ({
@@ -36,17 +52,69 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
   profit,
   profitPercentage,
   remainingBalance,
-  bestResaleInfo
+  bestResaleInfo,
+  // Additional props
+  correctionMode,
+  correctionIndex,
+  appreciationIndex,
+  downPaymentValue,
+  downPaymentPercentage,
+  installmentsValue,
+  installmentsPercentage,
+  installmentsCount,
+  reinforcementsValue,
+  reinforcementsPercentage,
+  reinforcementFrequency,
+  keysValue,
+  keysPercentage
 }) => {
+  const chartRef = useRef<HTMLDivElement>(null);
   const resaleData = schedule.find(item => item.month === resaleMonth);
 
   if (schedule.length === 0) {
     return null;
   }
 
+  const handleExportToPdf = async () => {
+    await exportSimulationPdf({
+      date: new Date(),
+      propertyValue: propertyValue,
+      correctionMode: correctionMode === 'manual' ? 'manual' : 'CUB/SC',
+      correctionIndex,
+      appreciationIndex,
+      downPaymentValue,
+      downPaymentPercentage,
+      installmentsValue,
+      installmentsPercentage,
+      installmentsCount,
+      reinforcementsValue,
+      reinforcementsPercentage,
+      reinforcementFrequency,
+      keysValue,
+      keysPercentage,
+      investmentValue,
+      currentPropertyValue: propertyValue,
+      remainingBalance,
+      profit,
+      profitPercentage,
+      resaleMonth,
+      schedule,
+      bestResaleInfo,
+      chartRef
+    });
+  };
+
   return (
     <div className="space-y-8">
-      <h2 className="text-2xl font-bold mt-8">Resultado da Simulação</h2>
+      <div className="flex items-center justify-between">
+        <h2 className="text-2xl font-bold mt-8">Resultado da Simulação</h2>
+        <Button 
+          onClick={handleExportToPdf}
+          className="bg-simulae-600 hover:bg-simulae-700 text-white"
+        >
+          <FilePdf className="mr-2 h-5 w-5" /> Exportar Simulação em PDF
+        </Button>
+      </div>
       
       {(bestResaleInfo.bestProfitMonth > 0 || bestResaleInfo.bestRoiMonth > 0) && (
         <Card className="border-l-4 border-l-yellow-400 bg-yellow-50">
@@ -180,7 +248,9 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
               <CardTitle>Evolução do Investimento</CardTitle>
             </CardHeader>
             <CardContent className="pt-0">
-              <ResultsChart schedule={schedule} resaleMonth={resaleMonth} />
+              <div ref={chartRef}>
+                <ResultsChart schedule={schedule} resaleMonth={resaleMonth} />
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
