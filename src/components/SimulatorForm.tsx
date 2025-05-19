@@ -1,9 +1,10 @@
-
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { 
   calculatePercentage, 
   calculateValue, 
@@ -17,29 +18,35 @@ import {
   PaymentType,
   CorrectionMode
 } from "@/utils/calculationUtils";
+import { saveSimulation, getSimulations, SavedSimulation } from "@/utils/simulationHistoryUtils";
 import PropertyValueInput from "./PropertyValueInput";
 import PercentageValueInput from "./PercentageValueInput";
 import NumberInput from "./NumberInput";
 import PercentageSlider from "./PercentageSlider";
 import CorrectionSelector from "./CorrectionSelector";
 import SimulationResults from "./SimulationResults";
+import SimulationHistory from "./SimulationHistory";
 import { CheckCircle, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const SimulatorForm: React.FC = () => {
   const { toast } = useToast();
+  const [simulationName, setSimulationName] = useState<string>("");
+  const [simulations, setSimulations] = useState<SavedSimulation[]>([]);
+  const [activeTab, setActiveTab] = useState<string>("simulator");
   const [formData, setFormData] = useState<SimulationFormData>({
     propertyValue: 500000,
     downPaymentValue: 50000,
     downPaymentPercentage: 10,
-    installmentsValue: 2500, // Updated based on 20% over 40 installments
-    installmentsPercentage: 20, // Changed from 55% to 20%
+    installmentsValue: 2500,
+    installmentsPercentage: 20,
     installmentsCount: 40,
-    reinforcementsValue: 16666.67, // Adjusted for 20% over typically 6 reinforcements
-    reinforcementsPercentage: 20, // Changed from 20% to 20% (unchanged)
+    reinforcementsValue: 16666.67,
+    reinforcementsPercentage: 20,
     reinforcementFrequency: 6,
-    keysValue: 250000, // Changed to reflect 50% of property value
-    keysPercentage: 50, // Changed from 15% to 50%
+    keysValue: 250000,
+    keysPercentage: 50,
     correctionMode: "manual",
     correctionIndex: 0.5,
     appreciationIndex: 1.35,
@@ -74,6 +81,12 @@ const SimulatorForm: React.FC = () => {
     maxRoi: 0,
     maxRoiProfit: 0
   });
+
+  // Load saved simulations on component mount
+  useEffect(() => {
+    const savedSimulations = getSimulations();
+    setSimulations(savedSimulations);
+  }, []);
 
   // Calculate total percentage whenever relevant form values change
   useEffect(() => {
@@ -267,6 +280,11 @@ const SimulatorForm: React.FC = () => {
     setFormData({ ...formData, resaleMonth: value });
   };
 
+  // Handle simulation name change
+  const handleSimulationNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSimulationName(e.target.value);
+  };
+
   // Run simulation
   const handleSimulate = () => {
     if (totalPercentage !== 100) {
@@ -294,6 +312,78 @@ const SimulatorForm: React.FC = () => {
     });
   };
 
+  // Save the current simulation
+  const handleSaveSimulation = () => {
+    if (!simulationName.trim()) {
+      toast({
+        title: "Nome obrigatório",
+        description: "Por favor, dê um nome para esta simulação",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (schedule.length === 0) {
+      toast({
+        title: "Simulação não realizada",
+        description: "Execute a simulação antes de salvar",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const simulation = saveSimulation({
+      name: simulationName,
+      timestamp: Date.now(),
+      formData,
+      results: resaleResults,
+      bestResaleInfo
+    });
+
+    // Update local state with the new simulation
+    setSimulations([simulation, ...simulations]);
+    
+    toast({
+      title: "Simulação salva",
+      description: "A simulação foi salva no histórico"
+    });
+  };
+
+  // View a saved simulation
+  const handleViewSimulation = (simulation: SavedSimulation) => {
+    setFormData(simulation.formData);
+    setSchedule(generatePaymentSchedule(simulation.formData));
+    setResaleResults(simulation.results);
+    setBestResaleInfo(simulation.bestResaleInfo);
+    setSimulationName(`Cópia de: ${simulation.name}`);
+    setActiveTab("simulator");
+
+    toast({
+      title: "Simulação carregada",
+      description: "A simulação foi carregada com sucesso"
+    });
+  };
+
+  // Duplicate a simulation
+  const handleDuplicateSimulation = (simulation: SavedSimulation) => {
+    setFormData(simulation.formData);
+    setSchedule(generatePaymentSchedule(simulation.formData));
+    setResaleResults(simulation.results);
+    setBestResaleInfo(simulation.bestResaleInfo);
+    setSimulationName(`Cópia de: ${simulation.name}`);
+    setActiveTab("simulator");
+
+    toast({
+      title: "Simulação duplicada",
+      description: "Edite a simulação conforme necessário e salve"
+    });
+  };
+
+  // Delete a simulation from state
+  const handleDeleteSimulation = (id: string) => {
+    setSimulations(simulations.filter(sim => sim.id !== id));
+  };
+
   // Format reinforcement months for display
   const getReinforcementMonthsText = (): string => {
     if (reinforcementMonths.length === 0) {
@@ -315,174 +405,215 @@ const SimulatorForm: React.FC = () => {
 
   return (
     <div className="space-y-8">
-      <Card className="shadow">
-        <CardContent className="pt-6">
-          <div className="space-y-6">
-            <PropertyValueInput
-              value={formData.propertyValue}
-              onChange={handlePropertyValueChange}
-            />
-            
-            <Separator />
-            
-            <Alert className={totalPercentage === 100 ? "bg-green-50" : "bg-amber-50"}>
-              <div className="flex items-center gap-2">
-                {totalPercentage === 100 ? (
-                  <CheckCircle className="h-5 w-5 text-green-600" />
-                ) : (
-                  <AlertCircle className="h-5 w-5 text-amber-600" />
-                )}
-                <AlertDescription className={totalPercentage === 100 ? "text-green-800" : "text-amber-800"}>
-                  Total atual: {totalPercentage.toFixed(2)}%
-                  {totalPercentage !== 100 && (
-                    <span className="font-medium ml-1">
-                      {calculateDifference()}
-                    </span>
-                  )}
-                </AlertDescription>
-              </div>
-            </Alert>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <PercentageValueInput
-                label="Entrada"
-                value={formData.downPaymentValue}
-                percentage={formData.downPaymentPercentage}
-                totalValue={formData.propertyValue}
-                onValueChange={handleDownPaymentValueChange}
-                onPercentageChange={handleDownPaymentPercentageChange}
-                noDecimalsForPercentage={true}
-              />
-              
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="mb-4">
+          <TabsTrigger value="simulator">Simulador</TabsTrigger>
+          <TabsTrigger value="history">Histórico</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="simulator" className="space-y-8">
+          <Card className="shadow">
+            <CardContent className="pt-6">
               <div className="space-y-6">
-                <PercentageValueInput
-                  label="Parcelas"
-                  valueLabel="Valor por parcela (R$)"
-                  value={formData.installmentsValue}
-                  percentage={formData.installmentsPercentage}
-                  totalValue={formData.propertyValue}
-                  onValueChange={handleInstallmentsValueChange}
-                  onPercentageChange={handleInstallmentsPercentageChange}
-                  noDecimalsForPercentage={true}
+                <PropertyValueInput
+                  value={formData.propertyValue}
+                  onChange={handlePropertyValueChange}
                 />
-                <NumberInput
-                  id="installments-count"
-                  label="Quantidade de parcelas"
-                  value={formData.installmentsCount}
-                  onChange={handleInstallmentsCountChange}
-                  min={1}
-                  noDecimals={true}
-                />
-              </div>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-6">
-                <PercentageValueInput
-                  label="Reforços"
-                  valueLabel="Valor por reforço (R$)"
-                  value={formData.reinforcementsValue}
-                  percentage={formData.reinforcementsPercentage}
-                  totalValue={formData.propertyValue}
-                  onValueChange={handleReinforcementsValueChange}
-                  onPercentageChange={handleReinforcementsPercentageChange}
-                  noDecimalsForPercentage={true}
-                />
-                <NumberInput
-                  id="reinforcement-frequency"
-                  label="Frequência dos reforços (meses)"
-                  value={formData.reinforcementFrequency}
-                  onChange={handleReinforcementFrequencyChange}
-                  min={0}
-                  suffix="meses"
-                  noDecimals={true}
-                />
-                {reinforcementMonths.length > 0 && (
-                  <div className="text-sm text-blue-600 mt-1">
-                    {getReinforcementMonthsText()}
+                
+                <Separator />
+                
+                <Alert className={totalPercentage === 100 ? "bg-green-50" : "bg-amber-50"}>
+                  <div className="flex items-center gap-2">
+                    {totalPercentage === 100 ? (
+                      <CheckCircle className="h-5 w-5 text-green-600" />
+                    ) : (
+                      <AlertCircle className="h-5 w-5 text-amber-600" />
+                    )}
+                    <AlertDescription className={totalPercentage === 100 ? "text-green-800" : "text-amber-800"}>
+                      Total atual: {totalPercentage.toFixed(2)}%
+                      {totalPercentage !== 100 && (
+                        <span className="font-medium ml-1">
+                          {calculateDifference()}
+                        </span>
+                      )}
+                    </AlertDescription>
                   </div>
-                )}
-              </div>
-              
-              <PercentageValueInput
-                label="Chaves"
-                value={formData.keysValue}
-                percentage={formData.keysPercentage}
-                totalValue={formData.propertyValue}
-                onValueChange={handleKeysValueChange}
-                onPercentageChange={handleKeysPercentageChange}
-                noDecimalsForPercentage={true}
-              />
-            </div>
-            
-            <Separator />
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-6">
-                <CorrectionSelector
-                  value={formData.correctionMode}
-                  onChange={handleCorrectionModeChange}
-                />
+                </Alert>
                 
-                {formData.correctionMode === "manual" && (
-                  <NumberInput
-                    id="correction-index"
-                    label="Índice de correção mensal"
-                    value={formData.correctionIndex}
-                    onChange={handleCorrectionIndexChange}
-                    min={0}
-                    step={0.01}
-                    suffix="%"
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <PercentageValueInput
+                    label="Entrada"
+                    value={formData.downPaymentValue}
+                    percentage={formData.downPaymentPercentage}
+                    totalValue={formData.propertyValue}
+                    onValueChange={handleDownPaymentValueChange}
+                    onPercentageChange={handleDownPaymentPercentageChange}
+                    noDecimalsForPercentage={true}
                   />
-                )}
-              </div>
-              
-              <div className="space-y-6">
-                <PercentageSlider
-                  id="appreciation-index"
-                  label="Índice de valorização mensal"
-                  value={formData.appreciationIndex}
-                  onChange={handleAppreciationIndexChange}
-                  min={0}
-                  max={5}
-                  step={0.01}
-                  suffix="%"
-                />
+                  
+                  <div className="space-y-6">
+                    <PercentageValueInput
+                      label="Parcelas"
+                      valueLabel="Valor por parcela (R$)"
+                      value={formData.installmentsValue}
+                      percentage={formData.installmentsPercentage}
+                      totalValue={formData.propertyValue}
+                      onValueChange={handleInstallmentsValueChange}
+                      onPercentageChange={handleInstallmentsPercentageChange}
+                      noDecimalsForPercentage={true}
+                    />
+                    <NumberInput
+                      id="installments-count"
+                      label="Quantidade de parcelas"
+                      value={formData.installmentsCount}
+                      onChange={handleInstallmentsCountChange}
+                      min={1}
+                      noDecimals={true}
+                    />
+                  </div>
+                </div>
                 
-                <NumberInput
-                  id="resale-month"
-                  label="Mês para revenda"
-                  value={formData.resaleMonth}
-                  onChange={handleResaleMonthChange}
-                  min={1}
-                  max={formData.installmentsCount}
-                  suffix="mês"
-                  noDecimals={true}
-                />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-6">
+                    <PercentageValueInput
+                      label="Reforços"
+                      valueLabel="Valor por reforço (R$)"
+                      value={formData.reinforcementsValue}
+                      percentage={formData.reinforcementsPercentage}
+                      totalValue={formData.propertyValue}
+                      onValueChange={handleReinforcementsValueChange}
+                      onPercentageChange={handleReinforcementsPercentageChange}
+                      noDecimalsForPercentage={true}
+                    />
+                    <NumberInput
+                      id="reinforcement-frequency"
+                      label="Frequência dos reforços (meses)"
+                      value={formData.reinforcementFrequency}
+                      onChange={handleReinforcementFrequencyChange}
+                      min={0}
+                      suffix="meses"
+                      noDecimals={true}
+                    />
+                    {reinforcementMonths.length > 0 && (
+                      <div className="text-sm text-blue-600 mt-1">
+                        {getReinforcementMonthsText()}
+                      </div>
+                    )}
+                  </div>
+                  
+                  <PercentageValueInput
+                    label="Chaves"
+                    value={formData.keysValue}
+                    percentage={formData.keysPercentage}
+                    totalValue={formData.propertyValue}
+                    onValueChange={handleKeysValueChange}
+                    onPercentageChange={handleKeysPercentageChange}
+                    noDecimalsForPercentage={true}
+                  />
+                </div>
+                
+                <Separator />
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-6">
+                    <CorrectionSelector
+                      value={formData.correctionMode}
+                      onChange={handleCorrectionModeChange}
+                    />
+                    
+                    {formData.correctionMode === "manual" && (
+                      <NumberInput
+                        id="correction-index"
+                        label="Índice de correção mensal"
+                        value={formData.correctionIndex}
+                        onChange={handleCorrectionIndexChange}
+                        min={0}
+                        step={0.01}
+                        suffix="%"
+                      />
+                    )}
+                  </div>
+                  
+                  <div className="space-y-6">
+                    <PercentageSlider
+                      id="appreciation-index"
+                      label="Índice de valorização mensal"
+                      value={formData.appreciationIndex}
+                      onChange={handleAppreciationIndexChange}
+                      min={0}
+                      max={5}
+                      step={0.01}
+                      suffix="%"
+                    />
+                    
+                    <NumberInput
+                      id="resale-month"
+                      label="Mês para revenda"
+                      value={formData.resaleMonth}
+                      onChange={handleResaleMonthChange}
+                      min={1}
+                      max={formData.installmentsCount}
+                      suffix="mês"
+                      noDecimals={true}
+                    />
+                  </div>
+                </div>
+                
+                <div className="pt-4">
+                  <div className="mb-4">
+                    <Label htmlFor="simulation-name">Nome da Simulação</Label>
+                    <Input
+                      id="simulation-name"
+                      placeholder="Ex: Cliente João - Apto 802"
+                      value={simulationName}
+                      onChange={handleSimulationNameChange}
+                      className="mt-1"
+                    />
+                  </div>
+                  
+                  <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                    <Button 
+                      onClick={handleSimulate} 
+                      disabled={totalPercentage !== 100}
+                      className="bg-simulae-600 hover:bg-simulae-700 text-white px-8 py-6 text-lg w-full sm:w-auto"
+                    >
+                      Simular
+                    </Button>
+                    
+                    {schedule.length > 0 && (
+                      <Button
+                        onClick={handleSaveSimulation}
+                        className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-6 text-lg w-full sm:w-auto"
+                        disabled={!simulationName.trim()}
+                      >
+                        Salvar Simulação
+                      </Button>
+                    )}
+                  </div>
+                </div>
               </div>
-            </div>
-            
-            <div className="flex justify-center pt-4">
-              <Button 
-                onClick={handleSimulate} 
-                disabled={totalPercentage !== 100}
-                className="bg-simulae-600 hover:bg-simulae-700 text-white px-8 py-6 text-lg"
-              >
-                Simular
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+            </CardContent>
+          </Card>
 
-      {schedule.length > 0 && (
-        <SimulationResults 
-          schedule={schedule}
-          resaleMonth={formData.resaleMonth}
-          bestResaleInfo={bestResaleInfo}
-          {...resaleResults}
-        />
-      )}
+          {schedule.length > 0 && (
+            <SimulationResults 
+              schedule={schedule}
+              resaleMonth={formData.resaleMonth}
+              bestResaleInfo={bestResaleInfo}
+              {...resaleResults}
+            />
+          )}
+        </TabsContent>
+        
+        <TabsContent value="history">
+          <SimulationHistory 
+            simulations={simulations}
+            onViewSimulation={handleViewSimulation}
+            onDuplicateSimulation={handleDuplicateSimulation}
+            onDeleteSimulation={handleDeleteSimulation}
+          />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };

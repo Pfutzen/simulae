@@ -2,7 +2,6 @@
 import React from "react";
 import SimulatorForm from "@/components/SimulatorForm";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { Image } from "lucide-react";
 
 const Index = () => {
   return (
