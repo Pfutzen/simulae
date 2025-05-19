@@ -6,7 +6,6 @@ export type PaymentType = {
   description: string;
   amount: number;
   balance: number;
-  correction: number;
   totalPaid: number;
   propertyValue: number;
 };
@@ -97,12 +96,20 @@ export const getReinforcementMonths = (
   return reinforcementMonths;
 };
 
+// Apply compound interest to a value based on the index and number of months
+export const applyCompoundInterest = (
+  baseValue: number,
+  monthlyIndex: number,
+  months: number
+): number => {
+  return baseValue * Math.pow(1 + monthlyIndex / 100, months);
+};
+
 // Generate payment schedule
 export const generatePaymentSchedule = (data: SimulationFormData): PaymentType[] => {
   const {
     propertyValue,
     downPaymentValue,
-    downPaymentPercentage,
     installmentsValue,
     installmentsCount,
     reinforcementsValue,
@@ -131,7 +138,6 @@ export const generatePaymentSchedule = (data: SimulationFormData): PaymentType[]
       description: "Entrada",
       amount: downPaymentValue,
       balance,
-      correction: 0,
       totalPaid,
       propertyValue: currentPropertyValue
     });
@@ -142,28 +148,33 @@ export const generatePaymentSchedule = (data: SimulationFormData): PaymentType[]
     let monthlyPayment = 0;
     const descriptions: string[] = [];
     
-    // Apply monthly correction to property value
+    // Apply monthly correction to remaining balance (compound interest)
+    balance = balance * (1 + correctionIndex / 100);
+    
+    // Apply monthly appreciation to property value
     currentPropertyValue *= (1 + appreciationIndex / 100);
     
-    // Apply correction to remaining balance
-    const monthlyCorrection = balance * (correctionIndex / 100);
-    balance += monthlyCorrection;
-    
-    // Regular installment payment
+    // Regular installment payment with compound interest applied
     if (month <= installmentsCount) {
-      monthlyPayment += installmentsValue;
+      // Apply compound interest to the base installment value
+      const correctedInstallment = applyCompoundInterest(installmentsValue, correctionIndex, month - 1);
+      monthlyPayment += correctedInstallment;
       descriptions.push("Parcela");
     }
     
-    // Reinforcement payment
+    // Reinforcement payment with compound interest applied
     if (reinforcementMonths.includes(month)) {
-      monthlyPayment += reinforcementsValue;
+      // Apply compound interest to the base reinforcement value
+      const correctedReinforcement = applyCompoundInterest(reinforcementsValue, correctionIndex, month - 1);
+      monthlyPayment += correctedReinforcement;
       descriptions.push("Reforço");
     }
     
-    // Keys payment (at the last installment)
+    // Keys payment (at the last installment) with compound interest applied
     if (month === installmentsCount) {
-      monthlyPayment += keysValue;
+      // Apply compound interest to the keys value
+      const correctedKeysValue = applyCompoundInterest(keysValue, correctionIndex, month - 1);
+      monthlyPayment += correctedKeysValue;
       descriptions.push("Chaves");
     }
     
@@ -176,7 +187,6 @@ export const generatePaymentSchedule = (data: SimulationFormData): PaymentType[]
         description: descriptions.join(" + "),
         amount: monthlyPayment,
         balance,
-        correction: monthlyCorrection,
         totalPaid,
         propertyValue: currentPropertyValue
       });

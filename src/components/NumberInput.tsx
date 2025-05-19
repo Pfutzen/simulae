@@ -1,7 +1,9 @@
+
 import React, { useState, useEffect, useRef } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { formatToBrazilianNumber, parseBrazilianNumber } from "@/utils/formatUtils";
+
 interface NumberInputProps {
   id: string;
   label: string;
@@ -13,6 +15,7 @@ interface NumberInputProps {
   suffix?: string;
   disabled?: boolean;
 }
+
 const NumberInput: React.FC<NumberInputProps> = ({
   id,
   label,
@@ -26,10 +29,12 @@ const NumberInput: React.FC<NumberInputProps> = ({
 }) => {
   const [internalValue, setInternalValue] = useState<string>("");
   const inputRef = useRef<HTMLInputElement>(null);
+
   useEffect(() => {
     // Format the value when it changes externally
     setInternalValue(formatToBrazilianNumber(value));
   }, [value]);
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value;
 
@@ -48,15 +53,27 @@ const NumberInput: React.FC<NumberInputProps> = ({
     const numericValue = parseBrazilianNumber(newValue);
     onChange(numericValue);
   };
+
   const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
     // Select all text on focus for better UX
     e.target.select();
   };
+
   return <div className="space-y-2">
       <Label htmlFor={id} className="text-base font-medium">
         {label}
       </Label>
-      <Input id={id} ref={inputRef} type="text" value={internalValue} onChange={handleChange} onFocus={handleFocus} disabled={disabled} suffix={suffix} className="" />
+      <Input 
+        id={id} 
+        ref={inputRef} 
+        type="text" 
+        value={internalValue} 
+        onChange={handleChange} 
+        onFocus={handleFocus} 
+        disabled={disabled} 
+        suffix={suffix} 
+      />
     </div>;
 };
+
 export default NumberInput;

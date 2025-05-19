@@ -123,7 +123,6 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
                       <TableHead>Mês</TableHead>
                       <TableHead>Descrição</TableHead>
                       <TableHead className="text-right">Valor</TableHead>
-                      <TableHead className="text-right">Correção</TableHead>
                       <TableHead className="text-right">Saldo Devedor</TableHead>
                       <TableHead className="text-right">Total Pago</TableHead>
                       <TableHead className="text-right">Valor do Imóvel</TableHead>
@@ -135,7 +134,6 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
                         <TableCell>{payment.month}</TableCell>
                         <TableCell>{payment.description}</TableCell>
                         <TableCell className="text-right">{formatCurrency(payment.amount)}</TableCell>
-                        <TableCell className="text-right">{formatCurrency(payment.correction)}</TableCell>
                         <TableCell className="text-right">{formatCurrency(payment.balance)}</TableCell>
                         <TableCell className="text-right">{formatCurrency(payment.totalPaid)}</TableCell>
                         <TableCell className="text-right">{formatCurrency(payment.propertyValue)}</TableCell>
