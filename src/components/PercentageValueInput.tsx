@@ -90,10 +90,9 @@ const PercentageValueInput: React.FC<PercentageValueInputProps> = ({
     const wasSelection = e.target.selectionStart !== e.target.selectionEnd;
     
     if (noDecimalsForPercentage) {
-      // Remove non-numeric characters
+      // For percentage fields without decimals, we use a simpler approach
       const cleanValue = newPercentage.replace(/\D/g, '');
       
-      // If it's empty, return a default
       if (!cleanValue) {
         setInternalPercentage('0');
         setPercentageCursorPosition(1);
@@ -101,22 +100,18 @@ const PercentageValueInput: React.FC<PercentageValueInputProps> = ({
         return;
       }
 
-      // Parse as integer
       const numericValue = parseInt(cleanValue) || 0;
-      
-      // Format with thousand separators but without decimals
       const formattedValue = numericValue.toLocaleString('pt-BR');
       
-      // Calculate new cursor position
-      let newPosition = currentPosition;
+      // Calculate new cursor position considering thousand separators
+      const oldThousandSepCount = (internalPercentage.match(/\./g) || []).length;
+      const newThousandSepCount = (formattedValue.match(/\./g) || []).length;
+      let newPosition;
+      
       if (!wasSelection) {
-        // Adjust for thousand separators that might have been added
-        const oldThousandSepCount = (internalPercentage.match(/\./g) || []).length;
-        const newThousandSepCount = (formattedValue.match(/\./g) || []).length;
         const diff = newThousandSepCount - oldThousandSepCount;
         newPosition = currentPosition + diff;
       } else {
-        // If there was a selection, position at end of new content
         newPosition = formattedValue.length;
       }
       
@@ -124,11 +119,11 @@ const PercentageValueInput: React.FC<PercentageValueInputProps> = ({
       setPercentageCursorPosition(newPosition);
       onPercentageChange(numericValue);
     } else {
-      // Use existing formatting logic for decimal numbers
+      // For percentage fields with decimals, use the same approach as currency fields
       const newChar = newPercentage.length > internalPercentage.length ? 
         newPercentage.charAt(currentPosition - 1) : null;
       
-      // Format the number with appropriate cursor position
+      // Use the shared formatting logic for proper cursor positioning
       const result = formatNumberWithCursor(
         newPercentage,
         currentPosition,

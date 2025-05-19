@@ -1,9 +1,9 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
-import { formatToBrazilianNumber, parseBrazilianNumber } from "@/utils/formatUtils";
+import { formatToBrazilianNumber, parseBrazilianNumber, formatNumberWithCursor } from "@/utils/formatUtils";
 import { SlidersHorizontal } from "lucide-react";
 
 interface PercentageSliderProps {
@@ -28,26 +28,52 @@ const PercentageSlider: React.FC<PercentageSliderProps> = ({
   suffix = "%"
 }) => {
   const [internalValue, setInternalValue] = useState<string>("");
+  const [cursorPosition, setCursorPosition] = useState<number>(0);
+  const inputRef = useRef<HTMLInputElement>(null);
   
   // Update internal value when external value changes
   useEffect(() => {
     setInternalValue(formatToBrazilianNumber(value));
   }, [value]);
   
+  // Update cursor position after value change
+  useEffect(() => {
+    if (inputRef.current && document.activeElement === inputRef.current) {
+      inputRef.current.setSelectionRange(cursorPosition, cursorPosition);
+    }
+  }, [internalValue, cursorPosition]);
+  
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value;
-    setInternalValue(newValue);
+    const currentPosition = e.target.selectionStart || 0;
+    const wasSelection = e.target.selectionStart !== e.target.selectionEnd;
     
-    const numericValue = parseBrazilianNumber(newValue);
-    if (!isNaN(numericValue)) {
-      onChange(numericValue);
-    }
+    // Get the newly typed character (if applicable)
+    const newChar = newValue.length > internalValue.length ? 
+      newValue.charAt(currentPosition - 1) : null;
+    
+    // Use our formatter that preserves cursor position
+    const result = formatNumberWithCursor(
+      newValue,
+      currentPosition,
+      newChar,
+      wasSelection
+    );
+    
+    setInternalValue(result.formattedValue);
+    setCursorPosition(result.cursorPosition);
+    onChange(result.numericValue);
   };
   
   const handleSliderChange = (newValue: number[]) => {
     const value = newValue[0];
     setInternalValue(formatToBrazilianNumber(value));
     onChange(value);
+  };
+  
+  const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
+    // Select all text on focus for better UX
+    e.target.select();
   };
 
   return (
@@ -60,9 +86,11 @@ const PercentageSlider: React.FC<PercentageSliderProps> = ({
           <SlidersHorizontal className="h-4 w-4 text-slate-400" />
           <Input
             id={id}
+            ref={inputRef}
             type="text"
             value={internalValue}
             onChange={handleInputChange}
+            onFocus={handleFocus}
             className="w-24 text-right font-medium"
             suffix={suffix}
           />
