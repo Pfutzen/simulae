@@ -1,3 +1,4 @@
+
 /**
  * Formats a number to Brazilian currency format (1.000,00)
  */
@@ -58,114 +59,50 @@ export const formatNumberWithCursor = (
     currentCursorPosition = 1;
   }
   
-  // Keep track of the original input to calculate proper cursor position later
-  const originalInput = inputValue;
+  // Remove all non-numeric characters except commas and periods
+  const cleanedValue = inputValue.replace(/[^\d.,]/g, '');
   
-  // Handle decimal separator input (convert . to ,)
-  inputValue = inputValue.replace(/\./g, ',');
-  
-  // Store if cursor is before or after decimal separator
-  const parts = inputValue.split(',');
-  const cursorInIntegerPart = parts.length === 1 || 
-    (parts.length > 1 && currentCursorPosition <= parts[0].length);
-  
-  // Calculate position relative to decimal point
-  const positionBeforeDecimal = parts.length > 1 && currentCursorPosition <= parts[0].length 
-    ? currentCursorPosition 
-    : parts[0].length;
-  
-  // Save integer part's digits before any formatting
-  const originalDigitsBeforeCursor = parts[0]
-    .replace(/\D/g, '')
-    .substring(0, positionBeforeDecimal);
-  
-  // If there's a comma in the input, we need special handling
-  if (inputValue.includes(',')) {
-    if (parts.length > 2) {
-      // Keep only the first comma
-      inputValue = parts[0] + ',' + parts.slice(1).join('');
-    }
-    
-    // Ensure we have exactly 2 digits after the comma
-    if (parts.length === 2) {
-      const decimalPart = parts[1].replace(/\D/g, '');
-      if (decimalPart.length > 2) {
-        parts[1] = decimalPart.substring(0, 2);
-        inputValue = parts.join(',');
-      }
-    }
-  }
-  
-  // Remove all formatting characters to work with raw numbers
-  let cleanValue = inputValue.replace(/\D/g, '');
-  
-  // If the clean value is empty, return zero
-  if (!cleanValue) {
+  // If the value is empty, return a default
+  if (!cleanedValue) {
     return { formattedValue: '0,00', cursorPosition: 1, numericValue: 0 };
   }
-  
-  // Always treat the last two digits as decimal places
-  if (cleanValue.length === 1) {
-    cleanValue = '00' + cleanValue;
-  } else if (cleanValue.length === 2) {
-    cleanValue = '0' + cleanValue;
-  }
-  
-  // Insert decimal separator
-  const decimalPosition = cleanValue.length - 2;
-  const integerPart = cleanValue.substring(0, decimalPosition);
-  const decimalPart = cleanValue.substring(decimalPosition);
-  
-  // Format the integer part with thousands separators
-  let formattedInteger = '';
-  for (let i = 0; i < integerPart.length; i++) {
-    if (i > 0 && (integerPart.length - i) % 3 === 0) {
-      formattedInteger += '.';
+
+  // Track the number of digits before the cursor in the cleaned input
+  let digitsBeforeCursor = 0;
+  for (let i = 0; i < Math.min(currentCursorPosition, cleanedValue.length); i++) {
+    if (/\d/.test(cleanedValue[i])) {
+      digitsBeforeCursor++;
     }
-    formattedInteger += integerPart.charAt(i);
   }
+
+  // Parse as number and format
+  const numericValue = parseBrazilianNumber(cleanedValue);
+  const formattedValue = formatToBrazilianNumber(numericValue);
   
-  // Combine parts with decimal separator
-  const formattedValue = formattedInteger + ',' + decimalPart;
-  
-  // Calculate numeric value
-  const numericValue = parseBrazilianNumber(formattedValue);
-  
-  // Calculate new cursor position based on formatting changes
-  let newCursorPosition;
-  
-  if (cursorInIntegerPart) {
-    // Count how many thousand separators were added before the cursor
-    const formattedDigitsSoFar = formattedInteger.replace(/\./g, '');
-    const originalDigitsCount = originalDigitsBeforeCursor.length;
-    
-    // Find position in formatted value that contains the same number of digits
-    let digitCount = 0;
-    let newPos = 0;
-    
-    for (let i = 0; i < formattedInteger.length; i++) {
-      if (/\d/.test(formattedInteger[i])) {
-        digitCount++;
-      }
-      if (digitCount === originalDigitsCount) {
-        newPos = i + 1; // +1 because we want the position after this digit
+  // Count digits and separators in the formatted value to determine new cursor position
+  let newPosition = 0;
+  let digitCount = 0;
+  for (let i = 0; i < formattedValue.length; i++) {
+    if (/\d/.test(formattedValue[i])) {
+      digitCount++;
+      if (digitCount === digitsBeforeCursor) {
+        newPosition = i + 1;
         break;
       }
     }
-    
-    newCursorPosition = newPos;
-  } else {
-    // If cursor is in decimal part, adjust based on decimal point position
-    newCursorPosition = formattedInteger.length + 1 + (currentCursorPosition - parts[0].length - 1);
-    
-    // Make sure we don't exceed the length of the formatted value
-    newCursorPosition = Math.min(newCursorPosition, formattedValue.length);
   }
-  
-  // Special case for selection - place cursor right after the first digit typed
-  if (isSelection && newChar && /\d/.test(newChar)) {
-    newCursorPosition = 1;
+
+  // If we didn't find the position, put cursor at the end of integer part
+  if (newPosition === 0 && digitsBeforeCursor > 0) {
+    newPosition = formattedValue.indexOf(',');
+    if (newPosition === -1) {
+      newPosition = formattedValue.length;
+    }
   }
-  
-  return { formattedValue, cursorPosition: newCursorPosition, numericValue };
+
+  return {
+    formattedValue,
+    cursorPosition: newPosition,
+    numericValue
+  };
 };

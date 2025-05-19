@@ -1,7 +1,8 @@
+
 import React, { useState, useEffect, useRef } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { formatToBrazilianNumber, parseBrazilianNumber } from "@/utils/formatUtils";
+import { formatToBrazilianNumber, parseBrazilianNumber, formatNumberWithCursor } from "@/utils/formatUtils";
 
 interface PropertyValueInputProps {
   value: number;
@@ -13,6 +14,7 @@ const PropertyValueInput: React.FC<PropertyValueInputProps> = ({
   onChange,
 }) => {
   const [internalValue, setInternalValue] = useState<string>("");
+  const [cursorPosition, setCursorPosition] = useState<number>(0);
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Update internal display value when prop value changes
@@ -20,23 +22,33 @@ const PropertyValueInput: React.FC<PropertyValueInputProps> = ({
     setInternalValue(formatToBrazilianNumber(value));
   }, [value]);
 
+  // Update cursor position after value change
+  useEffect(() => {
+    if (inputRef.current && document.activeElement === inputRef.current) {
+      inputRef.current.setSelectionRange(cursorPosition, cursorPosition);
+    }
+  }, [internalValue, cursorPosition]);
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value;
+    const currentPosition = e.target.selectionStart || 0;
+    const wasSelection = e.target.selectionStart !== e.target.selectionEnd;
     
-    // Remove all formatting except digits, comma and period
-    const cleanedValue = newValue.replace(/[^\d.,]/g, '');
+    // Get the newly typed character (if applicable)
+    const newChar = newValue.length > internalValue.length ? 
+      newValue.charAt(currentPosition - 1) : null;
     
-    // Keep raw input, but ensure it has proper format
-    setInternalValue(cleanedValue);
+    // Use our formatter that preserves cursor position
+    const result = formatNumberWithCursor(
+      newValue, 
+      currentPosition,
+      newChar,
+      wasSelection
+    );
     
-    // Only parse and update parent component if the value is meaningful
-    if (cleanedValue) {
-      // Convert Brazilian format to standard number
-      const numericValue = parseBrazilianNumber(cleanedValue);
-      onChange(numericValue);
-    } else {
-      onChange(0);
-    }
+    setInternalValue(result.formattedValue);
+    setCursorPosition(result.cursorPosition);
+    onChange(result.numericValue);
   };
 
   const handleBlur = () => {
