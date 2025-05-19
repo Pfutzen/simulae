@@ -10,6 +10,8 @@ export type PaymentType = {
   propertyValue: number;
 };
 
+export type CorrectionMode = "manual" | "cub";
+
 export type SimulationFormData = {
   propertyValue: number;
   downPaymentValue: number;
@@ -22,9 +24,39 @@ export type SimulationFormData = {
   reinforcementFrequency: number; 
   keysValue: number;
   keysPercentage: number;
-  correctionIndex: number; // Monthly correction index (e.g., CUB)
+  correctionMode: CorrectionMode;
+  correctionIndex: number; // Monthly correction index (manual mode)
   appreciationIndex: number; // Monthly property appreciation
   resaleMonth: number; // Desired month for early resale
+};
+
+// CUB/SC correction data
+export const CUB_CORRECTION_DATA = [
+  { month: 1, description: "Jun/24", percentage: 0.57 },
+  { month: 2, description: "Jul/24", percentage: 0.68 },
+  { month: 3, description: "Ago/24", percentage: 0.67 },
+  { month: 4, description: "Set/24", percentage: 1.05 },
+  { month: 5, description: "Out/24", percentage: 0.16 },
+  { month: 6, description: "Nov/24", percentage: 0.62 },
+  { month: 7, description: "Dez/24", percentage: 0.17 },
+  { month: 8, description: "Jan/25", percentage: 0.67 },
+  { month: 9, description: "Fev/25", percentage: 0.46 },
+  { month: 10, description: "Mar/25", percentage: 0.23 },
+  { month: 11, description: "Abr/25", percentage: 0.28 },
+  { month: 12, description: "Mai/25", percentage: 0.25 }
+];
+
+// Function to get the correction index for a specific month
+export const getCorrectionIndex = (month: number, correctionMode: CorrectionMode, manualIndex: number): number => {
+  if (correctionMode === "manual") {
+    return manualIndex;
+  }
+  
+  // For CUB mode, use the pre-defined CUB/SC data
+  // We use modulo to repeat the values if we go beyond 12 months
+  const modMonth = ((month - 1) % CUB_CORRECTION_DATA.length) + 1;
+  const cubData = CUB_CORRECTION_DATA.find(data => data.month === modMonth);
+  return cubData ? cubData.percentage : 0;
 };
 
 export const calculatePercentage = (value: number, total: number): number => {
@@ -105,6 +137,23 @@ export const applyCompoundInterest = (
   return baseValue * Math.pow(1 + monthlyIndex / 100, months);
 };
 
+// Apply compound interest using CUB/SC monthly rates
+export const applyCubCompoundInterest = (
+  baseValue: number,
+  startMonth: number,
+  endMonth: number
+): number => {
+  let result = baseValue;
+  
+  // Apply each monthly CUB rate sequentially
+  for (let month = startMonth; month <= endMonth; month++) {
+    const index = getCorrectionIndex(month, "cub", 0);
+    result *= (1 + index / 100);
+  }
+  
+  return result;
+};
+
 // Generate payment schedule
 export const generatePaymentSchedule = (data: SimulationFormData): PaymentType[] => {
   const {
@@ -115,6 +164,7 @@ export const generatePaymentSchedule = (data: SimulationFormData): PaymentType[]
     reinforcementsValue,
     reinforcementFrequency,
     keysValue,
+    correctionMode,
     correctionIndex,
     appreciationIndex,
     resaleMonth
@@ -148,32 +198,59 @@ export const generatePaymentSchedule = (data: SimulationFormData): PaymentType[]
     let monthlyPayment = 0;
     const descriptions: string[] = [];
     
+    // Get the correction index for this month
+    const monthlyCorrection = getCorrectionIndex(month, correctionMode, correctionIndex);
+    
     // Apply monthly correction to remaining balance (compound interest)
-    balance = balance * (1 + correctionIndex / 100);
+    balance = balance * (1 + monthlyCorrection / 100);
     
     // Apply monthly appreciation to property value
     currentPropertyValue *= (1 + appreciationIndex / 100);
     
     // Regular installment payment with compound interest applied
     if (month <= installmentsCount) {
-      // Apply compound interest to the base installment value
-      const correctedInstallment = applyCompoundInterest(installmentsValue, correctionIndex, month - 1);
+      let correctedInstallment = installmentsValue;
+      
+      if (correctionMode === "manual") {
+        // Apply compound interest to the base installment value
+        correctedInstallment = applyCompoundInterest(installmentsValue, correctionIndex, month - 1);
+      } else {
+        // Apply CUB/SC correction to the base installment value
+        correctedInstallment = applyCubCompoundInterest(installmentsValue, 1, month);
+      }
+      
       monthlyPayment += correctedInstallment;
       descriptions.push("Parcela");
     }
     
     // Reinforcement payment with compound interest applied
     if (reinforcementMonths.includes(month)) {
-      // Apply compound interest to the base reinforcement value
-      const correctedReinforcement = applyCompoundInterest(reinforcementsValue, correctionIndex, month - 1);
+      let correctedReinforcement = reinforcementsValue;
+      
+      if (correctionMode === "manual") {
+        // Apply compound interest to the base reinforcement value
+        correctedReinforcement = applyCompoundInterest(reinforcementsValue, correctionIndex, month - 1);
+      } else {
+        // Apply CUB/SC correction to the base reinforcement value
+        correctedReinforcement = applyCubCompoundInterest(reinforcementsValue, 1, month);
+      }
+      
       monthlyPayment += correctedReinforcement;
       descriptions.push("Reforço");
     }
     
     // Keys payment (at the last installment) with compound interest applied
     if (month === installmentsCount) {
-      // Apply compound interest to the keys value
-      const correctedKeysValue = applyCompoundInterest(keysValue, correctionIndex, month - 1);
+      let correctedKeysValue = keysValue;
+      
+      if (correctionMode === "manual") {
+        // Apply compound interest to the keys value
+        correctedKeysValue = applyCompoundInterest(keysValue, correctionIndex, month - 1);
+      } else {
+        // Apply CUB/SC correction to the keys value
+        correctedKeysValue = applyCubCompoundInterest(keysValue, 1, month);
+      }
+      
       monthlyPayment += correctedKeysValue;
       descriptions.push("Chaves");
     }

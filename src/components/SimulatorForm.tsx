@@ -13,11 +13,13 @@ import {
   calculateMaxReinforcementCount,
   getReinforcementMonths,
   SimulationFormData,
-  PaymentType
+  PaymentType,
+  CorrectionMode
 } from "@/utils/calculationUtils";
 import PropertyValueInput from "./PropertyValueInput";
 import PercentageValueInput from "./PercentageValueInput";
 import NumberInput from "./NumberInput";
+import CorrectionSelector from "./CorrectionSelector";
 import SimulationResults from "./SimulationResults";
 import { CheckCircle, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -36,6 +38,7 @@ const SimulatorForm: React.FC = () => {
     reinforcementFrequency: 6,
     keysValue: 75000,
     keysPercentage: 15,
+    correctionMode: "manual",
     correctionIndex: 0.5,
     appreciationIndex: 0.8,
     resaleMonth: 24
@@ -226,6 +229,11 @@ const SimulatorForm: React.FC = () => {
     });
   };
 
+  // Handle correction mode change
+  const handleCorrectionModeChange = (mode: CorrectionMode) => {
+    setFormData({ ...formData, correctionMode: mode });
+  };
+
   // Handle other inputs
   const handleCorrectionIndexChange = (value: number) => {
     setFormData({ ...formData, correctionIndex: value });
@@ -364,36 +372,47 @@ const SimulatorForm: React.FC = () => {
             
             <Separator />
             
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <NumberInput
-                id="correction-index"
-                label="Índice de correção mensal"
-                value={formData.correctionIndex}
-                onChange={handleCorrectionIndexChange}
-                min={0}
-                step={0.01}
-                suffix="%"
-              />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-6">
+                <CorrectionSelector
+                  value={formData.correctionMode}
+                  onChange={handleCorrectionModeChange}
+                />
+                
+                {formData.correctionMode === "manual" && (
+                  <NumberInput
+                    id="correction-index"
+                    label="Índice de correção mensal"
+                    value={formData.correctionIndex}
+                    onChange={handleCorrectionIndexChange}
+                    min={0}
+                    step={0.01}
+                    suffix="%"
+                  />
+                )}
+              </div>
               
-              <NumberInput
-                id="appreciation-index"
-                label="Índice de valorização mensal"
-                value={formData.appreciationIndex}
-                onChange={handleAppreciationIndexChange}
-                min={0}
-                step={0.01}
-                suffix="%"
-              />
-              
-              <NumberInput
-                id="resale-month"
-                label="Mês para revenda"
-                value={formData.resaleMonth}
-                onChange={handleResaleMonthChange}
-                min={1}
-                max={formData.installmentsCount}
-                suffix="mês"
-              />
+              <div className="space-y-6">
+                <NumberInput
+                  id="appreciation-index"
+                  label="Índice de valorização mensal"
+                  value={formData.appreciationIndex}
+                  onChange={handleAppreciationIndexChange}
+                  min={0}
+                  step={0.01}
+                  suffix="%"
+                />
+                
+                <NumberInput
+                  id="resale-month"
+                  label="Mês para revenda"
+                  value={formData.resaleMonth}
+                  onChange={handleResaleMonthChange}
+                  min={1}
+                  max={formData.installmentsCount}
+                  suffix="mês"
+                />
+              </div>
             </div>
             
             <div className="flex justify-center pt-4">
