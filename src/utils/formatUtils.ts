@@ -1,3 +1,4 @@
+
 /**
  * Formats a number to Brazilian currency format (1.000,00)
  */
@@ -104,29 +105,4 @@ export const formatNumberWithCursor = (
     cursorPosition: newPosition,
     numericValue
   };
-};
-
-/**
- * Formats a number as Brazilian currency (R$ 1.234,56)
- */
-export const formatCurrency = (value: number | string): string => {
-  const numValue = typeof value === 'number' ? value : parseFloat(value) || 0;
-  return numValue.toLocaleString('pt-BR', {
-    style: 'currency',
-    currency: 'BRL',
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2
-  });
-};
-
-/**
- * Formats a number as percentage (12,34%)
- */
-export const formatPercentage = (value: number | string): string => {
-  const numValue = typeof value === 'number' ? value : parseFloat(value) || 0;
-  return numValue.toLocaleString('pt-BR', {
-    style: 'percent',
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2
-  });
 };

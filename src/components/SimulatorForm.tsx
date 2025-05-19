@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -22,22 +23,10 @@ import NumberInput from "./NumberInput";
 import PercentageSlider from "./PercentageSlider";
 import CorrectionSelector from "./CorrectionSelector";
 import SimulationResults from "./SimulationResults";
-import SimulationNameInput from "./SimulationNameInput";
-import { SavedSimulation } from "@/utils/simulationTypes";
 import { CheckCircle, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
-interface SimulatorFormProps {
-  initialData?: SavedSimulation | null;
-  onSimulationSave?: (simulation: Omit<SavedSimulation, "id" | "date">) => SavedSimulation;
-  onClearSelection?: () => void;
-}
-
-const SimulatorForm: React.FC<SimulatorFormProps> = ({ 
-  initialData = null, 
-  onSimulationSave,
-  onClearSelection
-}) => {
+const SimulatorForm: React.FC = () => {
   const { toast } = useToast();
   const [formData, setFormData] = useState<SimulationFormData>({
     propertyValue: 500000,
@@ -56,11 +45,7 @@ const SimulatorForm: React.FC<SimulatorFormProps> = ({
     appreciationIndex: 1.35,
     resaleMonth: 24
   });
-  
-  const [simulationName, setSimulationName] = useState<string>("");
-  const [isEditingExisting, setIsEditingExisting] = useState<boolean>(false);
 
-  // For storing simulation results
   const [totalPercentage, setTotalPercentage] = useState<number>(0);
   const [schedule, setSchedule] = useState<PaymentType[]>([]);
   const [resaleResults, setResaleResults] = useState({
@@ -89,46 +74,6 @@ const SimulatorForm: React.FC<SimulatorFormProps> = ({
     maxRoi: 0,
     maxRoiProfit: 0
   });
-
-  // Load initial data if provided (existing simulation)
-  useEffect(() => {
-    if (initialData) {
-      setFormData({
-        propertyValue: initialData.propertyValue,
-        downPaymentValue: initialData.downPaymentValue,
-        downPaymentPercentage: initialData.downPaymentPercentage,
-        installmentsValue: initialData.installmentsValue,
-        installmentsPercentage: initialData.installmentsPercentage,
-        installmentsCount: initialData.installmentsCount,
-        reinforcementsValue: initialData.reinforcementsValue,
-        reinforcementsPercentage: initialData.reinforcementsPercentage,
-        reinforcementFrequency: initialData.reinforcementFrequency,
-        keysValue: initialData.keysValue,
-        keysPercentage: initialData.keysPercentage,
-        correctionMode: initialData.correctionMode,
-        correctionIndex: initialData.correctionIndex,
-        appreciationIndex: initialData.appreciationIndex,
-        resaleMonth: initialData.resaleMonth
-      });
-      
-      setSimulationName(initialData.name);
-      setSchedule(initialData.results.schedule);
-      setResaleResults({
-        investmentValue: initialData.results.investmentValue,
-        propertyValue: initialData.results.propertyValue,
-        profit: initialData.results.profit,
-        profitPercentage: initialData.results.profitPercentage,
-        remainingBalance: initialData.results.remainingBalance
-      });
-      setBestResaleInfo(initialData.results.bestResaleInfo);
-      setIsEditingExisting(true);
-      
-      toast({
-        title: "Simulação carregada",
-        description: `A simulação "${initialData.name}" foi carregada para edição.`
-      });
-    }
-  }, [initialData, toast]);
 
   // Calculate total percentage whenever relevant form values change
   useEffect(() => {
@@ -322,74 +267,12 @@ const SimulatorForm: React.FC<SimulatorFormProps> = ({
     setFormData({ ...formData, resaleMonth: value });
   };
 
-  // Handle simulation name change
-  const handleSimulationNameChange = (name: string) => {
-    setSimulationName(name);
-  };
-
-  // New button handler to create a new simulation (clear form)
-  const handleNewSimulation = () => {
-    setFormData({
-      propertyValue: 500000,
-      downPaymentValue: 50000,
-      downPaymentPercentage: 10,
-      installmentsValue: 2500,
-      installmentsPercentage: 20,
-      installmentsCount: 40,
-      reinforcementsValue: 16666.67,
-      reinforcementsPercentage: 20,
-      reinforcementFrequency: 6,
-      keysValue: 250000,
-      keysPercentage: 50,
-      correctionMode: "manual",
-      correctionIndex: 0.5,
-      appreciationIndex: 1.35,
-      resaleMonth: 24
-    });
-    setSimulationName("");
-    setSchedule([]);
-    setResaleResults({
-      investmentValue: 0,
-      propertyValue: 0,
-      profit: 0,
-      profitPercentage: 0,
-      remainingBalance: 0
-    });
-    setBestResaleInfo({
-      bestProfitMonth: 0,
-      maxProfit: 0,
-      maxProfitPercentage: 0,
-      bestRoiMonth: 0,
-      maxRoi: 0,
-      maxRoiProfit: 0
-    });
-    setIsEditingExisting(false);
-    
-    if (onClearSelection) {
-      onClearSelection();
-    }
-    
-    toast({
-      title: "Nova simulação",
-      description: "Os campos foram limpos para uma nova simulação."
-    });
-  };
-
   // Run simulation
   const handleSimulate = () => {
     if (totalPercentage !== 100) {
       toast({
         title: "Percentuais incorretos",
         description: "A soma dos percentuais deve ser exatamente 100%",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    if (!simulationName.trim()) {
-      toast({
-        title: "Nome da simulação obrigatório",
-        description: "Por favor, dê um nome para sua simulação antes de continuar",
         variant: "destructive"
       });
       return;
@@ -404,25 +287,6 @@ const SimulatorForm: React.FC<SimulatorFormProps> = ({
     // Calculate best resale month
     const bestResale = calculateBestResaleMonth(paymentSchedule);
     setBestResaleInfo(bestResale);
-    
-    // Save the simulation if handler is provided
-    if (onSimulationSave) {
-      const simulationToSave: Omit<SavedSimulation, "id" | "date"> = {
-        ...formData,
-        name: simulationName,
-        results: {
-          schedule: paymentSchedule,
-          investmentValue: results.investmentValue,
-          propertyValue: results.propertyValue,
-          profit: results.profit,
-          profitPercentage: results.profitPercentage,
-          remainingBalance: results.remainingBalance,
-          bestResaleInfo: bestResale
-        }
-      };
-      
-      onSimulationSave(simulationToSave);
-    }
     
     toast({
       title: "Simulação realizada com sucesso",
@@ -451,18 +315,6 @@ const SimulatorForm: React.FC<SimulatorFormProps> = ({
 
   return (
     <div className="space-y-8">
-      {isEditingExisting && (
-        <div className="flex justify-end">
-          <Button
-            onClick={handleNewSimulation}
-            variant="outline"
-            className="mb-4"
-          >
-            Criar Nova Simulação
-          </Button>
-        </div>
-      )}
-      
       <Card className="shadow">
         <CardContent className="pt-6">
           <div className="space-y-6">
@@ -610,17 +462,10 @@ const SimulatorForm: React.FC<SimulatorFormProps> = ({
               </div>
             </div>
             
-            <Separator />
-            
-            <SimulationNameInput
-              value={simulationName}
-              onChange={handleSimulationNameChange}
-            />
-            
             <div className="flex justify-center pt-4">
               <Button 
                 onClick={handleSimulate} 
-                disabled={totalPercentage !== 100 || !simulationName.trim()}
+                disabled={totalPercentage !== 100}
                 className="bg-simulae-600 hover:bg-simulae-700 text-white px-8 py-6 text-lg"
               >
                 Simular
@@ -635,23 +480,7 @@ const SimulatorForm: React.FC<SimulatorFormProps> = ({
           schedule={schedule}
           resaleMonth={formData.resaleMonth}
           bestResaleInfo={bestResaleInfo}
-          simulationName={simulationName}
           {...resaleResults}
-          // Additional props for PDF export
-          correctionMode={formData.correctionMode}
-          correctionIndex={formData.correctionIndex}
-          appreciationIndex={formData.appreciationIndex}
-          downPaymentValue={formData.downPaymentValue}
-          downPaymentPercentage={formData.downPaymentPercentage}
-          installmentsValue={formData.installmentsValue}
-          installmentsPercentage={formData.installmentsPercentage}
-          installmentsCount={formData.installmentsCount}
-          reinforcementsValue={formData.reinforcementsValue}
-          reinforcementsPercentage={formData.reinforcementsPercentage}
-          reinforcementFrequency={formData.reinforcementFrequency}
-          keysValue={formData.keysValue}
-          keysPercentage={formData.keysPercentage}
-          propertyValue={formData.propertyValue}
         />
       )}
     </div>

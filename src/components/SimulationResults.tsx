@@ -1,9 +1,8 @@
 
-import React, { useRef } from "react";
+import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { PaymentType, CorrectionMode } from "@/utils/calculationUtils";
-import { formatCurrency, formatPercentage } from "@/utils/formatUtils";
+import { PaymentType, formatCurrency, formatPercentage } from "@/utils/calculationUtils";
 import ResultsChart from "./ResultsChart";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { LightbulbIcon } from "lucide-react";
@@ -16,7 +15,6 @@ interface SimulationResultsProps {
   profit: number;
   profitPercentage: number;
   remainingBalance: number;
-  simulationName: string;
   bestResaleInfo: {
     bestProfitMonth: number;
     maxProfit: number;
@@ -28,20 +26,6 @@ interface SimulationResultsProps {
     earlyProfit?: number;
     earlyProfitPercentage?: number;
   };
-  // Additional props for PDF export (kept for future potential use)
-  correctionMode: CorrectionMode;
-  correctionIndex?: number;
-  appreciationIndex: number;
-  downPaymentValue: number;
-  downPaymentPercentage: number;
-  installmentsValue: number;
-  installmentsPercentage: number;
-  installmentsCount: number;
-  reinforcementsValue: number;
-  reinforcementsPercentage: number;
-  reinforcementFrequency: number;
-  keysValue: number;
-  keysPercentage: number;
 }
 
 const SimulationResults: React.FC<SimulationResultsProps> = ({
@@ -52,24 +36,9 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
   profit,
   profitPercentage,
   remainingBalance,
-  simulationName,
-  bestResaleInfo,
-  // Additional props (kept but not used)
-  correctionMode,
-  correctionIndex,
-  appreciationIndex,
-  downPaymentValue,
-  downPaymentPercentage,
-  installmentsValue,
-  installmentsPercentage,
-  installmentsCount,
-  reinforcementsValue,
-  reinforcementsPercentage,
-  reinforcementFrequency,
-  keysValue,
-  keysPercentage
+  bestResaleInfo
 }) => {
-  const chartRef = useRef<HTMLDivElement>(null);
+  const resaleData = schedule.find(item => item.month === resaleMonth);
 
   if (schedule.length === 0) {
     return null;
@@ -77,9 +46,7 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
 
   return (
     <div className="space-y-8">
-      <div>
-        <h2 className="text-2xl font-bold mt-8">Resultado da Simulação</h2>
-      </div>
+      <h2 className="text-2xl font-bold mt-8">Resultado da Simulação</h2>
       
       {(bestResaleInfo.bestProfitMonth > 0 || bestResaleInfo.bestRoiMonth > 0) && (
         <Card className="border-l-4 border-l-yellow-400 bg-yellow-50">
@@ -195,9 +162,7 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
               {formatCurrency(profit)}
             </p>
             <p className="text-sm text-muted-foreground">
-              {profitPercentage > 0 
-                ? `${formatPercentage(profitPercentage)} de retorno`
-                : `${formatPercentage(Math.abs(profitPercentage))} de prejuízo`}
+              {formatPercentage(profitPercentage)} de retorno
             </p>
           </CardContent>
         </Card>
@@ -215,9 +180,7 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
               <CardTitle>Evolução do Investimento</CardTitle>
             </CardHeader>
             <CardContent className="pt-0">
-              <div ref={chartRef}>
-                <ResultsChart schedule={schedule} resaleMonth={resaleMonth} />
-              </div>
+              <ResultsChart schedule={schedule} resaleMonth={resaleMonth} />
             </CardContent>
           </Card>
         </TabsContent>
