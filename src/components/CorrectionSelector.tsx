@@ -9,7 +9,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { CorrectionMode, CUB_CORRECTION_DATA } from "@/utils/calculationUtils";
 import { HelpCircle } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -30,37 +30,35 @@ const CorrectionSelector: React.FC<CorrectionSelectorProps> = ({ value, onChange
         <Label htmlFor="correction-mode" className="text-base font-medium">
           Modo de Correção
         </Label>
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <HelpCircle className="h-4 w-4 text-muted-foreground cursor-help" />
-            </TooltipTrigger>
-            <TooltipContent className="max-w-[350px]">
-              <div className="space-y-2">
-                <p><strong>Manual:</strong> Use um índice fixo mensal para correção.</p>
-                <p><strong>CUB/SC:</strong> Use os índices reais do CUB/SC dos últimos 12 meses.</p>
-                <div className="max-h-[300px] overflow-auto mt-2">
-                  <Table className="w-full">
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="w-1/3">Período</TableHead>
-                        <TableHead className="text-right">Variação (%)</TableHead>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <HelpCircle className="h-4 w-4 text-muted-foreground cursor-help" />
+          </TooltipTrigger>
+          <TooltipContent className="max-w-[350px]">
+            <div className="space-y-2">
+              <p><strong>Manual:</strong> Use um índice fixo mensal para correção.</p>
+              <p><strong>CUB/SC:</strong> Use os índices reais do CUB/SC dos últimos 12 meses.</p>
+              <div className="max-h-[300px] overflow-auto mt-2">
+                <Table className="w-full">
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-1/3">Período</TableHead>
+                      <TableHead className="text-right">Variação (%)</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {CUB_CORRECTION_DATA.map((item) => (
+                      <TableRow key={item.month}>
+                        <TableCell>{item.description}</TableCell>
+                        <TableCell className="text-right">{item.percentage.toFixed(2)}%</TableCell>
                       </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {CUB_CORRECTION_DATA.map((item) => (
-                        <TableRow key={item.month}>
-                          <TableCell>{item.description}</TableCell>
-                          <TableCell className="text-right">{item.percentage.toFixed(2)}%</TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
+                    ))}
+                  </TableBody>
+                </Table>
               </div>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
+            </div>
+          </TooltipContent>
+        </Tooltip>
       </div>
       <Select value={value} onValueChange={handleValueChange}>
         <SelectTrigger id="correction-mode" className="w-full">
