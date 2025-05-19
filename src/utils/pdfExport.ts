@@ -1,4 +1,3 @@
-
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import html2canvas from 'html2canvas';
@@ -20,6 +19,7 @@ declare module 'jspdf' {
         getHeight: () => number;
       };
       pages: number[];
+      // Add both methods to ensure compatibility
       getNumberOfPages: () => number;
       getEncryptor: (objectId: number) => (data: string) => string;
     };
