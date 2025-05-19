@@ -6,7 +6,7 @@ import { PaymentType, formatCurrency, formatPercentage, CorrectionMode } from "@
 import ResultsChart from "./ResultsChart";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { LightbulbIcon, FilePdf } from "lucide-react";
+import { LightbulbIcon, FileText } from "lucide-react";
 import { exportSimulationPdf } from "@/utils/pdfExport";
 
 interface SimulationResultsProps {
@@ -112,7 +112,7 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
           onClick={handleExportToPdf}
           className="bg-simulae-600 hover:bg-simulae-700 text-white"
         >
-          <FilePdf className="mr-2 h-5 w-5" /> Exportar Simulação em PDF
+          <FileText className="mr-2 h-5 w-5" /> Exportar Simulação em PDF
         </Button>
       </div>
       

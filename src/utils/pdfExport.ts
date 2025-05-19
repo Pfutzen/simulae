@@ -1,6 +1,6 @@
 
 import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
+import 'jspdf-autotable'; // Import as a side effect to extend jsPDF
 import html2canvas from 'html2canvas';
 import { PaymentType, formatCurrency, formatPercentage } from './calculationUtils';
 
@@ -34,6 +34,15 @@ interface SimulationPdfData {
     maxProfitPercentage: number;
   };
   chartRef?: React.RefObject<HTMLDivElement>;
+}
+
+// Extend the jsPDF type to include the autotable properties
+declare module 'jspdf' {
+  interface jsPDF {
+    autoTable: (options: any) => any;
+    lastAutoTable: { finalY: number };
+    internal: any;
+  }
 }
 
 export const exportSimulationPdf = async (data: SimulationPdfData) => {
@@ -188,7 +197,7 @@ export const exportSimulationPdf = async (data: SimulationPdfData) => {
   ]);
 
   // Add table with autotable
-  autoTable(pdf, {
+  pdf.autoTable({
     head: [tableHeaders],
     body: tableBody,
     startY: yPos,
@@ -217,13 +226,13 @@ export const exportSimulationPdf = async (data: SimulationPdfData) => {
   });
 
   // Get the final y position after the table
-  const finalY = (pdf as any).lastAutoTable.finalY + 30;
+  const finalY = pdf.lastAutoTable.finalY + 30;
 
   // Add footer on each page
   const addFooter = (pdf: jsPDF) => {
-    const pageCount = pdf.internal.getNumberOfPages();
+    const totalPages = pdf.internal.pages.length - 1;
     
-    for (let i = 1; i <= pageCount; i++) {
+    for (let i = 1; i <= totalPages; i++) {
       pdf.setPage(i);
       
       const pageHeight = pdf.internal.pageSize.getHeight();
@@ -246,7 +255,7 @@ export const exportSimulationPdf = async (data: SimulationPdfData) => {
       
       // Page numbers
       pdf.text(
-        `Página ${i} de ${pageCount}`,
+        `Página ${i} de ${totalPages}`,
         pageWidth - margin,
         pageHeight - 30,
         { align: 'right' }
