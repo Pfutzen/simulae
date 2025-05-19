@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -8,7 +9,9 @@ import {
   calculateValue, 
   calculateTotalPercentage, 
   generatePaymentSchedule, 
-  calculateResaleProfit, 
+  calculateResaleProfit,
+  calculateMaxReinforcementCount,
+  getReinforcementMonths,
   SimulationFormData,
   PaymentType
 } from "@/utils/calculationUtils";
@@ -47,6 +50,7 @@ const SimulatorForm: React.FC = () => {
     profitPercentage: 0,
     remainingBalance: 0
   });
+  const [reinforcementMonths, setReinforcementMonths] = useState<number[]>([]);
 
   // Calculate total percentage whenever relevant form values change
   useEffect(() => {
@@ -58,6 +62,12 @@ const SimulatorForm: React.FC = () => {
     formData.reinforcementsPercentage,
     formData.keysPercentage
   ]);
+
+  // Calculate reinforcement months whenever the frequency or installment count changes
+  useEffect(() => {
+    const months = getReinforcementMonths(formData.installmentsCount, formData.reinforcementFrequency);
+    setReinforcementMonths(months);
+  }, [formData.installmentsCount, formData.reinforcementFrequency]);
 
   // Handle property value change
   const handlePropertyValueChange = (value: number) => {
@@ -72,13 +82,18 @@ const SimulatorForm: React.FC = () => {
       newData.installmentsPercentage,
       value
     ) / newData.installmentsCount;
-    newData.reinforcementsValue = calculateValue(
-      newData.reinforcementsPercentage,
-      value
-    ) / Math.floor(newData.installmentsCount / newData.reinforcementFrequency);
+    
+    // Calculate reinforcement value based on actual number of reinforcements
+    const months = getReinforcementMonths(newData.installmentsCount, newData.reinforcementFrequency);
+    const reinforcementCount = months.length;
+    newData.reinforcementsValue = reinforcementCount > 0
+      ? calculateValue(newData.reinforcementsPercentage, value) / reinforcementCount
+      : 0;
+    
     newData.keysValue = calculateValue(newData.keysPercentage, value);
     
     setFormData(newData);
+    setReinforcementMonths(months);
   };
 
   // Handle down payment changes
@@ -128,19 +143,27 @@ const SimulatorForm: React.FC = () => {
     );
     const value = count > 0 ? totalValue / count : 0;
     
+    // Recalculate reinforcement value when installment count changes
+    const months = getReinforcementMonths(count, formData.reinforcementFrequency);
+    const reinforcementCount = months.length;
+    const newReinforcementValue = reinforcementCount > 0
+      ? calculateValue(formData.reinforcementsPercentage, formData.propertyValue) / reinforcementCount
+      : formData.reinforcementsValue;
+    
     setFormData({
       ...formData,
       installmentsCount: count,
-      installmentsValue: value
+      installmentsValue: value,
+      reinforcementsValue: newReinforcementValue
     });
+    
+    setReinforcementMonths(months);
   };
 
   // Handle reinforcements changes
   const handleReinforcementsValueChange = (value: number) => {
-    const frequency = formData.reinforcementFrequency;
-    const count = frequency > 0 
-      ? Math.floor(formData.installmentsCount / frequency) 
-      : 0;
+    const months = getReinforcementMonths(formData.installmentsCount, formData.reinforcementFrequency);
+    const count = months.length;
     const totalValue = value * count;
     const percentage = calculatePercentage(totalValue, formData.propertyValue);
     
@@ -153,10 +176,8 @@ const SimulatorForm: React.FC = () => {
 
   const handleReinforcementsPercentageChange = (percentage: number) => {
     const totalValue = calculateValue(percentage, formData.propertyValue);
-    const frequency = formData.reinforcementFrequency;
-    const count = frequency > 0 
-      ? Math.floor(formData.installmentsCount / frequency) 
-      : 0;
+    const months = getReinforcementMonths(formData.installmentsCount, formData.reinforcementFrequency);
+    const count = months.length;
     const value = count > 0 ? totalValue / count : 0;
     
     setFormData({
@@ -167,13 +188,14 @@ const SimulatorForm: React.FC = () => {
   };
 
   const handleReinforcementFrequencyChange = (frequency: number) => {
+    const months = getReinforcementMonths(formData.installmentsCount, frequency);
+    const count = months.length;
+    
+    // Calculate new per-reinforcement value
     const totalValue = calculateValue(
       formData.reinforcementsPercentage,
       formData.propertyValue
     );
-    const count = frequency > 0 
-      ? Math.floor(formData.installmentsCount / frequency) 
-      : 0;
     const value = count > 0 ? totalValue / count : 0;
     
     setFormData({
@@ -181,6 +203,8 @@ const SimulatorForm: React.FC = () => {
       reinforcementFrequency: frequency,
       reinforcementsValue: value
     });
+    
+    setReinforcementMonths(months);
   };
 
   // Handle keys payment changes
@@ -236,6 +260,14 @@ const SimulatorForm: React.FC = () => {
       title: "Simulação realizada com sucesso",
       description: "Veja os resultados abaixo"
     });
+  };
+
+  // Format reinforcement months for display
+  const getReinforcementMonthsText = (): string => {
+    if (reinforcementMonths.length === 0) {
+      return "Nenhum reforço será aplicado";
+    }
+    return `Reforços nos meses: ${reinforcementMonths.join(", ")}`;
   };
 
   return (
@@ -313,6 +345,11 @@ const SimulatorForm: React.FC = () => {
                   min={0}
                   suffix="meses"
                 />
+                {reinforcementMonths.length > 0 && (
+                  <div className="text-sm text-blue-600 mt-1">
+                    {getReinforcementMonthsText()}
+                  </div>
+                )}
               </div>
               
               <PercentageValueInput

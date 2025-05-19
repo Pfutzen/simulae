@@ -57,6 +57,46 @@ export const calculateTotalPercentage = (data: Partial<SimulationFormData>): num
   return Number((downPaymentPercentage + installmentsPercentage + reinforcementsPercentage + keysPercentage).toFixed(2));
 };
 
+/**
+ * Calculate the maximum number of reinforcements based on frequency and installments
+ * Ensures the last reinforcement doesn't happen in the last 5 months
+ */
+export const calculateMaxReinforcementCount = (
+  installmentsCount: number, 
+  frequency: number
+): number => {
+  if (frequency <= 0) return 0;
+  
+  // The last reinforcement can happen at most at installmentsCount - 5
+  const lastPossibleMonth = Math.max(0, installmentsCount - 5);
+  
+  // Calculate how many reinforcements fit within the allowed period
+  return Math.max(0, Math.floor(lastPossibleMonth / frequency));
+};
+
+/**
+ * Get the actual months when reinforcements occur
+ * Adjusts the last reinforcement if needed to respect the "no reinforcements in last 5 months" rule
+ */
+export const getReinforcementMonths = (
+  installmentsCount: number, 
+  frequency: number
+): number[] => {
+  if (frequency <= 0) return [];
+  
+  const reinforcementMonths: number[] = [];
+  const maxMonth = installmentsCount - 5;
+  
+  // Add reinforcements at regular frequency
+  for (let month = frequency; month <= installmentsCount; month += frequency) {
+    // Stop adding reinforcements once we reach the forbidden zone (last 5 months)
+    if (month > maxMonth) break;
+    reinforcementMonths.push(month);
+  }
+  
+  return reinforcementMonths;
+};
+
 // Generate payment schedule
 export const generatePaymentSchedule = (data: SimulationFormData): PaymentType[] => {
   const {
@@ -77,6 +117,9 @@ export const generatePaymentSchedule = (data: SimulationFormData): PaymentType[]
   let totalPaid = 0;
   let currentPropertyValue = propertyValue;
   let balance = propertyValue;
+  
+  // Get the months when reinforcements will happen
+  const reinforcementMonths = getReinforcementMonths(installmentsCount, reinforcementFrequency);
   
   // Month 0: Down payment
   if (downPaymentValue > 0) {
@@ -113,7 +156,7 @@ export const generatePaymentSchedule = (data: SimulationFormData): PaymentType[]
     }
     
     // Reinforcement payment
-    if (reinforcementFrequency > 0 && month % reinforcementFrequency === 0 && month < installmentsCount) {
+    if (reinforcementMonths.includes(month)) {
       monthlyPayment += reinforcementsValue;
       descriptions.push("Reforço");
     }
