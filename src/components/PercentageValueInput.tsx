@@ -33,6 +33,8 @@ const PercentageValueInput: React.FC<PercentageValueInputProps> = ({
   const [internalPercentage, setInternalPercentage] = useState<string>("");
   const [valueCursorPosition, setValueCursorPosition] = useState<number | null>(null);
   const [percentageCursorPosition, setPercentageCursorPosition] = useState<number | null>(null);
+  const [isValueTextSelected, setIsValueTextSelected] = useState(false);
+  const [isPercentageTextSelected, setIsPercentageTextSelected] = useState(false);
   const valueInputRef = useRef<HTMLInputElement>(null);
   const percentageInputRef = useRef<HTMLInputElement>(null);
 
@@ -75,11 +77,13 @@ const PercentageValueInput: React.FC<PercentageValueInputProps> = ({
     const { formattedValue, cursorPosition: newCursorPosition } = formatNumberWithCursor(
       newValue,
       selectionStart,
-      newChar
+      newChar,
+      isValueTextSelected
     );
     
     setInternalValue(formattedValue);
     setValueCursorPosition(newCursorPosition);
+    setIsValueTextSelected(false);
     
     const numericValue = parseBrazilianNumber(formattedValue);
     onValueChange(numericValue);
@@ -93,21 +97,33 @@ const PercentageValueInput: React.FC<PercentageValueInputProps> = ({
       // Remove non-numeric characters
       const cleanValue = newPercentage.replace(/\D/g, '');
       
-      // Parse as integer
-      const numericValue = parseInt(cleanValue) || 0;
+      // Handle case where all text was selected and user started typing
+      let numericValue;
+      let newCursorPos = 1;
+      
+      if (isPercentageTextSelected && cleanValue.length === 1) {
+        numericValue = parseInt(cleanValue) || 0;
+      } else {
+        // Parse as integer
+        numericValue = parseInt(cleanValue) || 0;
+        
+        // If not selecting all text, calculate cursor position normally
+        if (!isPercentageTextSelected) {
+          // Calculate new cursor position (accounting for thousand separators)
+          const formattedValue = numericValue.toLocaleString('pt-BR');
+          const newThousandSepCount = (formattedValue.match(/\./g) || []).length;
+          const oldThousandSepCount = (newPercentage.match(/\./g) || []).length;
+          const thousandSepDiff = newThousandSepCount - oldThousandSepCount;
+          newCursorPos = selectionStart + thousandSepDiff;
+        }
+      }
       
       // Format with thousand separators but without decimals
       const formattedValue = numericValue.toLocaleString('pt-BR');
       
-      // Calculate new cursor position (accounting for thousand separators)
-      const thousandSepCount = (formattedValue.match(/\./g) || []).length;
-      const newCursorPos = Math.min(
-        selectionStart + (formattedValue.length - newPercentage.length),
-        formattedValue.length
-      );
-      
       setInternalPercentage(formattedValue);
       setPercentageCursorPosition(newCursorPos);
+      setIsPercentageTextSelected(false);
       onPercentageChange(numericValue);
     } else {
       // Use existing formatting logic for decimal numbers
@@ -119,11 +135,13 @@ const PercentageValueInput: React.FC<PercentageValueInputProps> = ({
       const { formattedValue, cursorPosition: newCursorPosition } = formatNumberWithCursor(
         newPercentage,
         selectionStart,
-        newChar
+        newChar,
+        isPercentageTextSelected
       );
       
       setInternalPercentage(formattedValue);
       setPercentageCursorPosition(newCursorPosition);
+      setIsPercentageTextSelected(false);
       
       const numericPercentage = parseBrazilianNumber(formattedValue);
       onPercentageChange(numericPercentage);
@@ -133,6 +151,12 @@ const PercentageValueInput: React.FC<PercentageValueInputProps> = ({
   const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
     // Select all text on focus for better UX
     e.target.select();
+    const inputId = e.target.id;
+    if (inputId.includes('value')) {
+      setIsValueTextSelected(true);
+    } else if (inputId.includes('percentage')) {
+      setIsPercentageTextSelected(true);
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -146,6 +170,12 @@ const PercentageValueInput: React.FC<PercentageValueInputProps> = ({
       e.preventDefault();
     }
   };
+
+  const handleValueSelect = () => setIsValueTextSelected(true);
+  const handlePercentageSelect = () => setIsPercentageTextSelected(true);
+  
+  const handleValueBlur = () => setIsValueTextSelected(false);
+  const handlePercentageBlur = () => setIsPercentageTextSelected(false);
 
   return (
     <div className="space-y-2">
@@ -163,6 +193,8 @@ const PercentageValueInput: React.FC<PercentageValueInputProps> = ({
             onChange={handleValueChange}
             onFocus={handleFocus}
             onKeyDown={handleKeyDown}
+            onSelect={handleValueSelect}
+            onBlur={handleValueBlur}
             className="text-right"
             disabled={disabled}
             suffix="R$"
@@ -180,6 +212,8 @@ const PercentageValueInput: React.FC<PercentageValueInputProps> = ({
             onChange={handlePercentageChange}
             onFocus={handleFocus}
             onKeyDown={handleKeyDown}
+            onSelect={handlePercentageSelect}
+            onBlur={handlePercentageBlur}
             className="text-right"
             disabled={disabled}
             suffix="%"

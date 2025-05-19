@@ -16,6 +16,7 @@ const PropertyValueInput: React.FC<PropertyValueInputProps> = ({
   const [internalValue, setInternalValue] = useState<string>("");
   const [cursorPosition, setCursorPosition] = useState<number | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const [isTextSelected, setIsTextSelected] = useState(false);
 
   useEffect(() => {
     setInternalValue(formatToBrazilianNumber(value));
@@ -40,11 +41,13 @@ const PropertyValueInput: React.FC<PropertyValueInputProps> = ({
     const { formattedValue, cursorPosition: newCursorPosition } = formatNumberWithCursor(
       newValue,
       selectionStart,
-      newChar
+      newChar,
+      isTextSelected
     );
     
     setInternalValue(formattedValue);
     setCursorPosition(newCursorPosition);
+    setIsTextSelected(false);
     
     const numericValue = parseBrazilianNumber(formattedValue);
     onChange(numericValue);
@@ -53,6 +56,7 @@ const PropertyValueInput: React.FC<PropertyValueInputProps> = ({
   const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
     // Select all text on focus for better UX
     e.target.select();
+    setIsTextSelected(true);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -65,6 +69,14 @@ const PropertyValueInput: React.FC<PropertyValueInputProps> = ({
     if (!allowedKeys.includes(e.key)) {
       e.preventDefault();
     }
+  };
+
+  const handleSelect = () => {
+    setIsTextSelected(true);
+  };
+
+  const handleBlur = () => {
+    setIsTextSelected(false);
   };
 
   return (
@@ -80,6 +92,8 @@ const PropertyValueInput: React.FC<PropertyValueInputProps> = ({
         onChange={handleChange}
         onFocus={handleFocus}
         onKeyDown={handleKeyDown}
+        onSelect={handleSelect}
+        onBlur={handleBlur}
         className="text-right font-bold bg-purple-50 border-purple-200 hover:border-purple-300 focus-visible:ring-purple-400 text-xl"
         suffix="R$"
       />

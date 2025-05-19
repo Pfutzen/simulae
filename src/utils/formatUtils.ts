@@ -42,13 +42,22 @@ export const parseBrazilianNumber = (value: string): number => {
  * @param inputValue The current text value in the input field
  * @param currentCursorPosition The current cursor position
  * @param newChar Optional new character that was added (used for cursor positioning)
+ * @param isSelection Whether the text was selected before input
  * @returns Object with formatted value, new cursor position, and numeric value
  */
 export const formatNumberWithCursor = (
   inputValue: string,
   currentCursorPosition: number,
-  newChar?: string | null
+  newChar?: string | null,
+  isSelection?: boolean
 ): { formattedValue: string; cursorPosition: number; numericValue: number } => {
+  // Handle case where all text was selected and user started typing a new number
+  if (isSelection && newChar && /\d/.test(newChar)) {
+    // If it was a selection and the user typed a digit, we should replace everything with just that digit
+    inputValue = newChar;
+    currentCursorPosition = 1;
+  }
+  
   // Keep track of the original input to calculate proper cursor position later
   const originalInput = inputValue;
   
@@ -151,6 +160,11 @@ export const formatNumberWithCursor = (
     
     // Make sure we don't exceed the length of the formatted value
     newCursorPosition = Math.min(newCursorPosition, formattedValue.length);
+  }
+  
+  // Special case for selection - place cursor right after the first digit typed
+  if (isSelection && newChar && /\d/.test(newChar)) {
+    newCursorPosition = 1;
   }
   
   return { formattedValue, cursorPosition: newCursorPosition, numericValue };
