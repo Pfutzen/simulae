@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -47,6 +46,7 @@ const SimulatorForm: React.FC = () => {
     reinforcementsValue: 16666.67,
     reinforcementsPercentage: 20,
     reinforcementFrequency: 6,
+    finalMonthsWithoutReinforcement: 5, // Default to 5 months without reinforcement at the end
     keysValue: 250000,
     keysPercentage: 50,
     correctionMode: "manual",
@@ -104,11 +104,19 @@ const SimulatorForm: React.FC = () => {
     formData.keysPercentage
   ]);
 
-  // Calculate reinforcement months whenever the frequency or installment count changes
+  // Calculate reinforcement months whenever the frequency, installment count, or finalMonthsWithoutReinforcement changes
   useEffect(() => {
-    const months = getReinforcementMonths(formData.installmentsCount, formData.reinforcementFrequency);
+    const months = getReinforcementMonths(
+      formData.installmentsCount, 
+      formData.reinforcementFrequency,
+      formData.finalMonthsWithoutReinforcement
+    );
     setReinforcementMonths(months);
-  }, [formData.installmentsCount, formData.reinforcementFrequency]);
+  }, [
+    formData.installmentsCount, 
+    formData.reinforcementFrequency,
+    formData.finalMonthsWithoutReinforcement
+  ]);
 
   // Handle property value change
   const handlePropertyValueChange = (value: number) => {
@@ -125,7 +133,11 @@ const SimulatorForm: React.FC = () => {
     ) / newData.installmentsCount;
     
     // Calculate reinforcement value based on actual number of reinforcements
-    const months = getReinforcementMonths(newData.installmentsCount, newData.reinforcementFrequency);
+    const months = getReinforcementMonths(
+      newData.installmentsCount, 
+      newData.reinforcementFrequency,
+      newData.finalMonthsWithoutReinforcement
+    );
     const reinforcementCount = months.length;
     newData.reinforcementsValue = reinforcementCount > 0
       ? calculateValue(newData.reinforcementsPercentage, value) / reinforcementCount
@@ -185,7 +197,11 @@ const SimulatorForm: React.FC = () => {
     const value = count > 0 ? totalValue / count : 0;
     
     // Recalculate reinforcement value when installment count changes
-    const months = getReinforcementMonths(count, formData.reinforcementFrequency);
+    const months = getReinforcementMonths(
+      count, 
+      formData.reinforcementFrequency,
+      formData.finalMonthsWithoutReinforcement
+    );
     const reinforcementCount = months.length;
     const newReinforcementValue = reinforcementCount > 0
       ? calculateValue(formData.reinforcementsPercentage, formData.propertyValue) / reinforcementCount
@@ -203,7 +219,11 @@ const SimulatorForm: React.FC = () => {
 
   // Handle reinforcements changes
   const handleReinforcementsValueChange = (value: number) => {
-    const months = getReinforcementMonths(formData.installmentsCount, formData.reinforcementFrequency);
+    const months = getReinforcementMonths(
+      formData.installmentsCount,
+      formData.reinforcementFrequency,
+      formData.finalMonthsWithoutReinforcement
+    );
     const count = months.length;
     const totalValue = value * count;
     const percentage = calculatePercentage(totalValue, formData.propertyValue);
@@ -217,7 +237,11 @@ const SimulatorForm: React.FC = () => {
 
   const handleReinforcementsPercentageChange = (percentage: number) => {
     const totalValue = calculateValue(percentage, formData.propertyValue);
-    const months = getReinforcementMonths(formData.installmentsCount, formData.reinforcementFrequency);
+    const months = getReinforcementMonths(
+      formData.installmentsCount,
+      formData.reinforcementFrequency,
+      formData.finalMonthsWithoutReinforcement
+    );
     const count = months.length;
     const value = count > 0 ? totalValue / count : 0;
     
@@ -229,7 +253,11 @@ const SimulatorForm: React.FC = () => {
   };
 
   const handleReinforcementFrequencyChange = (frequency: number) => {
-    const months = getReinforcementMonths(formData.installmentsCount, frequency);
+    const months = getReinforcementMonths(
+      formData.installmentsCount, 
+      frequency,
+      formData.finalMonthsWithoutReinforcement
+    );
     const count = months.length;
     
     // Calculate new per-reinforcement value
@@ -246,6 +274,31 @@ const SimulatorForm: React.FC = () => {
     });
     
     setReinforcementMonths(months);
+  };
+
+  // Handle final months without reinforcement change
+  const handleFinalMonthsWithoutReinforcementChange = (months: number) => {
+    const newMonths = getReinforcementMonths(
+      formData.installmentsCount,
+      formData.reinforcementFrequency,
+      months
+    );
+    const count = newMonths.length;
+    
+    // Recalculate reinforcement value based on new count of reinforcement months
+    const totalValue = calculateValue(
+      formData.reinforcementsPercentage,
+      formData.propertyValue
+    );
+    const value = count > 0 ? totalValue / count : 0;
+    
+    setFormData({
+      ...formData,
+      finalMonthsWithoutReinforcement: months,
+      reinforcementsValue: value
+    });
+    
+    setReinforcementMonths(newMonths);
   };
 
   // Handle keys payment changes
@@ -513,6 +566,16 @@ const SimulatorForm: React.FC = () => {
                       value={formData.reinforcementFrequency}
                       onChange={handleReinforcementFrequencyChange}
                       min={0}
+                      suffix="meses"
+                      noDecimals={true}
+                    />
+                    <NumberInput
+                      id="final-months-without-reinforcement"
+                      label="Meses finais sem reforço"
+                      value={formData.finalMonthsWithoutReinforcement}
+                      onChange={handleFinalMonthsWithoutReinforcementChange}
+                      min={0}
+                      max={formData.installmentsCount - 1}
                       suffix="meses"
                       noDecimals={true}
                     />
