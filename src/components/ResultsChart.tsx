@@ -72,9 +72,9 @@ const ResultsChart: React.FC<ResultsChartProps> = ({ schedule, resaleMonth }) =>
           data={chartData} 
           margin={{ 
             top: 20, 
-            right: 10, 
-            left: 10, 
-            bottom: 10 
+            right: 30, 
+            left: 20, 
+            bottom: 20 
           }}
         >
           <defs>
@@ -232,6 +232,7 @@ const ResultsChart: React.FC<ResultsChartProps> = ({ schedule, resaleMonth }) =>
               filter: "url(#dropShadow)"
             }}
             style={{ filter: "url(#dropShadow)" }}
+            isAnimationActive={false}
           />
           
           {/* Line for property value with enhanced styling */}
@@ -249,6 +250,7 @@ const ResultsChart: React.FC<ResultsChartProps> = ({ schedule, resaleMonth }) =>
               filter: "url(#dropShadow)"
             }}
             style={{ filter: "url(#dropShadow)" }}
+            isAnimationActive={false}
           />
           
           {/* Line for total paid with enhanced styling */}
@@ -266,6 +268,7 @@ const ResultsChart: React.FC<ResultsChartProps> = ({ schedule, resaleMonth }) =>
               filter: "url(#dropShadow)"
             }}
             style={{ filter: "url(#dropShadow)" }}
+            isAnimationActive={false}
           />
           
           {/* Line for balance with enhanced styling */}
@@ -283,6 +286,7 @@ const ResultsChart: React.FC<ResultsChartProps> = ({ schedule, resaleMonth }) =>
               filter: "url(#dropShadow)"
             }}
             style={{ filter: "url(#dropShadow)" }}
+            isAnimationActive={false}
           />
         </ComposedChart>
       </ChartContainer>
