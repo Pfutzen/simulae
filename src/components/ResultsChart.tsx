@@ -65,12 +65,17 @@ const ResultsChart: React.FC<ResultsChartProps> = ({ schedule, resaleMonth }) =>
   return (
     <div className="w-full pb-6">
       <ChartContainer 
-        className="h-[400px]"
+        className="h-[350px] sm:h-[400px]"
         config={chartConfig}
       >
         <ComposedChart 
           data={chartData} 
-          margin={{ top: 20, right: 30, left: 20, bottom: 10 }}
+          margin={{ 
+            top: 20, 
+            right: 10, 
+            left: 10, 
+            bottom: 10 
+          }}
         >
           <defs>
             {/* Property Value Gradient */}
@@ -123,21 +128,33 @@ const ResultsChart: React.FC<ResultsChartProps> = ({ schedule, resaleMonth }) =>
             dataKey="month" 
             axisLine={false}
             tickLine={false}
-            tick={{ fill: '#64748b', fontSize: 12 }}
+            tick={{ fill: '#64748b', fontSize: 10 }}
             label={{ 
               value: 'Mês', 
               position: 'insideBottomRight', 
-              offset: -10,
-              fill: '#64748b'
+              offset: -5,
+              fill: '#64748b',
+              fontSize: 12,
+              style: { display: { xs: 'none', sm: 'block' } }
+            }}
+            tickFormatter={(value) => {
+              // On mobile, only show every 4th tick
+              return window.innerWidth < 640 && value % 4 !== 0 ? '' : value;
             }}
           />
           
           <YAxis 
-            tickFormatter={(value) => `${value.toLocaleString('pt-BR')}`}
+            tickFormatter={(value) => {
+              if (window.innerWidth < 640) {
+                // Simplified formatter for mobile
+                return (value / 1000) + 'k';
+              }
+              return `${value.toLocaleString('pt-BR')}`;
+            }}
             axisLine={false}
             tickLine={false}
-            tick={{ fill: '#64748b', fontSize: 12 }}
-            width={80}
+            tick={{ fill: '#64748b', fontSize: 10 }}
+            width={60}
           />
           
           <ChartTooltip 
@@ -145,8 +162,8 @@ const ResultsChart: React.FC<ResultsChartProps> = ({ schedule, resaleMonth }) =>
               if (!active || !payload || payload.length === 0) return null;
               
               return (
-                <div className="rounded-lg border bg-white/95 p-3 shadow-lg backdrop-blur-sm dark:bg-slate-950/90 min-w-[220px]">
-                  <div className="mb-2 font-medium">
+                <div className="rounded-lg border bg-white/95 p-2 sm:p-3 shadow-lg backdrop-blur-sm dark:bg-slate-950/90 min-w-[180px] sm:min-w-[220px]">
+                  <div className="mb-1 sm:mb-2 font-medium text-sm sm:text-base">
                     Mês {payload[0]?.payload?.month}
                   </div>
                   {payload.map((entry, index) => {
@@ -159,17 +176,17 @@ const ResultsChart: React.FC<ResultsChartProps> = ({ schedule, resaleMonth }) =>
                       <div key={`tooltip-${index}`} className="flex items-center justify-between py-1">
                         <div className="flex items-center">
                           <div 
-                            className="mr-2 h-3 w-3 rounded-full shadow-sm" 
+                            className="mr-1 sm:mr-2 h-2 w-2 sm:h-3 sm:w-3 rounded-full shadow-sm" 
                             style={{ backgroundColor: config?.color }}
                           />
-                          <span className="text-sm font-medium text-slate-700">
+                          <span className="text-xs sm:text-sm font-medium text-slate-700">
                             {config?.label}:
                           </span>
                         </div>
-                        <span className="font-medium">
+                        <span className="text-xs sm:text-sm font-medium">
                           R$ {Number(entry.value).toLocaleString('pt-BR', {
-                            minimumFractionDigits: 2,
-                            maximumFractionDigits: 2
+                            minimumFractionDigits: 0,
+                            maximumFractionDigits: 0
                           })}
                         </span>
                       </div>
@@ -184,14 +201,20 @@ const ResultsChart: React.FC<ResultsChartProps> = ({ schedule, resaleMonth }) =>
             verticalAlign="bottom"
             height={36}
             iconType="circle"
-            iconSize={10}
+            iconSize={8}
+            wrapperStyle={{
+              fontSize: '0.75rem',
+              '@media (min-width: 640px)': {
+                fontSize: '0.875rem',
+              }
+            }}
             formatter={(value, entry) => {
-              // Cast entry to a more appropriate type
               // The error was happening because dataKey doesn't exist on the type
+              // Now we check if entry has a dataKey property before accessing it
               const dataKey = entry && 'dataKey' in entry ? 
-                entry.dataKey as keyof typeof chartConfig : value;
+                entry.dataKey as keyof typeof chartConfig : value as keyof typeof chartConfig;
               
-              return <span className="text-sm font-medium ml-1">{chartConfig[dataKey]?.label}</span>;
+              return <span className="text-xs sm:text-sm font-medium ml-1">{chartConfig[dataKey]?.label}</span>;
             }}
           />
           
@@ -201,10 +224,10 @@ const ResultsChart: React.FC<ResultsChartProps> = ({ schedule, resaleMonth }) =>
             dataKey="profit"
             fill="url(#profitGradient)"
             stroke={chartConfig.profit.color}
-            strokeWidth={2.5}
+            strokeWidth={3}
             dot={false}
             activeDot={{ 
-              r: 6, 
+              r: 5, 
               strokeWidth: 2,
               stroke: "#fff",
               fill: chartConfig.profit.color,
@@ -218,10 +241,10 @@ const ResultsChart: React.FC<ResultsChartProps> = ({ schedule, resaleMonth }) =>
             type="monotone" 
             dataKey="propertyValue" 
             stroke={chartConfig.propertyValue.color}
-            strokeWidth={2.5}
+            strokeWidth={3}
             dot={false}
             activeDot={{ 
-              r: 6, 
+              r: 5, 
               strokeWidth: 2,
               stroke: "#fff",
               fill: chartConfig.propertyValue.color,
@@ -235,10 +258,10 @@ const ResultsChart: React.FC<ResultsChartProps> = ({ schedule, resaleMonth }) =>
             type="monotone" 
             dataKey="totalPaid" 
             stroke={chartConfig.totalPaid.color}
-            strokeWidth={2.5}
+            strokeWidth={3}
             dot={false}
             activeDot={{ 
-              r: 6, 
+              r: 5, 
               strokeWidth: 2,
               stroke: "#fff",
               fill: chartConfig.totalPaid.color,
@@ -252,10 +275,10 @@ const ResultsChart: React.FC<ResultsChartProps> = ({ schedule, resaleMonth }) =>
             type="monotone" 
             dataKey="balance" 
             stroke={chartConfig.balance.color}
-            strokeWidth={2.5}
+            strokeWidth={3}
             dot={false} 
             activeDot={{ 
-              r: 6, 
+              r: 5, 
               strokeWidth: 2,
               stroke: "#fff",
               fill: chartConfig.balance.color,
