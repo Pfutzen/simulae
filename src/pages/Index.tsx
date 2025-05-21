@@ -10,7 +10,7 @@ const Index = () => {
         <div className="container mx-auto px-4">
           <div className="flex flex-col items-center md:items-start">
             <img 
-              src="/lovable-uploads/e8e576bb-04f1-435e-8340-69508d489877.png" 
+              src="/lovable-uploads/7119182c-6f6b-4785-9c9c-b340b7d3dc22.png" 
               alt="Simulae Logo" 
               className="h-16 md:h-20 mb-2"
             />
