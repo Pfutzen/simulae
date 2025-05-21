@@ -54,16 +54,36 @@ const chartConfig = {
 
 const ResultsChart: React.FC<ResultsChartProps> = ({ schedule, resaleMonth }) => {
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+  const [isMobile, setIsMobile] = useState(false);
   
   // Handle window resize
   useEffect(() => {
     const handleResize = () => {
-      setWindowWidth(window.innerWidth);
+      const width = window.innerWidth;
+      setWindowWidth(width);
+      setIsMobile(width < 768);
     };
+    
+    // Set initial values
+    handleResize();
     
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+  
+  // If it's a mobile device, show a message instead of the chart
+  if (isMobile) {
+    return (
+      <div className="flex flex-col items-center justify-center p-8 bg-slate-50 rounded-lg border border-slate-200 h-[200px]">
+        <p className="text-slate-600 text-center mb-3">
+          Visualize o gráfico completo em uma tela maior para melhor experiência.
+        </p>
+        <p className="text-sm text-slate-500">
+          Os dados estão disponíveis na aba "Cronograma".
+        </p>
+      </div>
+    );
+  }
   
   // Prepare data for the chart
   const chartData: ChartData[] = schedule.map(item => ({
@@ -143,32 +163,23 @@ const ResultsChart: React.FC<ResultsChartProps> = ({ schedule, resaleMonth }) =>
             dataKey="month" 
             axisLine={false}
             tickLine={false}
-            tick={{ fill: '#64748b', fontSize: windowWidth < 640 ? 9 : 10 }}
+            tick={{ fill: '#64748b', fontSize: 10 }}
             label={{ 
-              value: windowWidth < 640 ? '' : 'Mês',
+              value: 'Mês',
               position: 'insideBottomRight', 
               offset: -5,
               fill: '#64748b',
               fontSize: 12
             }}
-            tickFormatter={(value) => {
-              // On mobile, only show every 6th tick
-              return windowWidth < 640 && value % 6 !== 0 ? '' : value;
-            }}
+            tickFormatter={(value) => value.toString()}
           />
           
           <YAxis 
-            tickFormatter={(value) => {
-              if (windowWidth < 640) {
-                // Simplified formatter for mobile - no decimal places, K suffix
-                return Math.abs(value) >= 1000 ? Math.round(value / 1000) + 'k' : value;
-              }
-              return `${value.toLocaleString('pt-BR')}`;
-            }}
+            tickFormatter={(value) => `${value.toLocaleString('pt-BR')}`}
             axisLine={false}
             tickLine={false}
-            tick={{ fill: '#64748b', fontSize: windowWidth < 640 ? 9 : 10 }}
-            width={windowWidth < 640 ? 30 : 60}
+            tick={{ fill: '#64748b', fontSize: 10 }}
+            width={60}
             domain={['auto', 'auto']}
           />
           
@@ -177,8 +188,8 @@ const ResultsChart: React.FC<ResultsChartProps> = ({ schedule, resaleMonth }) =>
               if (!active || !payload || payload.length === 0) return null;
               
               return (
-                <div className="rounded-lg border bg-white/95 p-1.5 sm:p-3 shadow-lg backdrop-blur-sm dark:bg-slate-950/90 max-w-[90vw] sm:max-w-none min-w-[150px] sm:min-w-[220px]">
-                  <div className="mb-1 sm:mb-2 font-medium text-xs sm:text-base">
+                <div className="rounded-lg border bg-white/95 p-3 shadow-lg backdrop-blur-sm dark:bg-slate-950/90 max-w-none min-w-[220px]">
+                  <div className="mb-2 font-medium text-base">
                     Mês {payload[0]?.payload?.month}
                   </div>
                   {payload.map((entry, index) => {
@@ -188,17 +199,17 @@ const ResultsChart: React.FC<ResultsChartProps> = ({ schedule, resaleMonth }) =>
                     const config = chartConfig[dataKey];
                     
                     return (
-                      <div key={`tooltip-${index}`} className="flex items-center justify-between py-0.5 sm:py-1">
+                      <div key={`tooltip-${index}`} className="flex items-center justify-between py-1">
                         <div className="flex items-center">
                           <div 
-                            className="mr-1 sm:mr-2 h-2 w-2 sm:h-3 sm:w-3 rounded-full shadow-sm" 
+                            className="mr-2 h-3 w-3 rounded-full shadow-sm" 
                             style={{ backgroundColor: config?.color }}
                           />
-                          <span className="text-[10px] sm:text-sm font-medium text-slate-700 truncate max-w-[75px] sm:max-w-none">
+                          <span className="text-sm font-medium text-slate-700 truncate">
                             {config?.label}:
                           </span>
                         </div>
-                        <span className="text-[10px] sm:text-sm font-medium pl-1">
+                        <span className="text-sm font-medium pl-1">
                           R$ {Number(entry.value).toLocaleString('pt-BR', {
                             minimumFractionDigits: 0,
                             maximumFractionDigits: 0
@@ -214,24 +225,22 @@ const ResultsChart: React.FC<ResultsChartProps> = ({ schedule, resaleMonth }) =>
           
           <Legend 
             verticalAlign="bottom"
-            height={windowWidth < 640 ? 24 : 36}
+            height={36}
             iconType="circle"
-            iconSize={windowWidth < 640 ? 6 : 8}
+            iconSize={8}
             wrapperStyle={{
-              fontSize: windowWidth < 640 ? '0.65rem' : '0.75rem',
-              paddingTop: windowWidth < 640 ? '5px' : '10px',
+              fontSize: '0.75rem',
+              paddingTop: '10px',
               display: 'flex',
               flexWrap: 'wrap',
               justifyContent: 'center',
               gap: '4px'
             }}
             formatter={(value, entry) => {
-              // The error was happening because dataKey doesn't exist on the type
-              // Now we check if entry has a dataKey property before accessing it
               const dataKey = entry && 'dataKey' in entry ? 
                 entry.dataKey as keyof typeof chartConfig : value as keyof typeof chartConfig;
               
-              return <span className="text-[10px] sm:text-xs md:text-sm font-medium ml-1">{chartConfig[dataKey]?.label}</span>;
+              return <span className="text-sm font-medium ml-1">{chartConfig[dataKey]?.label}</span>;
             }}
           />
           
@@ -241,10 +250,10 @@ const ResultsChart: React.FC<ResultsChartProps> = ({ schedule, resaleMonth }) =>
             dataKey="profit"
             fill="url(#profitGradient)"
             stroke={chartConfig.profit.color}
-            strokeWidth={windowWidth < 640 ? 2 : 3}
+            strokeWidth={3}
             dot={false}
             activeDot={{ 
-              r: windowWidth < 640 ? 4 : 5, 
+              r: 5, 
               strokeWidth: 2,
               stroke: "#fff",
               fill: chartConfig.profit.color,
@@ -259,10 +268,10 @@ const ResultsChart: React.FC<ResultsChartProps> = ({ schedule, resaleMonth }) =>
             type="monotone" 
             dataKey="propertyValue" 
             stroke={chartConfig.propertyValue.color}
-            strokeWidth={windowWidth < 640 ? 2 : 3}
+            strokeWidth={3}
             dot={false}
             activeDot={{ 
-              r: windowWidth < 640 ? 4 : 5, 
+              r: 5, 
               strokeWidth: 2,
               stroke: "#fff",
               fill: chartConfig.propertyValue.color,
@@ -277,10 +286,10 @@ const ResultsChart: React.FC<ResultsChartProps> = ({ schedule, resaleMonth }) =>
             type="monotone" 
             dataKey="totalPaid" 
             stroke={chartConfig.totalPaid.color}
-            strokeWidth={windowWidth < 640 ? 2 : 3}
+            strokeWidth={3}
             dot={false}
             activeDot={{ 
-              r: windowWidth < 640 ? 4 : 5, 
+              r: 5, 
               strokeWidth: 2,
               stroke: "#fff",
               fill: chartConfig.totalPaid.color,
@@ -295,10 +304,10 @@ const ResultsChart: React.FC<ResultsChartProps> = ({ schedule, resaleMonth }) =>
             type="monotone" 
             dataKey="balance" 
             stroke={chartConfig.balance.color}
-            strokeWidth={windowWidth < 640 ? 2 : 3}
+            strokeWidth={3}
             dot={false} 
             activeDot={{ 
-              r: windowWidth < 640 ? 4 : 5, 
+              r: 5, 
               strokeWidth: 2,
               stroke: "#fff",
               fill: chartConfig.balance.color,
