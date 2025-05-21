@@ -6,7 +6,7 @@ import { PaymentType, formatCurrency, formatPercentage } from "@/utils/calculati
 import { Button } from "@/components/ui/button";
 import ResultsChart from "./ResultsChart";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { LightbulbIcon, FileText, Download } from "lucide-react";
+import { LightbulbIcon, FileText } from "lucide-react";
 import { exportToPdf } from "@/utils/pdfExport";
 import { SavedSimulation } from "@/utils/simulationHistoryUtils";
 
@@ -198,12 +198,12 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
           <TabsTrigger value="table">Cronograma</TabsTrigger>
         </TabsList>
         
-        <TabsContent value="chart" className="mt-6">
-          <Card className="card-shadow">
+        <TabsContent value="chart" className="mt-6 w-full">
+          <Card className="card-shadow w-full">
             <CardHeader>
               <CardTitle>Evolução do Investimento</CardTitle>
             </CardHeader>
-            <CardContent className="pt-0">
+            <CardContent className="pt-0 px-0 sm:px-6">
               <ResultsChart schedule={schedule} resaleMonth={resaleMonth} />
             </CardContent>
           </Card>

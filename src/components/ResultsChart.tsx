@@ -97,20 +97,21 @@ const ResultsChart: React.FC<ResultsChartProps> = ({ schedule, resaleMonth }) =>
   // Calculate responsive margins based on screen size
   const chartMargins = {
     top: 20,
-    right: windowWidth < 640 ? 10 : 30,
-    left: windowWidth < 640 ? 5 : 20,
+    right: windowWidth < 640 ? 10 : 20,
+    left: windowWidth < 640 ? 5 : 10,
     bottom: 20
   };
 
   return (
     <div className="w-full max-w-full overflow-hidden pb-6">
       <ChartContainer 
-        className="h-[250px] sm:h-[350px] md:h-[400px] lg:h-[450px] max-w-full"
+        className="h-[250px] sm:h-[350px] md:h-[400px] lg:h-[450px] xl:h-[500px] w-full max-w-full"
         config={chartConfig}
       >
         <ComposedChart 
           data={chartData} 
           margin={chartMargins}
+          width={windowWidth}
         >
           <defs>
             {/* Property Value Gradient */}
