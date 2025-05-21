@@ -29,7 +29,7 @@ export const exportToPdf = (simulation: SavedSimulation): void => {
   // Add logo if available
   try {
     const img = new Image();
-    img.src = '/lovable-uploads/e8e576bb-04f1-435e-8340-69508d489877.png';
+    img.src = '/lovable-uploads/c2a68237-fb14-4957-891c-3d3581836ace.png';
     doc.addImage(img, 'PNG', margin, y, 50, 15);
     y += 20;
   } catch (error) {
