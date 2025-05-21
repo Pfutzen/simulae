@@ -73,10 +73,42 @@ const ResultsChart: React.FC<ResultsChartProps> = ({ schedule, resaleMonth }) =>
           margin={{ top: 20, right: 30, left: 20, bottom: 10 }}
         >
           <defs>
+            {/* Property Value Gradient */}
+            <linearGradient id="propertyValueGradient" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="5%" stopColor={chartConfig.propertyValue.color} stopOpacity={0.2}/>
+              <stop offset="95%" stopColor={chartConfig.propertyValue.color} stopOpacity={0}/>
+            </linearGradient>
+            
+            {/* Total Paid Gradient */}
+            <linearGradient id="totalPaidGradient" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="5%" stopColor={chartConfig.totalPaid.color} stopOpacity={0.2}/>
+              <stop offset="95%" stopColor={chartConfig.totalPaid.color} stopOpacity={0}/>
+            </linearGradient>
+            
+            {/* Balance Gradient */}
+            <linearGradient id="balanceGradient" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="5%" stopColor={chartConfig.balance.color} stopOpacity={0.2}/>
+              <stop offset="95%" stopColor={chartConfig.balance.color} stopOpacity={0}/>
+            </linearGradient>
+            
+            {/* Profit Gradient */}
             <linearGradient id="profitGradient" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor={chartConfig.profit.color} stopOpacity={0.1}/>
+              <stop offset="5%" stopColor={chartConfig.profit.color} stopOpacity={0.3}/>
               <stop offset="95%" stopColor={chartConfig.profit.color} stopOpacity={0}/>
             </linearGradient>
+            
+            {/* Drop shadows for lines */}
+            <filter id="dropShadow" height="130%" width="130%">
+              <feGaussianBlur in="SourceAlpha" stdDeviation="3"/> 
+              <feOffset dx="0" dy="2" result="offsetblur"/>
+              <feComponentTransfer>
+                <feFuncA type="linear" slope="0.1"/>
+              </feComponentTransfer>
+              <feMerge> 
+                <feMergeNode/>
+                <feMergeNode in="SourceGraphic"/> 
+              </feMerge>
+            </filter>
           </defs>
           
           <CartesianGrid 
@@ -84,7 +116,7 @@ const ResultsChart: React.FC<ResultsChartProps> = ({ schedule, resaleMonth }) =>
             horizontal={true}
             strokeDasharray="3 3" 
             stroke="#e2e8f0" 
-            opacity={0.4} 
+            opacity={0.3} 
           />
           
           <XAxis 
@@ -127,10 +159,10 @@ const ResultsChart: React.FC<ResultsChartProps> = ({ schedule, resaleMonth }) =>
                       <div key={`tooltip-${index}`} className="flex items-center justify-between py-1">
                         <div className="flex items-center">
                           <div 
-                            className="mr-2 h-2 w-2 rounded-full" 
+                            className="mr-2 h-3 w-3 rounded-full shadow-sm" 
                             style={{ backgroundColor: config?.color }}
                           />
-                          <span className="text-sm text-slate-600">
+                          <span className="text-sm font-medium text-slate-700">
                             {config?.label}:
                           </span>
                         </div>
@@ -152,68 +184,84 @@ const ResultsChart: React.FC<ResultsChartProps> = ({ schedule, resaleMonth }) =>
             verticalAlign="bottom"
             height={36}
             iconType="circle"
-            iconSize={8}
+            iconSize={10}
             formatter={(value, entry) => {
               // Cast entry to a more appropriate type
               // The error was happening because dataKey doesn't exist on the type
               const dataKey = entry && 'dataKey' in entry ? 
                 entry.dataKey as keyof typeof chartConfig : value;
               
-              return <span className="text-sm ml-1">{chartConfig[dataKey]?.label}</span>;
+              return <span className="text-sm font-medium ml-1">{chartConfig[dataKey]?.label}</span>;
             }}
           />
           
+          {/* Area for profit with enhanced styling */}
           <Area
             type="monotone"
             dataKey="profit"
             fill="url(#profitGradient)"
             stroke={chartConfig.profit.color}
-            strokeWidth={1.5}
+            strokeWidth={2.5}
             dot={false}
             activeDot={{ 
-              r: 4, 
-              strokeWidth: 1,
-              stroke: "#fff"
+              r: 6, 
+              strokeWidth: 2,
+              stroke: "#fff",
+              fill: chartConfig.profit.color,
+              filter: "url(#dropShadow)"
             }}
+            style={{ filter: "url(#dropShadow)" }}
           />
           
+          {/* Line for property value with enhanced styling */}
           <Line 
             type="monotone" 
             dataKey="propertyValue" 
             stroke={chartConfig.propertyValue.color}
-            strokeWidth={1.5}
+            strokeWidth={2.5}
             dot={false}
             activeDot={{ 
-              r: 4, 
-              strokeWidth: 1,
-              stroke: "#fff"
+              r: 6, 
+              strokeWidth: 2,
+              stroke: "#fff",
+              fill: chartConfig.propertyValue.color,
+              filter: "url(#dropShadow)"
             }}
+            style={{ filter: "url(#dropShadow)" }}
           />
           
+          {/* Line for total paid with enhanced styling */}
           <Line 
             type="monotone" 
             dataKey="totalPaid" 
             stroke={chartConfig.totalPaid.color}
-            strokeWidth={1.5}
+            strokeWidth={2.5}
             dot={false}
             activeDot={{ 
-              r: 4, 
-              strokeWidth: 1,
-              stroke: "#fff"
+              r: 6, 
+              strokeWidth: 2,
+              stroke: "#fff",
+              fill: chartConfig.totalPaid.color,
+              filter: "url(#dropShadow)"
             }}
+            style={{ filter: "url(#dropShadow)" }}
           />
           
+          {/* Line for balance with enhanced styling */}
           <Line 
             type="monotone" 
             dataKey="balance" 
             stroke={chartConfig.balance.color}
-            strokeWidth={1.5}
+            strokeWidth={2.5}
             dot={false} 
             activeDot={{ 
-              r: 4, 
-              strokeWidth: 1,
-              stroke: "#fff"
+              r: 6, 
+              strokeWidth: 2,
+              stroke: "#fff",
+              fill: chartConfig.balance.color,
+              filter: "url(#dropShadow)"
             }}
+            style={{ filter: "url(#dropShadow)" }}
           />
         </ComposedChart>
       </ChartContainer>
@@ -222,4 +270,3 @@ const ResultsChart: React.FC<ResultsChartProps> = ({ schedule, resaleMonth }) =>
 };
 
 export default ResultsChart;
-
