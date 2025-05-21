@@ -65,7 +65,7 @@ const ResultsChart: React.FC<ResultsChartProps> = ({ schedule, resaleMonth }) =>
   return (
     <div className="w-full pb-6">
       <ChartContainer 
-        className="h-[350px] sm:h-[400px]"
+        className="h-[300px] sm:h-[400px]"
         config={chartConfig}
       >
         <ComposedChart 
@@ -204,9 +204,7 @@ const ResultsChart: React.FC<ResultsChartProps> = ({ schedule, resaleMonth }) =>
             iconSize={8}
             wrapperStyle={{
               fontSize: '0.75rem',
-              '@media (min-width: 640px)': {
-                fontSize: '0.875rem',
-              }
+              paddingTop: '10px'
             }}
             formatter={(value, entry) => {
               // The error was happening because dataKey doesn't exist on the type
