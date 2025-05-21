@@ -105,7 +105,7 @@ const ResultsChart: React.FC<ResultsChartProps> = ({ schedule, resaleMonth }) =>
   return (
     <div className="w-full max-w-full overflow-hidden pb-6">
       <ChartContainer 
-        className="h-[250px] sm:h-[350px] md:h-[400px] max-w-full"
+        className="h-[250px] sm:h-[350px] md:h-[400px] lg:h-[450px] max-w-full"
         config={chartConfig}
       >
         <ComposedChart 
