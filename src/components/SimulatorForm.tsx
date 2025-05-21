@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -5,6 +6,7 @@ import { Separator } from "@/components/ui/separator";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { 
   calculatePercentage, 
   calculateValue, 
@@ -83,6 +85,7 @@ const SimulatorForm: React.FC = () => {
   });
   
   const [currentSimulation, setCurrentSimulation] = useState<SavedSimulation | undefined>(undefined);
+  const [customResaleEnabled, setCustomResaleEnabled] = useState<boolean>(true);
 
   // Load saved simulations on component mount
   useEffect(() => {
@@ -282,6 +285,11 @@ const SimulatorForm: React.FC = () => {
     setFormData({ ...formData, resaleMonth: value });
   };
 
+  // Toggle custom resale month
+  const handleCustomResaleToggle = (checked: boolean) => {
+    setCustomResaleEnabled(checked);
+  };
+
   // Handle simulation name change
   const handleSimulationNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSimulationName(e.target.value);
@@ -301,7 +309,12 @@ const SimulatorForm: React.FC = () => {
     const paymentSchedule = generatePaymentSchedule(formData);
     setSchedule(paymentSchedule);
     
-    const results = calculateResaleProfit(paymentSchedule, formData.resaleMonth);
+    // If custom resale is not enabled, use the last installment month (keys payment)
+    const effectiveResaleMonth = customResaleEnabled 
+      ? formData.resaleMonth 
+      : formData.installmentsCount;
+      
+    const results = calculateResaleProfit(paymentSchedule, effectiveResaleMonth);
     setResaleResults(results);
     
     // Calculate best resale month
@@ -364,6 +377,7 @@ const SimulatorForm: React.FC = () => {
     setSimulationName(`Cópia de: ${simulation.name}`);
     setCurrentSimulation(simulation);
     setActiveTab("simulator");
+    setCustomResaleEnabled(true); // Enable custom resale when loading a simulation
 
     toast({
       title: "Simulação carregada",
@@ -554,16 +568,31 @@ const SimulatorForm: React.FC = () => {
                       suffix="%"
                     />
                     
-                    <NumberInput
-                      id="resale-month"
-                      label="Mês para revenda"
-                      value={formData.resaleMonth}
-                      onChange={handleResaleMonthChange}
-                      min={1}
-                      max={formData.installmentsCount}
-                      suffix="mês"
-                      noDecimals={true}
-                    />
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <Label htmlFor="custom-resale-toggle" className="flex items-center gap-2 cursor-pointer">
+                          Quero simular a venda em um mês específico
+                        </Label>
+                        <Switch 
+                          id="custom-resale-toggle"
+                          checked={customResaleEnabled} 
+                          onCheckedChange={handleCustomResaleToggle}
+                        />
+                      </div>
+                      
+                      {customResaleEnabled && (
+                        <NumberInput
+                          id="resale-month"
+                          label="Mês para revenda"
+                          value={formData.resaleMonth}
+                          onChange={handleResaleMonthChange}
+                          min={1}
+                          max={formData.installmentsCount}
+                          suffix="mês"
+                          noDecimals={true}
+                        />
+                      )}
+                    </div>
                   </div>
                 </div>
                 
@@ -606,7 +635,7 @@ const SimulatorForm: React.FC = () => {
           {schedule.length > 0 && (
             <SimulationResults 
               schedule={schedule}
-              resaleMonth={formData.resaleMonth}
+              resaleMonth={customResaleEnabled ? formData.resaleMonth : formData.installmentsCount}
               bestResaleInfo={bestResaleInfo}
               simulationData={currentSimulation}
               {...resaleResults}
