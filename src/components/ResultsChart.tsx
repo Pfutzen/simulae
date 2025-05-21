@@ -36,19 +36,19 @@ interface ChartData {
 const chartConfig = {
   propertyValue: {
     label: "Valor do Imóvel",
-    color: "#0c4a6e" // simulae-900
+    color: "#0c4a6e" // Azul Marinho (Navy Blue)
   },
   totalPaid: {
     label: "Total Investido",
-    color: "#475569" // slate-600
+    color: "#ef4444" // Vermelho claro (Light Red)
   },
   balance: {
     label: "Saldo Devedor", 
-    color: "#b45309" // amber-700 (vermelho queimado/cobre)
+    color: "#f97316" // Laranja (Orange)
   },
   profit: {
     label: "Lucro",
-    color: "#047857" // emerald-700 (verde jade)
+    color: "#16a34a" // Verde Bandeira (Flag Green)
   }
 };
 
