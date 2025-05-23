@@ -328,17 +328,19 @@ export const calculateBestResaleMonth = (schedule: PaymentType[]): {
     // Profit calculation: property value minus total investment minus remaining balance
     const profit = propertyValue - investmentValue - remainingBalance;
     
-    // Only calculate percentage if investment value is positive to avoid division by zero
-    const profitPercentage = investmentValue > 0 ? (profit / investmentValue) * 100 : 0;
+    // ROI calculation: profit divided by investment, converted to percentage
+    const roiPercentage = investmentValue > 0 ? (profit / investmentValue) * 100 : 0;
     
+    // Check for best absolute profit
     if (profit > maxProfit) {
       maxProfit = profit;
-      maxProfitPercentage = profitPercentage;
+      maxProfitPercentage = roiPercentage; // Use the same ROI calculation here
       bestProfitMonth = entry.month;
     }
     
-    if (profitPercentage > maxRoi && profit > 0) {
-      maxRoi = profitPercentage;
+    // Check for best ROI percentage (only if profit is positive)
+    if (profit > 0 && roiPercentage > maxRoi) {
+      maxRoi = roiPercentage;
       maxRoiProfit = profit;
       bestRoiMonth = entry.month;
     }
@@ -355,13 +357,13 @@ export const calculateBestResaleMonth = (schedule: PaymentType[]): {
     const remainingBalance = entry.balance;
     
     const profit = propertyValue - investmentValue - remainingBalance;
-    const profitPercentage = investmentValue > 0 ? (profit / investmentValue) * 100 : 0;
+    const roiPercentage = investmentValue > 0 ? (profit / investmentValue) * 100 : 0;
     
     // Find the earliest month that has at least 70% of the maximum ROI
-    if (profit > 0 && profitPercentage > earlyThreshold) {
+    if (profit > 0 && roiPercentage > earlyThreshold) {
       earlyMonth = entry.month;
       earlyProfit = profit;
-      earlyProfitPercentage = profitPercentage;
+      earlyProfitPercentage = roiPercentage;
       break; // Stop at the first month that meets the criteria
     }
   }

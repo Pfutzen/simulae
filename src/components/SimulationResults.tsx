@@ -113,8 +113,7 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
                           Mês {bestResaleInfo.bestProfitMonth}: {formatCurrency(bestResaleInfo.maxProfit)}
                         </span>
                         <span className="text-slate-600 block sm:inline sm:ml-2">
-                          {/* CRITICAL FIX: Calculate the correct percentage and format */}
-                          (retorno de {formatPercentage((bestResaleInfo.maxProfit / investmentValue) * 100 / 100)})
+                          (retorno de {formatPercentage(bestResaleInfo.maxProfitPercentage / 100)})
                         </span>
                       </div>
                     </div>
@@ -130,25 +129,23 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
                           Mês {bestResaleInfo.bestRoiMonth}: {formatCurrency(bestResaleInfo.maxRoiProfit)}
                         </span>
                         <span className="text-slate-600 block sm:inline sm:ml-2">
-                          {/* CRITICAL FIX: Use the correct percentage formatting */}
                           (retorno de {formatPercentage(bestResaleInfo.maxRoi / 100)})
                         </span>
                       </div>
                     </div>
                   )}
 
-                  {bestResaleInfo.earlyMonth && (
+                  {bestResaleInfo.earlyMonth && bestResaleInfo.earlyProfit && bestResaleInfo.earlyProfitPercentage && (
                     <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
                       <div className="px-3 py-1 bg-green-100 text-green-800 font-medium rounded-lg text-center whitespace-nowrap">
                         🕒 Mais cedo
                       </div>
                       <div>
                         <span className="font-medium text-green-800">
-                          Mês {bestResaleInfo.earlyMonth}: {formatCurrency(bestResaleInfo.earlyProfit || 0)}
+                          Mês {bestResaleInfo.earlyMonth}: {formatCurrency(bestResaleInfo.earlyProfit)}
                         </span>
                         <span className="text-slate-600 block sm:inline sm:ml-2">
-                          {/* CRITICAL FIX: Calculate the correct percentage and format */}
-                          (retorno de {formatPercentage(((bestResaleInfo.earlyProfit || 0) / investmentValue) * 100 / 100)})
+                          (retorno de {formatPercentage(bestResaleInfo.earlyProfitPercentage / 100)})
                         </span>
                       </div>
                     </div>
