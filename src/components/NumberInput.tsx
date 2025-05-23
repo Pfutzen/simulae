@@ -13,6 +13,7 @@ interface NumberInputProps {
   suffix?: string;
   disabled?: boolean;
   noDecimals?: boolean;
+  className?: string;
 }
 const NumberInput: React.FC<NumberInputProps> = ({
   id,
@@ -24,7 +25,8 @@ const NumberInput: React.FC<NumberInputProps> = ({
   step = 1,
   suffix = "",
   disabled = false,
-  noDecimals = false
+  noDecimals = false,
+  className = ""
 }) => {
   const [internalValue, setInternalValue] = useState<string>("");
   const [cursorPosition, setCursorPosition] = useState<number | null>(null);
@@ -109,7 +111,20 @@ const NumberInput: React.FC<NumberInputProps> = ({
       <Label htmlFor={id} className="text-base font-medium">
         {label}
       </Label>
-      <Input id={id} ref={inputRef} type="text" value={internalValue} onChange={handleChange} onFocus={handleFocus} onKeyDown={handleKeyDown} onSelect={handleSelect} onBlur={handleBlur} disabled={disabled} suffix={suffix} className="text-left font-medium" />
+      <Input 
+        id={id} 
+        ref={inputRef} 
+        type="text" 
+        value={internalValue} 
+        onChange={handleChange} 
+        onFocus={handleFocus} 
+        onKeyDown={handleKeyDown} 
+        onSelect={handleSelect} 
+        onBlur={handleBlur} 
+        disabled={disabled} 
+        suffix={suffix} 
+        className={`text-left font-medium ${className}`} 
+      />
     </div>;
 };
 export default NumberInput;

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -28,7 +29,7 @@ import PercentageSlider from "./PercentageSlider";
 import CorrectionSelector from "./CorrectionSelector";
 import SimulationResults from "./SimulationResults";
 import SimulationHistory from "./SimulationHistory";
-import { CheckCircle, AlertCircle } from "lucide-react";
+import { CheckCircle, AlertCircle, DollarSign, Calendar, TrendingUp, Home } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -501,7 +502,7 @@ const SimulatorForm: React.FC = () => {
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 max-w-5xl mx-auto">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="mb-4">
           <TabsTrigger value="simulator">Simulador</TabsTrigger>
@@ -511,13 +512,11 @@ const SimulatorForm: React.FC = () => {
         <TabsContent value="simulator" className="space-y-8">
           <Card className="shadow">
             <CardContent className="pt-6">
-              <div className="space-y-6">
+              <div className="space-y-8">
                 <PropertyValueInput
                   value={formData.propertyValue}
                   onChange={handlePropertyValueChange}
                 />
-                
-                <Separator />
                 
                 <Alert className={totalPercentage === 100 ? "bg-green-50" : "bg-amber-50"}>
                   <div className="flex items-center gap-2">
@@ -537,123 +536,165 @@ const SimulatorForm: React.FC = () => {
                   </div>
                 </Alert>
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <PercentageValueInput
-                    label="Entrada"
-                    value={formData.downPaymentValue}
-                    percentage={formData.downPaymentPercentage}
-                    totalValue={formData.propertyValue}
-                    onValueChange={handleDownPaymentValueChange}
-                    onPercentageChange={handleDownPaymentPercentageChange}
-                    noDecimalsForPercentage={true}
-                  />
-                  
-                  <div className="space-y-6">
-                    <PercentageValueInput
-                      label="Parcelas"
-                      valueLabel="Valor por parcela (R$)"
-                      value={formData.installmentsValue}
-                      percentage={formData.installmentsPercentage}
-                      totalValue={formData.propertyValue}
-                      onValueChange={handleInstallmentsValueChange}
-                      onPercentageChange={handleInstallmentsPercentageChange}
-                      noDecimalsForPercentage={true}
-                    />
-                    <NumberInput
-                      id="installments-count"
-                      label="Quantidade de parcelas"
-                      value={formData.installmentsCount}
-                      onChange={handleInstallmentsCountChange}
-                      min={1}
-                      noDecimals={true}
-                    />
+                {/* Bloco: Entrada e Parcelamento */}
+                <div className="rounded-lg border border-slate-200 p-5">
+                  <div className="flex items-center mb-4 gap-2">
+                    <DollarSign className="h-5 w-5 text-simulae-600" />
+                    <h3 className="text-lg font-semibold text-slate-800">Entrada e Parcelamento</h3>
                   </div>
-                </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <PercentageValueInput
-                      label="Reforços"
-                      valueLabel="Valor por reforço (R$)"
-                      value={formData.reinforcementsValue}
-                      percentage={formData.reinforcementsPercentage}
+                      label="Entrada"
+                      value={formData.downPaymentValue}
+                      percentage={formData.downPaymentPercentage}
                       totalValue={formData.propertyValue}
-                      onValueChange={handleReinforcementsValueChange}
-                      onPercentageChange={handleReinforcementsPercentageChange}
+                      onValueChange={handleDownPaymentValueChange}
+                      onPercentageChange={handleDownPaymentPercentageChange}
                       noDecimalsForPercentage={true}
-                    />
-                    <NumberInput
-                      id="reinforcement-frequency"
-                      label="Frequência dos reforços (meses)"
-                      value={formData.reinforcementFrequency}
-                      onChange={handleReinforcementFrequencyChange}
-                      min={0}
-                      suffix="meses"
-                      noDecimals={true}
-                    />
-                    <NumberInput
-                      id="final-months-without-reinforcement"
-                      label="Meses finais sem reforço"
-                      value={formData.finalMonthsWithoutReinforcement}
-                      onChange={handleFinalMonthsWithoutReinforcementChange}
-                      min={0}
-                      max={formData.installmentsCount - 1}
-                      suffix="meses"
-                      noDecimals={true}
-                    />
-                    {reinforcementMonths.length > 0 && (
-                      <div className="text-sm text-blue-600 mt-1">
-                        {getReinforcementMonthsText()}
-                      </div>
-                    )}
-                  </div>
-                  
-                  <PercentageValueInput
-                    label="Chaves"
-                    value={formData.keysValue}
-                    percentage={formData.keysPercentage}
-                    totalValue={formData.propertyValue}
-                    onValueChange={handleKeysValueChange}
-                    onPercentageChange={handleKeysPercentageChange}
-                    noDecimalsForPercentage={true}
-                  />
-                </div>
-                
-                <Separator />
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-6">
-                    <CorrectionSelector
-                      value={formData.correctionMode}
-                      onChange={handleCorrectionModeChange}
+                      valueInputClassName="w-full md:w-[240px]"
+                      percentageInputClassName="w-full md:w-[120px]"
                     />
                     
-                    {formData.correctionMode === "manual" && (
+                    <div className="space-y-4">
+                      <PercentageValueInput
+                        label="Parcelas"
+                        valueLabel="Valor por parcela (R$)"
+                        value={formData.installmentsValue}
+                        percentage={formData.installmentsPercentage}
+                        totalValue={formData.propertyValue}
+                        onValueChange={handleInstallmentsValueChange}
+                        onPercentageChange={handleInstallmentsPercentageChange}
+                        noDecimalsForPercentage={true}
+                        valueInputClassName="w-full md:w-[240px]"
+                        percentageInputClassName="w-full md:w-[120px]"
+                      />
                       <NumberInput
-                        id="correction-index"
-                        label="Índice de correção mensal"
-                        value={formData.correctionIndex}
-                        onChange={handleCorrectionIndexChange}
+                        id="installments-count"
+                        label="Quantidade de parcelas"
+                        value={formData.installmentsCount}
+                        onChange={handleInstallmentsCountChange}
+                        min={1}
+                        noDecimals={true}
+                        className="w-full md:w-[240px]"
+                      />
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Bloco: Reforços Programados */}
+                <div className="rounded-lg border border-slate-200 p-5">
+                  <div className="flex items-center mb-4 gap-2">
+                    <Calendar className="h-5 w-5 text-blue-600" />
+                    <h3 className="text-lg font-semibold text-slate-800">Reforços Programados</h3>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-4">
+                      <PercentageValueInput
+                        label="Reforços"
+                        valueLabel="Valor por reforço (R$)"
+                        value={formData.reinforcementsValue}
+                        percentage={formData.reinforcementsPercentage}
+                        totalValue={formData.propertyValue}
+                        onValueChange={handleReinforcementsValueChange}
+                        onPercentageChange={handleReinforcementsPercentageChange}
+                        noDecimalsForPercentage={true}
+                        valueInputClassName="w-full md:w-[240px]"
+                        percentageInputClassName="w-full md:w-[120px]"
+                      />
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <NumberInput
+                          id="reinforcement-frequency"
+                          label="Frequência (meses)"
+                          value={formData.reinforcementFrequency}
+                          onChange={handleReinforcementFrequencyChange}
+                          min={0}
+                          suffix="meses"
+                          noDecimals={true}
+                          className="w-full"
+                        />
+                        <NumberInput
+                          id="final-months-without-reinforcement"
+                          label="Meses finais sem reforço"
+                          value={formData.finalMonthsWithoutReinforcement}
+                          onChange={handleFinalMonthsWithoutReinforcementChange}
+                          min={0}
+                          max={formData.installmentsCount - 1}
+                          suffix="meses"
+                          noDecimals={true}
+                          className="w-full"
+                        />
+                      </div>
+                      {reinforcementMonths.length > 0 && (
+                        <div className="text-sm text-blue-600 mt-1">
+                          {getReinforcementMonthsText()}
+                        </div>
+                      )}
+                    </div>
+                    
+                    <PercentageValueInput
+                      label="Chaves"
+                      value={formData.keysValue}
+                      percentage={formData.keysPercentage}
+                      totalValue={formData.propertyValue}
+                      onValueChange={handleKeysValueChange}
+                      onPercentageChange={handleKeysPercentageChange}
+                      noDecimalsForPercentage={true}
+                      valueInputClassName="w-full md:w-[240px]"
+                      percentageInputClassName="w-full md:w-[120px]"
+                    />
+                  </div>
+                </div>
+                
+                {/* Bloco: Correção Monetária e Valorização */}
+                <div className="rounded-lg border border-slate-200 p-5">
+                  <div className="flex items-center mb-4 gap-2">
+                    <TrendingUp className="h-5 w-5 text-green-600" />
+                    <h3 className="text-lg font-semibold text-slate-800">Correção Monetária e Valorização</h3>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-4">
+                      <CorrectionSelector
+                        value={formData.correctionMode}
+                        onChange={handleCorrectionModeChange}
+                      />
+                      
+                      {formData.correctionMode === "manual" && (
+                        <NumberInput
+                          id="correction-index"
+                          label="Índice de correção mensal"
+                          value={formData.correctionIndex}
+                          onChange={handleCorrectionIndexChange}
+                          min={0}
+                          step={0.01}
+                          suffix="%"
+                          className="w-full md:w-[240px]"
+                        />
+                      )}
+                    </div>
+                    
+                    <div className="space-y-4">
+                      <PercentageSlider
+                        id="appreciation-index"
+                        label="Índice de valorização mensal"
+                        value={formData.appreciationIndex}
+                        onChange={handleAppreciationIndexChange}
                         min={0}
+                        max={5}
                         step={0.01}
                         suffix="%"
                       />
-                    )}
+                    </div>
                   </div>
-                  
-                  <div className="space-y-6">
-                    <PercentageSlider
-                      id="appreciation-index"
-                      label="Índice de valorização mensal"
-                      value={formData.appreciationIndex}
-                      onChange={handleAppreciationIndexChange}
-                      min={0}
-                      max={5}
-                      step={0.01}
-                      suffix="%"
-                    />
-                    
-                    <div className="space-y-2">
+                </div>
+                
+                {/* Bloco: Revenda e Aluguel */}
+                <div className="rounded-lg border border-slate-200 p-5">
+                  <div className="flex items-center mb-4 gap-2">
+                    <Home className="h-5 w-5 text-purple-600" />
+                    <h3 className="text-lg font-semibold text-slate-800">Revenda e Aluguel</h3>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-4">
                       <div className="flex items-center justify-between">
                         <Label htmlFor="custom-resale-toggle" className="flex items-center gap-2 cursor-pointer">
                           Quero simular a venda em um mês específico
@@ -675,10 +716,11 @@ const SimulatorForm: React.FC = () => {
                           max={formData.installmentsCount}
                           suffix="mês"
                           noDecimals={true}
+                          className="w-full md:w-[240px]"
                         />
                       )}
                     </div>
-
+                    
                     <PercentageSlider
                       id="rental-percentage"
                       label="Percentual para aluguel mensal"
