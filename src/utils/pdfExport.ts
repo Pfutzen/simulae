@@ -114,7 +114,8 @@ export function exportToPdf(simulation: SavedSimulation): void {
   
   yPos += 5;
   
-  doc.text(`Lucro na revenda: ${formatCurrency(simulation.results.profit)} (${formatPercentage(simulation.results.profitPercentage)})`, 20, yPos);
+  // Fix: Use the correct percentage format for profit percentage - the profitPercentage is already a percentage value
+  doc.text(`Lucro na revenda: ${formatCurrency(simulation.results.profit)} (${formatPercentage(simulation.results.profitPercentage/100)})`, 20, yPos);
   
   // Add rental information if available
   if (simulation.formData.rentalPercentage) {
@@ -138,7 +139,7 @@ export function exportToPdf(simulation: SavedSimulation): void {
     
     doc.setFontSize(12);
     doc.setFont("helvetica", "normal");
-    doc.text(`Percentual para aluguel: ${formatPercentage(simulation.formData.rentalPercentage)}`, 20, yPos);
+    doc.text(`Percentual para aluguel: ${formatPercentage(simulation.formData.rentalPercentage/100)}`, 20, yPos);
     
     yPos += 5;
     
@@ -154,7 +155,7 @@ export function exportToPdf(simulation: SavedSimulation): void {
     
     yPos += 5;
     
-    doc.text(`Rentabilidade anual: ${formatPercentage(rentalData.annualRentalReturn)}`, 20, yPos);
+    doc.text(`Rentabilidade anual: ${formatPercentage(rentalData.annualRentalReturn/100)}`, 20, yPos);
   }
   
   // Add horizontal line
