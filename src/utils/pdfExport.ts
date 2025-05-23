@@ -53,7 +53,7 @@ export function exportToPdf(simulation: SavedSimulation): void {
   
   yPos += 5;
   
-  // Fix: Format downPaymentPercentage correctly
+  // Format percentages correctly
   doc.text(`Entrada: ${formatCurrency(simulation.formData.downPaymentValue)} (${formatPercentage(simulation.formData.downPaymentPercentage/100)})`, 20, yPos);
   
   yPos += 5;
@@ -74,17 +74,17 @@ export function exportToPdf(simulation: SavedSimulation): void {
   
   yPos += 5;
   
-  // Fix: Format keysPercentage correctly
+  // Format percentages correctly
   doc.text(`Chaves: ${formatCurrency(simulation.formData.keysValue)} (${formatPercentage(simulation.formData.keysPercentage/100)})`, 20, yPos);
   
   yPos += 5;
   
-  // Fix: Format correctionIndex correctly
+  // Format percentages correctly
   doc.text(`Correção: ${formatPercentage(simulation.formData.correctionIndex/100)} ao mês`, 20, yPos);
   
   yPos += 5;
   
-  // Fix: Format appreciationIndex correctly
+  // Format percentages correctly
   doc.text(`Valorização: ${formatPercentage(simulation.formData.appreciationIndex/100)} ao mês`, 20, yPos);
   
   yPos += 5;
@@ -118,8 +118,10 @@ export function exportToPdf(simulation: SavedSimulation): void {
   
   yPos += 5;
   
-  // Fix: Format profitPercentage correctly - divide by 100 before formatting
-  doc.text(`Lucro na revenda: ${formatCurrency(simulation.results.profit)} (${formatPercentage(simulation.results.profitPercentage/100)})`, 20, yPos);
+  // CRITICAL FIX: Use direct calculation for profit percentage - no need to divide by 100 
+  // because the calculation is already correct (profit/investment * 100)
+  const profitPercentage = (simulation.results.profit / simulation.results.investmentValue) * 100;
+  doc.text(`Lucro na revenda: ${formatCurrency(simulation.results.profit)} (${formatPercentage(profitPercentage/100)})`, 20, yPos);
   
   // Add rental information if available
   if (simulation.formData.rentalPercentage) {
@@ -143,7 +145,7 @@ export function exportToPdf(simulation: SavedSimulation): void {
     
     doc.setFontSize(12);
     doc.setFont("helvetica", "normal");
-    // Fix: Format rentalPercentage correctly
+    // Format percentages correctly
     doc.text(`Percentual para aluguel: ${formatPercentage(simulation.formData.rentalPercentage/100)}`, 20, yPos);
     
     yPos += 5;
@@ -160,7 +162,7 @@ export function exportToPdf(simulation: SavedSimulation): void {
     
     yPos += 5;
     
-    // Fix: Format annualRentalReturn correctly
+    // Format percentages correctly
     doc.text(`Rentabilidade anual: ${formatPercentage(rentalData.annualRentalReturn/100)}`, 20, yPos);
   }
   
@@ -182,9 +184,10 @@ export function exportToPdf(simulation: SavedSimulation): void {
     doc.setFont("helvetica", "normal");
     
     if (simulation.bestResaleInfo.bestProfitMonth > 0) {
-      // Fix: Format maxProfitPercentage correctly
+      // CRITICAL FIX: Recalculate the profit percentage correctly
+      const maxProfitPercentage = simulation.bestResaleInfo.maxProfit / simulation.results.investmentValue * 100;
       doc.text(
-        `Maior lucro: Mês ${simulation.bestResaleInfo.bestProfitMonth} - ${formatCurrency(simulation.bestResaleInfo.maxProfit)} (${formatPercentage(simulation.bestResaleInfo.maxProfitPercentage/100)})`,
+        `Maior lucro: Mês ${simulation.bestResaleInfo.bestProfitMonth} - ${formatCurrency(simulation.bestResaleInfo.maxProfit)} (${formatPercentage(maxProfitPercentage/100)})`,
         20,
         yPos
       );
@@ -193,7 +196,7 @@ export function exportToPdf(simulation: SavedSimulation): void {
     }
     
     if (simulation.bestResaleInfo.bestRoiMonth > 0) {
-      // Fix: Format maxRoi correctly
+      // CRITICAL FIX: Use maxRoi correctly - this should already be a proper percentage
       doc.text(
         `Maior ROI: Mês ${simulation.bestResaleInfo.bestRoiMonth} - ${formatCurrency(simulation.bestResaleInfo.maxRoiProfit)} (${formatPercentage(simulation.bestResaleInfo.maxRoi/100)})`,
         20,
@@ -204,9 +207,10 @@ export function exportToPdf(simulation: SavedSimulation): void {
     }
     
     if (simulation.bestResaleInfo.earlyMonth) {
-      // Fix: Format earlyProfitPercentage correctly if it exists
+      // CRITICAL FIX: Recalculate the early profit percentage correctly if it exists
+      const earlyProfitPercentage = (simulation.bestResaleInfo.earlyProfit || 0) / simulation.results.investmentValue * 100;
       doc.text(
-        `Mais cedo: Mês ${simulation.bestResaleInfo.earlyMonth} - ${formatCurrency(simulation.bestResaleInfo.earlyProfit || 0)} (${formatPercentage((simulation.bestResaleInfo.earlyProfitPercentage || 0)/100)})`,
+        `Mais cedo: Mês ${simulation.bestResaleInfo.earlyMonth} - ${formatCurrency(simulation.bestResaleInfo.earlyProfit || 0)} (${formatPercentage(earlyProfitPercentage/100)})`,
         20,
         yPos
       );
