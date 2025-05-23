@@ -1,4 +1,3 @@
-
 export type CorrectionMode = "manual" | "cub";
 
 export interface PaymentType {
@@ -292,7 +291,7 @@ export const getReinforcementMonths = (
  * Calculates the best month for resale based on maximum profit and ROI (Return on Investment).
  *
  * @param {PaymentType[]} schedule - The payment schedule.
- * @returns {{ bestProfitMonth: number; maxProfit: number; maxProfitPercentage: number; bestRoiMonth: number; maxRoi: number; maxRoiProfit: number; }} An object containing the best month for resale based on maximum profit and ROI.
+ * @returns {{ bestProfitMonth: number; maxProfit: number; maxProfitPercentage: number; bestRoiMonth: number; maxRoi: number; maxRoiProfit: number; earlyMonth?: number; earlyProfit?: number; earlyProfitPercentage?: number; }} An object containing the best month for resale based on maximum profit and ROI.
  */
 export const calculateBestResaleMonth = (schedule: PaymentType[]): {
   bestProfitMonth: number;
@@ -315,28 +314,11 @@ export const calculateBestResaleMonth = (schedule: PaymentType[]): {
   let earlyProfit: number | undefined = undefined;
   let earlyProfitPercentage: number | undefined = undefined;
   
+  // Minimum threshold for "early month" indicator (5% return)
+  const EARLY_MONTH_THRESHOLD = 5; // 5%
+  
   if (schedule.length === 0) {
     return { bestProfitMonth, maxProfit, maxProfitPercentage, bestRoiMonth, maxRoi, maxRoiProfit };
-  }
-  
-  // Find the earliest month with profit
-  for (let i = 1; i < schedule.length; i++) {
-    const entry = schedule[i];
-    const investmentValue = entry.totalPaid;
-    const propertyValue = entry.propertyValue;
-    const remainingBalance = entry.balance;
-    
-    // Profit calculation: property value minus total investment minus remaining balance
-    const profit = propertyValue - investmentValue - remainingBalance;
-    
-    // Only calculate percentage if investment value is positive to avoid division by zero
-    const profitPercentage = investmentValue > 0 ? (profit / investmentValue) * 100 : 0;
-    
-    if (profit > 0 && earlyMonth === undefined) {
-      earlyMonth = entry.month;
-      earlyProfit = profit;
-      earlyProfitPercentage = profitPercentage;
-    }
   }
   
   // Find best profit and best ROI months
@@ -351,6 +333,13 @@ export const calculateBestResaleMonth = (schedule: PaymentType[]): {
     
     // Only calculate percentage if investment value is positive to avoid division by zero
     const profitPercentage = investmentValue > 0 ? (profit / investmentValue) * 100 : 0;
+    
+    // Check for early month with meaningful return (above threshold)
+    if (profit > 0 && profitPercentage >= EARLY_MONTH_THRESHOLD && earlyMonth === undefined) {
+      earlyMonth = entry.month;
+      earlyProfit = profit;
+      earlyProfitPercentage = profitPercentage;
+    }
     
     if (profit > maxProfit) {
       maxProfit = profit;
