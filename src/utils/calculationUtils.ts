@@ -125,6 +125,7 @@ export const generatePaymentSchedule = (formData: SimulationFormData): PaymentTy
   let currentBalance = formData.propertyValue - formData.downPaymentValue;
   let totalPaid = formData.downPaymentValue;
   let propertyValue = formData.propertyValue;
+  let correctionFactor = 1; // Track cumulative correction factor
   
   // Initial down payment
   schedule.push({
@@ -143,49 +144,68 @@ export const generatePaymentSchedule = (formData: SimulationFormData): PaymentTy
     formData.finalMonthsWithoutReinforcement
   );
   
+  // Initial values (not corrected)
+  let baseInstallmentAmount = formData.installmentsValue;
+  let baseReinforcementAmount = formData.reinforcementsValue;
+  let baseKeysValue = formData.keysValue;
+  
   for (let month = 1; month <= formData.installmentsCount; month++) {
     let monthlyCorrection = 0;
+    let correctionPercentage = 0;
     
+    // Calculate monthly correction percentage
     if (formData.correctionMode === "manual") {
-      monthlyCorrection = currentBalance * (formData.correctionIndex / 100);
+      correctionPercentage = formData.correctionIndex / 100;
     } else if (formData.correctionMode === "cub") {
       // Use CUB correction data - cycle through the last 12 months
       const cubIndex = (month - 1) % 12;
-      const correctionPercentage = CUB_CORRECTION_DATA[cubIndex].percentage;
-      monthlyCorrection = currentBalance * (correctionPercentage / 100);
+      correctionPercentage = CUB_CORRECTION_DATA[cubIndex].percentage / 100;
     }
     
+    // Update the correction factor
+    correctionFactor *= (1 + correctionPercentage);
+    
+    // Apply correction to current balance
+    monthlyCorrection = currentBalance * correctionPercentage;
     currentBalance += monthlyCorrection;
     propertyValue += propertyValue * (formData.appreciationIndex / 100);
     
-    let installmentAmount = formData.installmentsValue;
+    // Calculate corrected installment for this month
+    const correctedInstallmentAmount = baseInstallmentAmount * correctionFactor;
     
-    // Check if it's a reinforcement month
+    // Start with the corrected installment amount
+    let paymentAmount = correctedInstallmentAmount;
+    let description = `Parcela (${month})`;
+    
+    // Check if it's a reinforcement month and add the corrected reinforcement
     if (reinforcementMonths.includes(month)) {
-      installmentAmount += formData.reinforcementsValue;
+      const correctedReinforcementAmount = baseReinforcementAmount * correctionFactor;
+      paymentAmount += correctedReinforcementAmount;
+      description = `Parcela + Reforço (${month})`;
     }
     
-    currentBalance -= installmentAmount;
-    totalPaid += installmentAmount;
+    // Apply the payment
+    currentBalance -= paymentAmount;
+    totalPaid += paymentAmount;
     
     schedule.push({
       month: month,
-      description: reinforcementMonths.includes(month)
-        ? `Parcela + Reforço (${month})`
-        : `Parcela (${month})`,
-      amount: installmentAmount,
+      description: description,
+      amount: paymentAmount,
       balance: currentBalance > 0 ? currentBalance : 0,
       totalPaid: totalPaid,
       propertyValue: propertyValue > 0 ? propertyValue : 0
     });
   }
   
-  // Add keys payment
-  totalPaid += formData.keysValue;
+  // Add keys payment (also corrected)
+  const correctedKeysValue = baseKeysValue * correctionFactor;
+  totalPaid += correctedKeysValue;
+  
   schedule.push({
     month: formData.installmentsCount + 1,
     description: "Chaves",
-    amount: formData.keysValue,
+    amount: correctedKeysValue,
     balance: 0,
     totalPaid: totalPaid,
     propertyValue: propertyValue
