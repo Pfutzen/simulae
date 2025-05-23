@@ -1,7 +1,6 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { Input } from "@/components/ui/input";
-import { formatToBrazilianNumber, parseBrazilianNumber } from "@/utils/formatUtils";
 
 interface CurrencyInputProps {
   id?: string;
@@ -16,39 +15,64 @@ const CurrencyInput: React.FC<CurrencyInputProps> = ({
   value,
   onChange,
   className = "",
-  placeholder = ""
+  placeholder = "0"
 }) => {
   const [internalValue, setInternalValue] = useState<string>("");
+  const [isFormatted, setIsFormatted] = useState<boolean>(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Update internal display value when prop value changes
   useEffect(() => {
-    setInternalValue(formatToBrazilianNumber(value));
+    if (!document.activeElement || document.activeElement !== inputRef.current) {
+      // Only format when not focused
+      const formatted = value.toLocaleString('pt-BR', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      });
+      setInternalValue(formatted);
+      setIsFormatted(true);
+    }
   }, [value]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value;
     
-    // Allow free typing - just clean non-numeric characters except comma and dot
-    const cleanValue = newValue.replace(/[^\d.,]/g, '');
+    // Allow free typing - only numbers, dots and commas
+    const cleanValue = newValue.replace(/[^0-9.,]/g, '');
     
     setInternalValue(cleanValue);
+    setIsFormatted(false);
     
     // Convert to numeric value for callback
-    const numericValue = parseBrazilianNumber(cleanValue);
-    onChange(numericValue);
-  };
-
-  const handleBlur = () => {
-    // Format properly on blur
-    const numericValue = parseBrazilianNumber(internalValue);
-    setInternalValue(formatToBrazilianNumber(numericValue));
+    let numericValue = 0;
+    if (cleanValue) {
+      // Replace comma with dot for parsing
+      const normalizedValue = cleanValue.replace(',', '.');
+      numericValue = parseFloat(normalizedValue) || 0;
+    }
+    
     onChange(numericValue);
   };
 
   const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
-    // On focus, select all text for easier editing
-    e.target.select();
+    // On focus, show raw numeric value without formatting
+    setInternalValue(value.toString());
+    setIsFormatted(false);
+    
+    // Select all text for easier editing
+    setTimeout(() => {
+      e.target.select();
+    }, 0);
+  };
+
+  const handleBlur = () => {
+    // Format properly on blur
+    const formatted = value.toLocaleString('pt-BR', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    });
+    setInternalValue(formatted);
+    setIsFormatted(true);
   };
 
   return (
