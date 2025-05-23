@@ -1,4 +1,5 @@
-export type CorrectionMode = "manual" | "market";
+
+export type CorrectionMode = "manual" | "cub";
 
 export interface PaymentType {
   month: number;
@@ -28,6 +29,28 @@ export interface SimulationFormData {
   resaleMonth: number;
   rentalPercentage?: number; // New field for rental percentage
 }
+
+// CUB correction data for the last 12 months
+export interface CubCorrectionItem {
+  month: number;
+  description: string;
+  percentage: number;
+}
+
+export const CUB_CORRECTION_DATA: CubCorrectionItem[] = [
+  { month: 1, description: "Maio/2024", percentage: 0.42 },
+  { month: 2, description: "Abril/2024", percentage: 0.38 },
+  { month: 3, description: "Março/2024", percentage: 0.45 },
+  { month: 4, description: "Fevereiro/2024", percentage: 0.51 },
+  { month: 5, description: "Janeiro/2024", percentage: 0.63 },
+  { month: 6, description: "Dezembro/2023", percentage: 0.58 },
+  { month: 7, description: "Novembro/2023", percentage: 0.47 },
+  { month: 8, description: "Outubro/2023", percentage: 0.39 },
+  { month: 9, description: "Setembro/2023", percentage: 0.43 },
+  { month: 10, description: "Agosto/2023", percentage: 0.41 },
+  { month: 11, description: "Julho/2023", percentage: 0.44 },
+  { month: 12, description: "Junho/2023", percentage: 0.40 }
+];
 
 /**
  * Format currency to BRL
@@ -125,6 +148,11 @@ export const generatePaymentSchedule = (formData: SimulationFormData): PaymentTy
     
     if (formData.correctionMode === "manual") {
       monthlyCorrection = currentBalance * (formData.correctionIndex / 100);
+    } else if (formData.correctionMode === "cub") {
+      // Use CUB correction data - cycle through the last 12 months
+      const cubIndex = (month - 1) % 12;
+      const correctionPercentage = CUB_CORRECTION_DATA[cubIndex].percentage;
+      monthlyCorrection = currentBalance * (correctionPercentage / 100);
     }
     
     currentBalance += monthlyCorrection;

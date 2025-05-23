@@ -65,8 +65,8 @@ const SimulatorForm: React.FC = () => {
     profit: 0,
     profitPercentage: 0,
     remainingBalance: 0,
-    rentalEstimate: 0,
-    annualRentalReturn: 0
+    rentalEstimate: 0, // Initialize with default value
+    annualRentalReturn: 0 // Initialize with default value
   });
   const [reinforcementMonths, setReinforcementMonths] = useState<number[]>([]);
   const [bestResaleInfo, setBestResaleInfo] = useState<{
@@ -384,7 +384,7 @@ const SimulatorForm: React.FC = () => {
       formData.rentalPercentage
     );
     
-    // Combine results
+    // Combine results with default values for optional properties
     setResaleResults({
       ...results,
       rentalEstimate: rentalData.rentalEstimate,
