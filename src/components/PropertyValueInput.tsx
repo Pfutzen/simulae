@@ -3,6 +3,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { formatToBrazilianNumber, parseBrazilianNumber, formatNumberWithCursor } from "@/utils/formatUtils";
+import { Home } from "lucide-react";
 
 interface PropertyValueInputProps {
   value: number;
@@ -64,10 +65,14 @@ const PropertyValueInput: React.FC<PropertyValueInputProps> = ({
   };
 
   return (
-    <div className="space-y-2">
-      <Label htmlFor="property-value" className="text-base font-medium">
-        Valor Total do Imóvel
-      </Label>
+    <div className="space-y-3 bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-lg border border-blue-200">
+      <div className="flex items-center gap-2 mb-2">
+        <Home className="h-5 w-5 text-blue-600" />
+        <Label htmlFor="property-value" className="text-lg font-semibold text-blue-800">
+          Valor Total do Imóvel
+        </Label>
+      </div>
+      <p className="text-sm text-blue-600 mb-3">Valor base para toda a simulação</p>
       <Input
         id="property-value"
         ref={inputRef}
@@ -76,7 +81,7 @@ const PropertyValueInput: React.FC<PropertyValueInputProps> = ({
         onChange={handleChange}
         onBlur={handleBlur}
         onFocus={handleFocus}
-        className="text-right font-bold bg-purple-50 border-purple-200 hover:border-purple-300 focus-visible:ring-purple-400 text-xl"
+        className="text-right font-bold text-xl h-12 bg-white border-blue-300 hover:border-blue-400 focus-visible:ring-blue-500 focus-visible:border-blue-500 shadow-sm"
         suffix="R$"
       />
     </div>
