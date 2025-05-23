@@ -36,16 +36,18 @@ const PercentageValueInput: React.FC<PercentageValueInputProps> = ({
     onValueChange(newValue);
     
     // Calculate percentage based on the new value
-    // For installments: percentage = (value * installmentsCount) / totalValue * 100
-    // For other cases: percentage = value / totalValue * 100
     let newPercentage = 0;
     if (totalValue > 0) {
       if (label === "Parcelas" && installmentsCount > 0) {
         // For installments, calculate percentage based on total installment value
         const totalInstallmentValue = newValue * installmentsCount;
         newPercentage = (totalInstallmentValue / totalValue) * 100;
+      } else if (label === "Reforços" && installmentsCount > 0) {
+        // For reinforcements, calculate percentage based on total reinforcement value
+        const totalReinforcementValue = newValue * installmentsCount;
+        newPercentage = (totalReinforcementValue / totalValue) * 100;
       } else {
-        // For other cases (entrada, reforços, chaves)
+        // For other cases (entrada, chaves)
         newPercentage = (newValue / totalValue) * 100;
       }
     }
@@ -62,6 +64,10 @@ const PercentageValueInput: React.FC<PercentageValueInputProps> = ({
       // For installments: value = (percentage * totalValue / 100) / installmentsCount
       const totalInstallmentValue = (newPercentage / 100) * totalValue;
       newValue = totalInstallmentValue / installmentsCount;
+    } else if (label === "Reforços" && installmentsCount > 0) {
+      // For reinforcements: value = (percentage * totalValue / 100) / reinforcementsCount
+      const totalReinforcementValue = (newPercentage / 100) * totalValue;
+      newValue = totalReinforcementValue / installmentsCount;
     } else {
       // For other cases: value = (percentage * totalValue) / 100
       newValue = (newPercentage / 100) * totalValue;
