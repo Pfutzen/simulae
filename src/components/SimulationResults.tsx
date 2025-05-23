@@ -96,7 +96,7 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
                           Mês {bestResaleInfo.bestProfitMonth}: {formatCurrency(bestResaleInfo.maxProfit)}
                         </span>
                         <span className="text-slate-600 block sm:inline sm:ml-2">
-                          (retorno de {formatPercentage(bestResaleInfo.maxProfitPercentage)})
+                          (retorno de {formatPercentage(bestResaleInfo.maxProfitPercentage/100)})
                         </span>
                       </div>
                     </div>
@@ -112,7 +112,7 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
                           Mês {bestResaleInfo.bestRoiMonth}: {formatCurrency(bestResaleInfo.maxRoiProfit)}
                         </span>
                         <span className="text-slate-600 block sm:inline sm:ml-2">
-                          (retorno de {formatPercentage(bestResaleInfo.maxRoi)})
+                          (retorno de {formatPercentage(bestResaleInfo.maxRoi/100)})
                         </span>
                       </div>
                     </div>
@@ -128,7 +128,7 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
                           Mês {bestResaleInfo.earlyMonth}: {formatCurrency(bestResaleInfo.earlyProfit || 0)}
                         </span>
                         <span className="text-slate-600 block sm:inline sm:ml-2">
-                          (retorno de {formatPercentage(bestResaleInfo.earlyProfitPercentage || 0)})
+                          (retorno de {formatPercentage((bestResaleInfo.earlyProfitPercentage || 0)/100)})
                         </span>
                       </div>
                     </div>

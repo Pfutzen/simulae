@@ -321,39 +321,45 @@ export const calculateBestResaleMonth = (schedule: PaymentType[]): {
   
   // Find the earliest month with profit
   for (let i = 1; i < schedule.length; i++) {
-    const resaleData = schedule[i];
-    const investmentValue = resaleData.totalPaid;
-    const propertyValue = resaleData.propertyValue;
-    const remainingBalance = resaleData.balance;
-    const profit = propertyValue - investmentValue - remainingBalance;
-    const profitPercentage = (profit / investmentValue) * 100;
+    const entry = schedule[i];
+    const investmentValue = entry.totalPaid;
+    const propertyValue = entry.propertyValue;
     
-    if (profit > 0) {
-      earlyMonth = resaleData.month;
+    // Simple profit calculation: property value minus total investment
+    const profit = propertyValue - investmentValue;
+    
+    // Only calculate percentage if investment value is positive to avoid division by zero
+    const profitPercentage = investmentValue > 0 ? (profit / investmentValue) * 100 : 0;
+    
+    if (profit > 0 && earlyMonth === undefined) {
+      earlyMonth = entry.month;
       earlyProfit = profit;
       earlyProfitPercentage = profitPercentage;
-      break;
     }
   }
   
+  // Find best profit and best ROI months
   for (let i = 1; i < schedule.length; i++) {
-    const resaleData = schedule[i];
-    const investmentValue = resaleData.totalPaid;
-    const propertyValue = resaleData.propertyValue;
-    const remainingBalance = resaleData.balance;
-    const profit = propertyValue - investmentValue - remainingBalance;
-    const profitPercentage = (profit / investmentValue) * 100;
+    const entry = schedule[i];
+    const investmentValue = entry.totalPaid;
+    const propertyValue = entry.propertyValue;
+    
+    // Simple profit calculation: property value minus total investment
+    const profit = propertyValue - investmentValue;
+    
+    // Only calculate percentage if investment value is positive to avoid division by zero
+    const profitPercentage = investmentValue > 0 ? (profit / investmentValue) * 100 : 0;
     
     if (profit > maxProfit) {
       maxProfit = profit;
       maxProfitPercentage = profitPercentage;
-      bestProfitMonth = resaleData.month;
+      bestProfitMonth = entry.month;
     }
     
     if (profitPercentage > maxRoi) {
       maxRoi = profitPercentage;
       maxRoiProfit = profit;
-      bestRoiMonth = resaleData.month;
+      bestRoiMonth = entry.month;
     }
   }
   
