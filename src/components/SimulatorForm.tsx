@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -567,6 +566,7 @@ const SimulatorForm: React.FC = () => {
                         noDecimalsForPercentage={true}
                         valueInputClassName="w-full md:w-[240px]"
                         percentageInputClassName="w-full md:w-[120px]"
+                        installmentsCount={formData.installmentsCount}
                       />
                       <NumberInput
                         id="installments-count"
@@ -600,6 +600,7 @@ const SimulatorForm: React.FC = () => {
                         noDecimalsForPercentage={true}
                         valueInputClassName="w-full md:w-[240px]"
                         percentageInputClassName="w-full md:w-[120px]"
+                        installmentsCount={reinforcementMonths.length}
                       />
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <NumberInput

@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,6 +16,7 @@ interface PercentageValueInputProps {
   noDecimalsForPercentage?: boolean;
   valueInputClassName?: string;
   percentageInputClassName?: string;
+  installmentsCount?: number; // Add optional prop for installments count
 }
 
 const PercentageValueInput: React.FC<PercentageValueInputProps> = ({
@@ -27,17 +29,44 @@ const PercentageValueInput: React.FC<PercentageValueInputProps> = ({
   onPercentageChange,
   noDecimalsForPercentage = false,
   valueInputClassName = "",
-  percentageInputClassName = ""
+  percentageInputClassName = "",
+  installmentsCount = 1 // Default to 1 if not provided
 }) => {
   const handleValueChange = (newValue: number) => {
     onValueChange(newValue);
-    const newPercentage = (newValue / totalValue) * 100;
+    
+    // Calculate percentage based on the new value
+    // For installments: percentage = (value * installmentsCount) / totalValue * 100
+    // For other cases: percentage = value / totalValue * 100
+    let newPercentage = 0;
+    if (totalValue > 0) {
+      if (label === "Parcelas" && installmentsCount > 0) {
+        // For installments, calculate percentage based on total installment value
+        const totalInstallmentValue = newValue * installmentsCount;
+        newPercentage = (totalInstallmentValue / totalValue) * 100;
+      } else {
+        // For other cases (entrada, reforços, chaves)
+        newPercentage = (newValue / totalValue) * 100;
+      }
+    }
+    
     onPercentageChange(newPercentage);
   };
 
   const handlePercentageChange = (newPercentage: number) => {
     onPercentageChange(newPercentage);
-    const newValue = (newPercentage / 100) * totalValue;
+    
+    // Calculate value based on the new percentage
+    let newValue = 0;
+    if (label === "Parcelas" && installmentsCount > 0) {
+      // For installments: value = (percentage * totalValue / 100) / installmentsCount
+      const totalInstallmentValue = (newPercentage / 100) * totalValue;
+      newValue = totalInstallmentValue / installmentsCount;
+    } else {
+      // For other cases: value = (percentage * totalValue) / 100
+      newValue = (newPercentage / 100) * totalValue;
+    }
+    
     onValueChange(newValue);
   };
   
