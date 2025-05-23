@@ -1,8 +1,7 @@
-
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { PaymentType, formatCurrency, formatPercentage } from "@/utils/calculationUtils";
+import { PaymentType, formatCurrency, formatPercentage, calculateRentalEstimate } from "@/utils/calculationUtils";
 import { Button } from "@/components/ui/button";
 import ResultsChart from "./ResultsChart";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -54,6 +53,15 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
   // Get the delivery month property value (last month in the schedule)
   const deliveryMonthData = schedule.length > 0 ? schedule[schedule.length - 1] : null;
   const deliveryPropertyValue = deliveryMonthData ? deliveryMonthData.propertyValue : propertyValue;
+  
+  // Calculate rental values using the delivery property value
+  const rentalValues = rentalPercentage 
+    ? calculateRentalEstimate(deliveryPropertyValue, rentalPercentage)
+    : undefined;
+  
+  // Use the newly calculated values or fall back to the props
+  const calculatedRentalEstimate = rentalValues?.rentalEstimate || rentalEstimate;
+  const calculatedAnnualRentalReturn = rentalValues?.annualRentalReturn || annualRentalReturn;
 
   if (schedule.length === 0) {
     return null;
@@ -202,8 +210,7 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
         </Card>
       </div>
 
-      {/* Rental Income Estimation */}
-      {rentalEstimate && rentalPercentage && annualRentalReturn && (
+      {rentalPercentage && calculatedRentalEstimate && calculatedAnnualRentalReturn && (
         <Card className="card-shadow bg-white border border-slate-200">
           <CardHeader>
             <CardTitle className="text-xl">Estimativa de Renda com Aluguel</CardTitle>
@@ -225,8 +232,8 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
                     Aluguel Estimado ({formatPercentage(rentalPercentage/100)})
                   </span>
                 </div>
-                <p className="text-2xl font-bold text-slate-800">{formatCurrency(rentalEstimate)}<span className="text-base font-normal text-slate-500">/mês</span></p>
-                <p className="text-sm text-slate-500 mt-1">{formatCurrency(rentalEstimate * 12)}/ano</p>
+                <p className="text-2xl font-bold text-slate-800">{formatCurrency(calculatedRentalEstimate)}<span className="text-base font-normal text-slate-500">/mês</span></p>
+                <p className="text-sm text-slate-500 mt-1">{formatCurrency(calculatedRentalEstimate * 12)}/ano</p>
               </div>
               
               <div className="flex flex-col p-4 bg-slate-50 rounded-lg border border-slate-100">
@@ -234,7 +241,7 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
                   <TrendingUpIcon className="h-6 w-6 text-purple-600" />
                   <span className="text-sm font-medium text-slate-500">Retorno com Aluguel</span>
                 </div>
-                <p className="text-2xl font-bold text-slate-800">{formatPercentage(annualRentalReturn/100)}<span className="text-base font-normal text-slate-500"> ao ano</span></p>
+                <p className="text-2xl font-bold text-slate-800">{formatPercentage(calculatedAnnualRentalReturn/100)}<span className="text-base font-normal text-slate-500"> ao ano</span></p>
               </div>
             </div>
           </CardContent>
