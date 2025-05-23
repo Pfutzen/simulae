@@ -5,7 +5,7 @@ import { PaymentType, formatCurrency, formatPercentage, calculateRentalEstimate 
 import { Button } from "@/components/ui/button";
 import ResultsChart from "./ResultsChart";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { LightbulbIcon, FileText, HomeIcon, PiggyBankIcon, TrendingUpIcon } from "lucide-react";
+import { LightbulbIcon, FileText, HomeIcon, PiggyBankIcon, TrendingUpIcon, BarChart3Icon } from "lucide-react";
 import { exportToPdf } from "@/utils/pdfExport";
 import { SavedSimulation } from "@/utils/simulationHistoryUtils";
 
@@ -67,6 +67,11 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
   // Use the newly calculated values or fall back to the props
   const calculatedRentalEstimate = rentalValues?.rentalEstimate || rentalEstimate;
   const calculatedAnnualRentalReturn = rentalValues?.annualRentalReturn || annualRentalReturn;
+
+  // Calculate annual property appreciation from the simulation data
+  const annualPropertyAppreciation = simulationData 
+    ? simulationData.formData.appreciationIndex * 12 
+    : 0;
 
   if (schedule.length === 0) {
     return null;
@@ -157,6 +162,7 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
         </Card>
       )}
       
+      
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <Card className="card-shadow">
           <CardHeader className="pb-2">
@@ -222,7 +228,7 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
             <CardTitle className="text-xl">Estimativa de Renda com Aluguel</CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               <div className="flex flex-col p-4 bg-slate-50 rounded-lg border border-slate-100">
                 <div className="flex items-center gap-3 mb-2">
                   <HomeIcon className="h-6 w-6 text-sky-600" />
@@ -249,11 +255,20 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
                 </div>
                 <p className="text-2xl font-bold text-slate-800">{formatPercentage(calculatedAnnualRentalReturn/100)}<span className="text-base font-normal text-slate-500"> ao ano</span></p>
               </div>
+              
+              <div className="flex flex-col p-4 bg-slate-50 rounded-lg border border-slate-100">
+                <div className="flex items-center gap-3 mb-2">
+                  <BarChart3Icon className="h-6 w-6 text-orange-600" />
+                  <span className="text-sm font-medium text-slate-500">Valorização Anual do Imóvel</span>
+                </div>
+                <p className="text-2xl font-bold text-slate-800">{formatPercentage(annualPropertyAppreciation/100)}<span className="text-base font-normal text-slate-500"> ao ano</span></p>
+              </div>
             </div>
           </CardContent>
         </Card>
       )}
 
+      
       <Tabs defaultValue="chart" className="w-full">
         <TabsList>
           <TabsTrigger value="chart">Gráfico</TabsTrigger>
