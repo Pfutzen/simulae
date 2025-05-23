@@ -1,9 +1,17 @@
 
 import React from "react";
 import SimulatorForm from "@/components/SimulatorForm";
+import SessionTimeoutModal from "@/components/SessionTimeoutModal";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { useSessionTimeout } from "@/hooks/useSessionTimeout";
 
 const Index = () => {
+  const { isSessionExpired, resetSession } = useSessionTimeout();
+
+  const handleValidPassword = () => {
+    resetSession();
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-slate-50">
       <header className="bg-white py-6 shadow-sm">
@@ -32,6 +40,11 @@ const Index = () => {
           © 2025 Simulae. Todos os direitos reservados.
         </div>
       </footer>
+
+      <SessionTimeoutModal 
+        isOpen={isSessionExpired}
+        onValidPassword={handleValidPassword}
+      />
     </div>
   );
 };
