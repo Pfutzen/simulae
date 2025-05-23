@@ -53,7 +53,8 @@ export function exportToPdf(simulation: SavedSimulation): void {
   
   yPos += 5;
   
-  doc.text(`Entrada: ${formatCurrency(simulation.formData.downPaymentValue)} (${simulation.formData.downPaymentPercentage}%)`, 20, yPos);
+  // Fix: Format downPaymentPercentage correctly
+  doc.text(`Entrada: ${formatCurrency(simulation.formData.downPaymentValue)} (${formatPercentage(simulation.formData.downPaymentPercentage/100)})`, 20, yPos);
   
   yPos += 5;
   
@@ -73,15 +74,18 @@ export function exportToPdf(simulation: SavedSimulation): void {
   
   yPos += 5;
   
-  doc.text(`Chaves: ${formatCurrency(simulation.formData.keysValue)} (${simulation.formData.keysPercentage}%)`, 20, yPos);
+  // Fix: Format keysPercentage correctly
+  doc.text(`Chaves: ${formatCurrency(simulation.formData.keysValue)} (${formatPercentage(simulation.formData.keysPercentage/100)})`, 20, yPos);
   
   yPos += 5;
   
-  doc.text(`Correção: ${simulation.formData.correctionIndex}% ao mês`, 20, yPos);
+  // Fix: Format correctionIndex correctly
+  doc.text(`Correção: ${formatPercentage(simulation.formData.correctionIndex/100)} ao mês`, 20, yPos);
   
   yPos += 5;
   
-  doc.text(`Valorização: ${simulation.formData.appreciationIndex}% ao mês`, 20, yPos);
+  // Fix: Format appreciationIndex correctly
+  doc.text(`Valorização: ${formatPercentage(simulation.formData.appreciationIndex/100)} ao mês`, 20, yPos);
   
   yPos += 5;
   
@@ -114,7 +118,7 @@ export function exportToPdf(simulation: SavedSimulation): void {
   
   yPos += 5;
   
-  // Fix: Use the correct percentage format for profit percentage - the profitPercentage is already a percentage value
+  // Fix: Format profitPercentage correctly - divide by 100 before formatting
   doc.text(`Lucro na revenda: ${formatCurrency(simulation.results.profit)} (${formatPercentage(simulation.results.profitPercentage/100)})`, 20, yPos);
   
   // Add rental information if available
@@ -139,6 +143,7 @@ export function exportToPdf(simulation: SavedSimulation): void {
     
     doc.setFontSize(12);
     doc.setFont("helvetica", "normal");
+    // Fix: Format rentalPercentage correctly
     doc.text(`Percentual para aluguel: ${formatPercentage(simulation.formData.rentalPercentage/100)}`, 20, yPos);
     
     yPos += 5;
@@ -155,6 +160,7 @@ export function exportToPdf(simulation: SavedSimulation): void {
     
     yPos += 5;
     
+    // Fix: Format annualRentalReturn correctly
     doc.text(`Rentabilidade anual: ${formatPercentage(rentalData.annualRentalReturn/100)}`, 20, yPos);
   }
   
@@ -176,6 +182,7 @@ export function exportToPdf(simulation: SavedSimulation): void {
     doc.setFont("helvetica", "normal");
     
     if (simulation.bestResaleInfo.bestProfitMonth > 0) {
+      // Fix: Format maxProfitPercentage correctly
       doc.text(
         `Maior lucro: Mês ${simulation.bestResaleInfo.bestProfitMonth} - ${formatCurrency(simulation.bestResaleInfo.maxProfit)} (${formatPercentage(simulation.bestResaleInfo.maxProfitPercentage/100)})`,
         20,
@@ -186,6 +193,7 @@ export function exportToPdf(simulation: SavedSimulation): void {
     }
     
     if (simulation.bestResaleInfo.bestRoiMonth > 0) {
+      // Fix: Format maxRoi correctly
       doc.text(
         `Maior ROI: Mês ${simulation.bestResaleInfo.bestRoiMonth} - ${formatCurrency(simulation.bestResaleInfo.maxRoiProfit)} (${formatPercentage(simulation.bestResaleInfo.maxRoi/100)})`,
         20,
@@ -196,6 +204,7 @@ export function exportToPdf(simulation: SavedSimulation): void {
     }
     
     if (simulation.bestResaleInfo.earlyMonth) {
+      // Fix: Format earlyProfitPercentage correctly if it exists
       doc.text(
         `Mais cedo: Mês ${simulation.bestResaleInfo.earlyMonth} - ${formatCurrency(simulation.bestResaleInfo.earlyProfit || 0)} (${formatPercentage((simulation.bestResaleInfo.earlyProfitPercentage || 0)/100)})`,
         20,
