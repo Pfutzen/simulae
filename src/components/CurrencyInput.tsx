@@ -8,13 +8,15 @@ interface CurrencyInputProps {
   value: number;
   onChange: (value: number) => void;
   className?: string;
+  placeholder?: string;  // Added placeholder prop
 }
 
 const CurrencyInput: React.FC<CurrencyInputProps> = ({
   id,
   value,
   onChange,
-  className = ""
+  className = "",
+  placeholder = ""  // Default to empty string
 }) => {
   const [internalValue, setInternalValue] = useState<string>("");
   const [cursorPosition, setCursorPosition] = useState<number>(0);
@@ -77,6 +79,7 @@ const CurrencyInput: React.FC<CurrencyInputProps> = ({
       onFocus={handleFocus}
       className={`text-right font-medium ${className}`}
       suffix="R$"
+      placeholder={placeholder}  // Use the placeholder prop
     />
   );
 };
