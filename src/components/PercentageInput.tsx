@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { Input } from "@/components/ui/input";
-import { formatToBrazilianNumber, parseBrazilianNumber, formatNumberWithCursor } from "@/utils/formatUtils";
+import { formatToBrazilianNumber, parseBrazilianNumber } from "@/utils/formatUtils";
 
 interface PercentageInputProps {
   id?: string;
@@ -19,7 +19,6 @@ const PercentageInput: React.FC<PercentageInputProps> = ({
   className = ""
 }) => {
   const [internalValue, setInternalValue] = useState<string>("");
-  const [cursorPosition, setCursorPosition] = useState<number>(0);
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Update internal display value when prop value changes
@@ -31,43 +30,24 @@ const PercentageInput: React.FC<PercentageInputProps> = ({
     }
   }, [value, noDecimals]);
 
-  // Update cursor position after value change
-  useEffect(() => {
-    if (inputRef.current && document.activeElement === inputRef.current) {
-      inputRef.current.setSelectionRange(cursorPosition, cursorPosition);
-    }
-  }, [internalValue, cursorPosition]);
-
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value;
-    const currentPosition = e.target.selectionStart || 0;
-    const wasSelection = e.target.selectionStart !== e.target.selectionEnd;
     
     if (noDecimals) {
-      // For fields without decimals, use simpler logic
+      // For no decimals, only allow integers
       const cleanValue = newValue.replace(/\D/g, '');
-      const numericValue = parseInt(cleanValue) || 0;
-      const formattedValue = numericValue.toString();
+      setInternalValue(cleanValue);
       
-      setInternalValue(formattedValue);
-      setCursorPosition(currentPosition);
+      const numericValue = parseInt(cleanValue) || 0;
       onChange(numericValue);
     } else {
-      // Get the newly typed character (if applicable)
-      const newChar = newValue.length > internalValue.length ? 
-        newValue.charAt(currentPosition - 1) : null;
+      // Allow free typing - just clean non-numeric characters except comma and dot
+      const cleanValue = newValue.replace(/[^\d.,]/g, '');
+      setInternalValue(cleanValue);
       
-      // Use our formatter that preserves cursor position
-      const result = formatNumberWithCursor(
-        newValue, 
-        currentPosition,
-        newChar,
-        wasSelection
-      );
-      
-      setInternalValue(result.formattedValue);
-      setCursorPosition(result.cursorPosition);
-      onChange(result.numericValue);
+      // Convert to numeric value for callback
+      const numericValue = parseBrazilianNumber(cleanValue);
+      onChange(numericValue);
     }
   };
 
