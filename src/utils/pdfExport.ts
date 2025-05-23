@@ -1,3 +1,4 @@
+
 import jsPDF from 'jspdf';
 import { SavedSimulation } from './simulationHistoryUtils';
 import { formatCurrency, formatPercentage } from './calculationUtils';
@@ -126,15 +127,24 @@ export function exportToPdf(simulation: SavedSimulation): void {
     
     yPos += 8;
     
-    // Calculate rental information
+    // Get the payment schedule to find the delivery month property value
+    const schedule = simulation.schedule || [];
+    const deliveryMonthData = schedule.length > 0 ? schedule[schedule.length - 1] : null;
+    const deliveryPropertyValue = deliveryMonthData ? deliveryMonthData.propertyValue : simulation.results.propertyValue;
+    
+    // Calculate rental information using the delivery property value
     const rentalData = calculateRentalEstimate(
-      simulation.results.propertyValue,
+      deliveryPropertyValue,
       simulation.formData.rentalPercentage
     );
     
     doc.setFontSize(12);
     doc.setFont("helvetica", "normal");
     doc.text(`Percentual para aluguel: ${formatPercentage(simulation.formData.rentalPercentage)}`, 20, yPos);
+    
+    yPos += 5;
+    
+    doc.text(`Valor do imóvel na entrega: ${formatCurrency(deliveryPropertyValue)}`, 20, yPos);
     
     yPos += 5;
     
@@ -168,7 +178,7 @@ export function exportToPdf(simulation: SavedSimulation): void {
     
     if (simulation.bestResaleInfo.bestProfitMonth > 0) {
       doc.text(
-        `Maior lucro: Mês ${simulation.bestResaleInfo.bestProfitMonth} - ${formatCurrency(simulation.bestResaleInfo.maxProfit)} (${formatPercentage(simulation.bestResaleInfo.maxProfitPercentage)})`,
+        `Maior lucro: Mês ${simulation.bestResaleInfo.bestProfitMonth} - ${formatCurrency(simulation.bestResaleInfo.maxProfit)} (${formatPercentage(simulation.bestResaleInfo.maxProfitPercentage/100)})`,
         20,
         yPos
       );
@@ -178,7 +188,7 @@ export function exportToPdf(simulation: SavedSimulation): void {
     
     if (simulation.bestResaleInfo.bestRoiMonth > 0) {
       doc.text(
-        `Maior ROI: Mês ${simulation.bestResaleInfo.bestRoiMonth} - ${formatCurrency(simulation.bestResaleInfo.maxRoiProfit)} (${formatPercentage(simulation.bestResaleInfo.maxRoi)})`,
+        `Maior ROI: Mês ${simulation.bestResaleInfo.bestRoiMonth} - ${formatCurrency(simulation.bestResaleInfo.maxRoiProfit)} (${formatPercentage(simulation.bestResaleInfo.maxRoi/100)})`,
         20,
         yPos
       );
@@ -188,7 +198,7 @@ export function exportToPdf(simulation: SavedSimulation): void {
     
     if (simulation.bestResaleInfo.earlyMonth) {
       doc.text(
-        `Mais cedo: Mês ${simulation.bestResaleInfo.earlyMonth} - ${formatCurrency(simulation.bestResaleInfo.earlyProfit || 0)} (${formatPercentage(simulation.bestResaleInfo.earlyProfitPercentage || 0)})`,
+        `Mais cedo: Mês ${simulation.bestResaleInfo.earlyMonth} - ${formatCurrency(simulation.bestResaleInfo.earlyProfit || 0)} (${formatPercentage((simulation.bestResaleInfo.earlyProfitPercentage || 0)/100)})`,
         20,
         yPos
       );
