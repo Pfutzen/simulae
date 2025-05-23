@@ -224,7 +224,7 @@ export const calculateResaleProfit = (schedule: PaymentType[], resaleMonth: numb
   const propertyValue = resaleData.propertyValue;
   const remainingBalance = resaleData.balance;
   const profit = propertyValue - investmentValue - remainingBalance;
-  const profitPercentage = (profit / investmentValue) * 100;
+  const profitPercentage = (profit / investmentValue) * 100; // Correct calculation: profit / investment * 100
   
   return {
     investmentValue,
@@ -310,7 +310,7 @@ export const calculateBestResaleMonth = (schedule: PaymentType[]): {
     if (profit > 0) {
       earlyMonth = resaleData.month;
       earlyProfit = profit;
-      earlyProfitPercentage = (profit / investmentValue) * 100;
+      earlyProfitPercentage = (profit / investmentValue) * 100; // Correctly calculate percentage
       break;
     }
   }
@@ -321,7 +321,7 @@ export const calculateBestResaleMonth = (schedule: PaymentType[]): {
     const propertyValue = resaleData.propertyValue;
     const remainingBalance = resaleData.balance;
     const profit = propertyValue - investmentValue - remainingBalance;
-    const roi = (profit / investmentValue) * 100;
+    const roi = (profit / investmentValue) * 100; // Correctly calculate ROI percentage
     
     if (profit > maxProfit) {
       maxProfit = profit;

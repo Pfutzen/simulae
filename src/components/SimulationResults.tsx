@@ -218,7 +218,7 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
                 <div className="flex items-center gap-3 mb-2">
                   <PiggyBankIcon className="h-6 w-6 text-emerald-600" />
                   <span className="text-sm font-medium text-slate-500">
-                    Aluguel Estimado ({formatPercentage(rentalPercentage)})
+                    Aluguel Estimado ({formatPercentage(rentalPercentage/100)})
                   </span>
                 </div>
                 <p className="text-2xl font-bold text-slate-800">{formatCurrency(rentalEstimate)}<span className="text-base font-normal text-slate-500">/mês</span></p>
@@ -230,7 +230,7 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
                   <TrendingUpIcon className="h-6 w-6 text-purple-600" />
                   <span className="text-sm font-medium text-slate-500">Retorno com Aluguel</span>
                 </div>
-                <p className="text-2xl font-bold text-slate-800">{formatPercentage(annualRentalReturn)}<span className="text-base font-normal text-slate-500">/ano</span></p>
+                <p className="text-2xl font-bold text-slate-800">{formatPercentage(annualRentalReturn/100)}<span className="text-base font-normal text-slate-500"> ao ano</span></p>
               </div>
             </div>
           </CardContent>
