@@ -428,6 +428,7 @@ const SimulatorForm: React.FC = () => {
       name: simulationName,
       timestamp: Date.now(),
       formData,
+      schedule, // Save the payment schedule
       results: resaleResults,
       bestResaleInfo
     });

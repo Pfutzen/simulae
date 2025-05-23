@@ -1,19 +1,20 @@
 
-import { SimulationFormData } from "./calculationUtils";
+import { SimulationFormData, PaymentType } from "./calculationUtils";
 
 export interface SavedSimulation {
   id: string;
   name: string;
   timestamp: number;
   formData: SimulationFormData;
+  schedule?: PaymentType[]; // Added this optional schedule property
   results: {
     investmentValue: number;
     propertyValue: number;
     profit: number;
     profitPercentage: number;
     remainingBalance: number;
-    rentalEstimate: number;  // Changed from optional to required
-    annualRentalReturn: number;  // Changed from optional to required
+    rentalEstimate: number;
+    annualRentalReturn: number;
   };
   bestResaleInfo: {
     bestProfitMonth: number;

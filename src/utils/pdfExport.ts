@@ -127,10 +127,8 @@ export function exportToPdf(simulation: SavedSimulation): void {
     
     yPos += 8;
     
-    // Get the payment schedule to find the delivery month property value
-    const schedule = simulation.schedule || [];
-    const deliveryMonthData = schedule.length > 0 ? schedule[schedule.length - 1] : null;
-    const deliveryPropertyValue = deliveryMonthData ? deliveryMonthData.propertyValue : simulation.results.propertyValue;
+    // Get the delivery month property value (last month in the schedule)
+    const deliveryPropertyValue = getDeliveryPropertyValue(simulation);
     
     // Calculate rental information using the delivery property value
     const rentalData = calculateRentalEstimate(
@@ -207,4 +205,16 @@ export function exportToPdf(simulation: SavedSimulation): void {
   
   // Save the PDF
   doc.save(`simulae_${simulation.id}.pdf`);
+}
+
+// Helper function to get the delivery property value
+function getDeliveryPropertyValue(simulation: SavedSimulation): number {
+  // If we have a schedule, use the last month's property value
+  if (simulation.schedule && simulation.schedule.length > 0) {
+    const deliveryMonthData = simulation.schedule[simulation.schedule.length - 1];
+    return deliveryMonthData.propertyValue;
+  }
+  
+  // Fallback to the property value in the results
+  return simulation.results.propertyValue;
 }
