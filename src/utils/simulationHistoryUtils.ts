@@ -12,6 +12,8 @@ export interface SavedSimulation {
     profit: number;
     profitPercentage: number;
     remainingBalance: number;
+    rentalEstimate?: number;
+    annualRentalReturn?: number;
   };
   bestResaleInfo: {
     bestProfitMonth: number;

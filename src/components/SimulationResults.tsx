@@ -6,7 +6,7 @@ import { PaymentType, formatCurrency, formatPercentage } from "@/utils/calculati
 import { Button } from "@/components/ui/button";
 import ResultsChart from "./ResultsChart";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { LightbulbIcon, FileText } from "lucide-react";
+import { LightbulbIcon, FileText, HomeIcon, PiggyBankIcon, TrendingUpIcon } from "lucide-react";
 import { exportToPdf } from "@/utils/pdfExport";
 import { SavedSimulation } from "@/utils/simulationHistoryUtils";
 
@@ -18,6 +18,9 @@ interface SimulationResultsProps {
   profit: number;
   profitPercentage: number;
   remainingBalance: number;
+  rentalPercentage?: number;
+  rentalEstimate?: number;
+  annualRentalReturn?: number;
   bestResaleInfo: {
     bestProfitMonth: number;
     maxProfit: number;
@@ -40,6 +43,9 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
   profit,
   profitPercentage,
   remainingBalance,
+  rentalPercentage,
+  rentalEstimate,
+  annualRentalReturn,
   bestResaleInfo,
   simulationData
 }) => {
@@ -191,6 +197,45 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
           </CardContent>
         </Card>
       </div>
+
+      {/* Rental Income Estimation */}
+      {rentalEstimate && rentalPercentage && annualRentalReturn && (
+        <Card className="card-shadow bg-white border border-slate-200">
+          <CardHeader>
+            <CardTitle className="text-xl">Estimativa de Renda com Aluguel</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="flex flex-col p-4 bg-slate-50 rounded-lg border border-slate-100">
+                <div className="flex items-center gap-3 mb-2">
+                  <HomeIcon className="h-6 w-6 text-sky-600" />
+                  <span className="text-sm font-medium text-slate-500">Valor do Imóvel na Entrega</span>
+                </div>
+                <p className="text-2xl font-bold text-slate-800">{formatCurrency(propertyValue)}</p>
+              </div>
+              
+              <div className="flex flex-col p-4 bg-slate-50 rounded-lg border border-slate-100">
+                <div className="flex items-center gap-3 mb-2">
+                  <PiggyBankIcon className="h-6 w-6 text-emerald-600" />
+                  <span className="text-sm font-medium text-slate-500">
+                    Aluguel Estimado ({formatPercentage(rentalPercentage)})
+                  </span>
+                </div>
+                <p className="text-2xl font-bold text-slate-800">{formatCurrency(rentalEstimate)}<span className="text-base font-normal text-slate-500">/mês</span></p>
+                <p className="text-sm text-slate-500 mt-1">{formatCurrency(rentalEstimate * 12)}/ano</p>
+              </div>
+              
+              <div className="flex flex-col p-4 bg-slate-50 rounded-lg border border-slate-100">
+                <div className="flex items-center gap-3 mb-2">
+                  <TrendingUpIcon className="h-6 w-6 text-purple-600" />
+                  <span className="text-sm font-medium text-slate-500">Retorno com Aluguel</span>
+                </div>
+                <p className="text-2xl font-bold text-slate-800">{formatPercentage(annualRentalReturn)}<span className="text-base font-normal text-slate-500">/ano</span></p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <Tabs defaultValue="chart" className="w-full">
         <TabsList>

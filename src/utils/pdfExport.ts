@@ -1,162 +1,200 @@
-
 import jsPDF from 'jspdf';
 import { SavedSimulation } from './simulationHistoryUtils';
 import { formatCurrency, formatPercentage } from './calculationUtils';
+import { calculateRentalEstimate } from './calculationUtils';
 
-// Function to format date
-const formatDate = (timestamp: number): string => {
-  const date = new Date(timestamp);
-  return date.toLocaleDateString('pt-BR') + ' ' + date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-};
-
-// Main export function
-export const exportToPdf = (simulation: SavedSimulation): void => {
-  const doc = new jsPDF();
+// Function to export the simulation to a PDF
+export function exportToPdf(simulation: SavedSimulation): void {
+  // Define the document structure
+  const doc = new jsPDF({
+    orientation: 'portrait',
+    unit: 'mm',
+    format: 'a4'
+  });
   
-  // Set font size and styles
-  const titleSize = 16;
-  const subtitleSize = 14;
-  const normalSize = 10;
-  const smallSize = 8;
-  
-  // Page dimensions
+  // Add the logo
+  const logoHeight = 20;
   const pageWidth = doc.internal.pageSize.getWidth();
-  const margin = 20;
-  const contentWidth = pageWidth - (margin * 2);
+  const logoWidth = 60;
+  const logoX = (pageWidth - logoWidth) / 2;
   
-  let y = margin;
+  // Use the Simulae logo
+  doc.addImage("/lovable-uploads/c2a68237-fb14-4957-891c-3d3581836ace.png", "PNG", logoX, 10, logoWidth, logoHeight);
   
-  // Add logo if available
-  try {
-    const img = new Image();
-    img.src = '/lovable-uploads/c2a68237-fb14-4957-891c-3d3581836ace.png';
-    doc.addImage(img, 'PNG', margin, y, 50, 15);
-    y += 20;
-  } catch (error) {
-    console.error('Error adding logo to PDF:', error);
-  }
+  // Add header information
+  const headerY = logoHeight + 15;
+  doc.setFontSize(16);
+  doc.setFont("helvetica", "bold");
+  doc.text("Relatório de Simulação", pageWidth / 2, headerY, { align: "center" });
   
-  // Title
-  doc.setFontSize(titleSize);
-  doc.setFont('helvetica', 'bold');
-  doc.text('Simulação de Investimento Imobiliário', margin, y);
-  y += 10;
+  doc.setFontSize(12);
+  doc.setFont("helvetica", "normal");
+  doc.text(`Nome: ${simulation.name}`, 20, headerY + 10);
+  doc.text(`Data: ${new Intl.DateTimeFormat('pt-BR').format(simulation.timestamp)}`, 20, headerY + 15);
   
-  // Simulation name and date
-  doc.setFontSize(normalSize);
-  doc.setFont('helvetica', 'normal');
-  doc.text(`Nome: ${simulation.name}`, margin, y);
-  y += 6;
-  doc.text(`Data: ${formatDate(simulation.timestamp)}`, margin, y);
-  y += 10;
+  // Add horizontal line
+  const lineY = headerY + 20;
+  doc.setDrawColor(200, 200, 200);
+  doc.line(20, lineY, pageWidth - 20, lineY);
   
-  // Separator line
-  doc.setLineWidth(0.5);
-  doc.line(margin, y, pageWidth - margin, y);
-  y += 10;
+  // Section: Property Information
+  let yPos = lineY + 10;
   
-  // Parameters section
-  doc.setFontSize(subtitleSize);
-  doc.setFont('helvetica', 'bold');
-  doc.text('Parâmetros da Simulação', margin, y);
-  y += 8;
+  doc.setFontSize(14);
+  doc.setFont("helvetica", "bold");
+  doc.text("Informações do Imóvel", 20, yPos);
   
-  // Function to add a parameter line
-  const addParamLine = (label: string, value: string): void => {
-    doc.setFontSize(normalSize);
-    doc.setFont('helvetica', 'bold');
-    doc.text(label, margin, y);
-    doc.setFont('helvetica', 'normal');
-    doc.text(value, margin + 70, y);
-    y += 6;
-  };
+  yPos += 8;
   
-  // Parameters
-  addParamLine('Valor do imóvel:', formatCurrency(simulation.formData.propertyValue));
-  addParamLine('Entrada:', `${formatCurrency(simulation.formData.downPaymentValue)} (${simulation.formData.downPaymentPercentage}%)`);
-  addParamLine('Parcelas:', `${simulation.formData.installmentsCount}x de ${formatCurrency(simulation.formData.installmentsValue)} (${simulation.formData.installmentsPercentage}%)`);
+  doc.setFontSize(12);
+  doc.setFont("helvetica", "normal");
+  doc.text(`Valor do imóvel: ${formatCurrency(simulation.formData.propertyValue)}`, 20, yPos);
   
-  if (simulation.formData.reinforcementsValue > 0) {
-    const reinforcementMonths = Math.floor(simulation.formData.installmentsCount / simulation.formData.reinforcementFrequency);
-    addParamLine('Reforços:', `${reinforcementMonths}x de ${formatCurrency(simulation.formData.reinforcementsValue)} (${simulation.formData.reinforcementsPercentage}%)`);
-    addParamLine('Frequência de reforços:', `A cada ${simulation.formData.reinforcementFrequency} meses`);
-  }
+  yPos += 5;
   
-  addParamLine('Chaves:', `${formatCurrency(simulation.formData.keysValue)} (${simulation.formData.keysPercentage}%)`);
-  addParamLine('Índice de correção:', `${simulation.formData.correctionIndex}% ao mês`);
-  addParamLine('Índice de valorização:', `${simulation.formData.appreciationIndex}% ao mês`);
+  doc.text(`Entrada: ${formatCurrency(simulation.formData.downPaymentValue)} (${simulation.formData.downPaymentPercentage}%)`, 20, yPos);
   
-  y += 5;
+  yPos += 5;
   
-  // Separator line
-  doc.setLineWidth(0.5);
-  doc.line(margin, y, pageWidth - margin, y);
-  y += 10;
+  doc.text(`Parcelas: ${simulation.formData.installmentsCount} x ${formatCurrency(simulation.formData.installmentsValue)}`, 20, yPos);
   
-  // Results section
-  doc.setFontSize(subtitleSize);
-  doc.setFont('helvetica', 'bold');
-  doc.text('Resultados da Simulação', margin, y);
-  y += 8;
+  yPos += 5;
   
-  // Add result line
-  const addResultLine = (label: string, value: string): void => {
-    doc.setFontSize(normalSize);
-    doc.setFont('helvetica', 'bold');
-    doc.text(label, margin, y);
-    doc.setFont('helvetica', 'normal');
-    doc.text(value, margin + 90, y);
-    y += 6;
-  };
-  
-  // Results for chosen resale month
-  addResultLine('Mês de revenda escolhido:', `Mês ${simulation.formData.resaleMonth}`);
-  addResultLine('Total investido:', formatCurrency(simulation.results.investmentValue));
-  addResultLine('Valor do imóvel na revenda:', formatCurrency(simulation.results.propertyValue));
-  addResultLine('Saldo devedor:', formatCurrency(simulation.results.remainingBalance));
-  addResultLine('Lucro na revenda:', formatCurrency(simulation.results.profit));
-  addResultLine('Percentual de retorno:', formatPercentage(simulation.results.profitPercentage));
-  
-  y += 5;
-  
-  // Best months section
-  doc.setFontSize(subtitleSize);
-  doc.setFont('helvetica', 'bold');
-  doc.text('Melhores Meses para Revenda', margin, y);
-  y += 8;
-  
-  if (simulation.bestResaleInfo.bestProfitMonth > 0) {
-    addResultLine('Mês de maior lucro:', `Mês ${simulation.bestResaleInfo.bestProfitMonth}: ${formatCurrency(simulation.bestResaleInfo.maxProfit)}`);
-    addResultLine('Percentual de retorno:', formatPercentage(simulation.bestResaleInfo.maxProfitPercentage));
-  }
-  
-  if (simulation.bestResaleInfo.bestRoiMonth > 0) {
-    addResultLine('Mês de melhor ROI:', `Mês ${simulation.bestResaleInfo.bestRoiMonth}: ${formatCurrency(simulation.bestResaleInfo.maxRoiProfit)}`);
-    addResultLine('Percentual de retorno:', formatPercentage(simulation.bestResaleInfo.maxRoi));
-  }
-  
-  if (simulation.bestResaleInfo.earlyMonth) {
-    addResultLine('Mês mais cedo com lucro:', `Mês ${simulation.bestResaleInfo.earlyMonth}: ${formatCurrency(simulation.bestResaleInfo.earlyProfit || 0)}`);
-    addResultLine('Percentual de retorno:', formatPercentage(simulation.bestResaleInfo.earlyProfitPercentage || 0));
-  }
-  
-  // Check if we need a new page for the schedule
-  if (y > 240) {
-    doc.addPage();
-    y = margin;
+  if (simulation.formData.reinforcementFrequency > 0) {
+    doc.text(
+      `Reforços: ${formatCurrency(simulation.formData.reinforcementsValue)} a cada ${simulation.formData.reinforcementFrequency} meses`,
+      20,
+      yPos
+    );
   } else {
-    y += 10;
+    doc.text("Reforços: Nenhum", 20, yPos);
   }
   
-  // Footer with page numbers
-  for (let i = 1; i <= doc.getNumberOfPages(); i++) {
-    doc.setPage(i);
-    doc.setFontSize(smallSize);
-    doc.setFont('helvetica', 'italic');
-    doc.text(`Simulae - Página ${i} de ${doc.getNumberOfPages()}`, margin, pageWidth - 10);
-    doc.text(`Gerado em ${formatDate(Date.now())}`, pageWidth - margin - 50, pageWidth - 10, { align: 'right' });
+  yPos += 5;
+  
+  doc.text(`Chaves: ${formatCurrency(simulation.formData.keysValue)} (${simulation.formData.keysPercentage}%)`, 20, yPos);
+  
+  yPos += 5;
+  
+  doc.text(`Correção: ${simulation.formData.correctionIndex}% ao mês`, 20, yPos);
+  
+  yPos += 5;
+  
+  doc.text(`Valorização: ${simulation.formData.appreciationIndex}% ao mês`, 20, yPos);
+  
+  yPos += 5;
+  
+  doc.text(`Mês para revenda: ${simulation.formData.resaleMonth}`, 20, yPos);
+  
+  // Add horizontal line
+  yPos += 10;
+  doc.line(20, yPos, pageWidth - 20, yPos);
+  
+  // Section: Results
+  yPos += 10;
+  
+  doc.setFontSize(14);
+  doc.setFont("helvetica", "bold");
+  doc.text("Resultados", 20, yPos);
+  
+  yPos += 8;
+  
+  doc.setFontSize(12);
+  doc.setFont("helvetica", "normal");
+  doc.text(`Total investido: ${formatCurrency(simulation.results.investmentValue)}`, 20, yPos);
+  
+  yPos += 5;
+  
+  doc.text(`Valor do imóvel na revenda: ${formatCurrency(simulation.results.propertyValue)}`, 20, yPos);
+  
+  yPos += 5;
+  
+  doc.text(`Saldo devedor: ${formatCurrency(simulation.results.remainingBalance)}`, 20, yPos);
+  
+  yPos += 5;
+  
+  doc.text(`Lucro na revenda: ${formatCurrency(simulation.results.profit)} (${formatPercentage(simulation.results.profitPercentage)})`, 20, yPos);
+  
+  // Add rental information if available
+  if (simulation.formData.rentalPercentage) {
+    yPos += 10;
+    
+    // Rental section header
+    doc.setFontSize(14);
+    doc.setFont("helvetica", "bold");
+    doc.text("Estimativa de Aluguel", 20, yPos);
+    
+    yPos += 8;
+    
+    // Calculate rental information
+    const rentalData = calculateRentalEstimate(
+      simulation.results.propertyValue,
+      simulation.formData.rentalPercentage
+    );
+    
+    doc.setFontSize(12);
+    doc.setFont("helvetica", "normal");
+    doc.text(`Percentual para aluguel: ${formatPercentage(simulation.formData.rentalPercentage)}`, 20, yPos);
+    
+    yPos += 5;
+    
+    doc.text(`Aluguel mensal estimado: ${formatCurrency(rentalData.rentalEstimate)}`, 20, yPos);
+    
+    yPos += 5;
+    
+    doc.text(`Renda anual: ${formatCurrency(rentalData.annualRental)}`, 20, yPos);
+    
+    yPos += 5;
+    
+    doc.text(`Rentabilidade anual: ${formatPercentage(rentalData.annualRentalReturn)}`, 20, yPos);
+  }
+  
+  // Add horizontal line
+  yPos += 10;
+  doc.line(20, yPos, pageWidth - 20, yPos);
+  
+  // Best months for resale
+  if (simulation.bestResaleInfo) {
+    yPos += 10;
+    
+    doc.setFontSize(14);
+    doc.setFont("helvetica", "bold");
+    doc.text("Melhores Meses para Revenda", 20, yPos);
+    
+    yPos += 8;
+    
+    doc.setFontSize(12);
+    doc.setFont("helvetica", "normal");
+    
+    if (simulation.bestResaleInfo.bestProfitMonth > 0) {
+      doc.text(
+        `Maior lucro: Mês ${simulation.bestResaleInfo.bestProfitMonth} - ${formatCurrency(simulation.bestResaleInfo.maxProfit)} (${formatPercentage(simulation.bestResaleInfo.maxProfitPercentage)})`,
+        20,
+        yPos
+      );
+      
+      yPos += 5;
+    }
+    
+    if (simulation.bestResaleInfo.bestRoiMonth > 0) {
+      doc.text(
+        `Maior ROI: Mês ${simulation.bestResaleInfo.bestRoiMonth} - ${formatCurrency(simulation.bestResaleInfo.maxRoiProfit)} (${formatPercentage(simulation.bestResaleInfo.maxRoi)})`,
+        20,
+        yPos
+      );
+      
+      yPos += 5;
+    }
+    
+    if (simulation.bestResaleInfo.earlyMonth) {
+      doc.text(
+        `Mais cedo: Mês ${simulation.bestResaleInfo.earlyMonth} - ${formatCurrency(simulation.bestResaleInfo.earlyProfit || 0)} (${formatPercentage(simulation.bestResaleInfo.earlyProfitPercentage || 0)})`,
+        20,
+        yPos
+      );
+    }
   }
   
   // Save the PDF
-  doc.save(`simulacao-${simulation.name.replace(/\s+/g, '-').toLowerCase()}.pdf`);
-};
+  doc.save(`simulae_${simulation.id}.pdf`);
+}

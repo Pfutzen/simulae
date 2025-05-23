@@ -15,6 +15,7 @@ import {
   calculateMaxReinforcementCount,
   getReinforcementMonths,
   calculateBestResaleMonth,
+  calculateRentalEstimate,
   SimulationFormData,
   PaymentType,
   CorrectionMode
@@ -52,7 +53,8 @@ const SimulatorForm: React.FC = () => {
     correctionMode: "manual",
     correctionIndex: 0.5,
     appreciationIndex: 1.35,
-    resaleMonth: 24
+    resaleMonth: 24,
+    rentalPercentage: 0.5 // Default rental percentage (0.5%)
   });
 
   const [totalPercentage, setTotalPercentage] = useState<number>(0);
@@ -62,7 +64,9 @@ const SimulatorForm: React.FC = () => {
     propertyValue: 0,
     profit: 0,
     profitPercentage: 0,
-    remainingBalance: 0
+    remainingBalance: 0,
+    rentalEstimate: 0,
+    annualRentalReturn: 0
   });
   const [reinforcementMonths, setReinforcementMonths] = useState<number[]>([]);
   const [bestResaleInfo, setBestResaleInfo] = useState<{
@@ -348,6 +352,11 @@ const SimulatorForm: React.FC = () => {
     setSimulationName(e.target.value);
   };
 
+  // Handle rental percentage change
+  const handleRentalPercentageChange = (value: number) => {
+    setFormData({ ...formData, rentalPercentage: value });
+  };
+
   // Run simulation
   const handleSimulate = () => {
     if (totalPercentage !== 100) {
@@ -368,7 +377,19 @@ const SimulatorForm: React.FC = () => {
       : formData.installmentsCount;
       
     const results = calculateResaleProfit(paymentSchedule, effectiveResaleMonth);
-    setResaleResults(results);
+    
+    // Calculate rental income
+    const rentalData = calculateRentalEstimate(
+      results.propertyValue, 
+      formData.rentalPercentage
+    );
+    
+    // Combine results
+    setResaleResults({
+      ...results,
+      rentalEstimate: rentalData.rentalEstimate,
+      annualRentalReturn: rentalData.annualRentalReturn
+    });
     
     // Calculate best resale month
     const bestResale = calculateBestResaleMonth(paymentSchedule);
@@ -656,6 +677,17 @@ const SimulatorForm: React.FC = () => {
                         />
                       )}
                     </div>
+
+                    <PercentageSlider
+                      id="rental-percentage"
+                      label="Percentual para aluguel mensal"
+                      value={formData.rentalPercentage}
+                      onChange={handleRentalPercentageChange}
+                      min={0.1}
+                      max={1}
+                      step={0.05}
+                      suffix="%"
+                    />
                   </div>
                 </div>
                 
@@ -701,6 +733,9 @@ const SimulatorForm: React.FC = () => {
               resaleMonth={customResaleEnabled ? formData.resaleMonth : formData.installmentsCount}
               bestResaleInfo={bestResaleInfo}
               simulationData={currentSimulation}
+              rentalPercentage={formData.rentalPercentage}
+              rentalEstimate={resaleResults.rentalEstimate}
+              annualRentalReturn={resaleResults.annualRentalReturn}
               {...resaleResults}
             />
           )}

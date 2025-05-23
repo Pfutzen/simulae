@@ -1,17 +1,15 @@
-// Utility functions for real estate calculations
+export type CorrectionMode = "manual" | "market";
 
-export type PaymentType = {
+export interface PaymentType {
   month: number;
   description: string;
   amount: number;
   balance: number;
   totalPaid: number;
   propertyValue: number;
-};
+}
 
-export type CorrectionMode = "manual" | "cub";
-
-export type SimulationFormData = {
+export interface SimulationFormData {
   propertyValue: number;
   downPaymentValue: number;
   downPaymentPercentage: number;
@@ -20,359 +18,161 @@ export type SimulationFormData = {
   installmentsCount: number;
   reinforcementsValue: number;
   reinforcementsPercentage: number;
-  reinforcementFrequency: number; 
-  finalMonthsWithoutReinforcement: number; // New field for configurable months without reinforcement
+  reinforcementFrequency: number;
+  finalMonthsWithoutReinforcement: number;
   keysValue: number;
   keysPercentage: number;
   correctionMode: CorrectionMode;
-  correctionIndex: number; // Monthly correction index (manual mode)
-  appreciationIndex: number; // Monthly property appreciation
-  resaleMonth: number; // Desired month for early resale
-};
+  correctionIndex: number;
+  appreciationIndex: number;
+  resaleMonth: number;
+  rentalPercentage?: number; // New field for rental percentage
+}
 
-// CUB/SC correction data
-export const CUB_CORRECTION_DATA = [
-  { month: 1, description: "Jun/24", percentage: 0.57 },
-  { month: 2, description: "Jul/24", percentage: 0.68 },
-  { month: 3, description: "Ago/24", percentage: 0.67 },
-  { month: 4, description: "Set/24", percentage: 1.05 },
-  { month: 5, description: "Out/24", percentage: 0.16 },
-  { month: 6, description: "Nov/24", percentage: 0.62 },
-  { month: 7, description: "Dez/24", percentage: 0.17 },
-  { month: 8, description: "Jan/25", percentage: 0.67 },
-  { month: 9, description: "Fev/25", percentage: 0.46 },
-  { month: 10, description: "Mar/25", percentage: 0.23 },
-  { month: 11, description: "Abr/25", percentage: 0.28 },
-  { month: 12, description: "Mai/25", percentage: 0.25 }
-];
-
-// Function to get the correction index for a specific month
-export const getCorrectionIndex = (month: number, correctionMode: CorrectionMode, manualIndex: number): number => {
-  if (correctionMode === "manual") {
-    return manualIndex;
-  }
-  
-  // For CUB mode, use the pre-defined CUB/SC data
-  // We use modulo to repeat the values if we go beyond 12 months
-  const modMonth = ((month - 1) % CUB_CORRECTION_DATA.length) + 1;
-  const cubData = CUB_CORRECTION_DATA.find(data => data.month === modMonth);
-  return cubData ? cubData.percentage : 0;
-};
-
-export const calculatePercentage = (value: number, total: number): number => {
-  if (!total) return 0;
-  return (value / total) * 100;
-};
-
-export const calculateValue = (percentage: number, total: number): number => {
-  return (percentage / 100) * total;
-};
-
+/**
+ * Format currency to BRL
+ * @param value
+ * @returns string
+ */
 export const formatCurrency = (value: number): string => {
-  return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  return value.toLocaleString("pt-BR", {
+    style: "currency",
+    currency: "BRL"
+  });
 };
 
+/**
+ * Format percentage
+ * @param value
+ * @returns string
+ */
 export const formatPercentage = (value: number): string => {
-  return `${value.toFixed(2)}%`;
-};
-
-// Calculate total percentage to validate it equals 100%
-export const calculateTotalPercentage = (data: Partial<SimulationFormData>): number => {
-  const { 
-    downPaymentPercentage = 0,
-    installmentsPercentage = 0,
-    reinforcementsPercentage = 0,
-    keysPercentage = 0
-  } = data;
-  
-  return Number((downPaymentPercentage + installmentsPercentage + reinforcementsPercentage + keysPercentage).toFixed(2));
+  return value.toLocaleString("pt-BR", {
+    style: "percent",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  });
 };
 
 /**
- * Calculate the maximum number of reinforcements based on frequency and installments
- * Ensures the last reinforcement doesn't happen in the final configurable months
+ * Calculates the value based on a percentage of a total value.
+ *
+ * @param {number} percentage - The percentage to calculate (e.g., 10 for 10%).
+ * @param {number} totalValue - The total value to calculate the percentage from.
+ * @returns {number} The calculated value.
  */
-export const calculateMaxReinforcementCount = (
-  installmentsCount: number, 
-  frequency: number,
-  finalMonthsWithoutReinforcement: number
-): number => {
-  if (frequency <= 0) return 0;
-  
-  // The last reinforcement can happen at most at installmentsCount - finalMonthsWithoutReinforcement
-  const lastPossibleMonth = Math.max(0, installmentsCount - finalMonthsWithoutReinforcement);
-  
-  // Calculate how many reinforcements fit within the allowed period
-  return Math.max(0, Math.floor(lastPossibleMonth / frequency));
+export const calculateValue = (percentage: number, totalValue: number): number => {
+  return (percentage / 100) * totalValue;
 };
 
 /**
- * Get the actual months when reinforcements occur
- * Adjusts the last reinforcement to respect the "no reinforcements in final X months" rule
+ * Calculates the percentage that a value represents of a total value.
+ *
+ * @param {number} value - The value to determine the percentage for.
+ * @param {number} totalValue - The total value to calculate the percentage against.
+ * @returns {number} The calculated percentage.
  */
-export const getReinforcementMonths = (
-  installmentsCount: number, 
-  frequency: number,
-  finalMonthsWithoutReinforcement: number
-): number[] => {
-  if (frequency <= 0) return [];
-  
-  const reinforcementMonths: number[] = [];
-  const maxMonth = installmentsCount - finalMonthsWithoutReinforcement;
-  
-  // Add reinforcements at regular frequency
-  for (let month = frequency; month <= installmentsCount; month += frequency) {
-    // Stop adding reinforcements once we reach the forbidden zone
-    if (month > maxMonth) break;
-    reinforcementMonths.push(month);
-  }
-  
-  return reinforcementMonths;
+export const calculatePercentage = (value: number, totalValue: number): number => {
+  return (value / totalValue) * 100;
 };
 
-// Apply compound interest to a value based on the index and number of months
-export const applyCompoundInterest = (
-  baseValue: number,
-  monthlyIndex: number,
-  months: number
-): number => {
-  return baseValue * Math.pow(1 + monthlyIndex / 100, months);
+/**
+ * Calculates the total percentage from down payment, installments, reinforcements and keys.
+ *
+ * @param {SimulationFormData} formData - The form data to calculate the total percentage from.
+ * @returns {number} The calculated total percentage.
+ */
+export const calculateTotalPercentage = (formData: SimulationFormData): number => {
+  return (
+    formData.downPaymentPercentage +
+    formData.installmentsPercentage +
+    formData.reinforcementsPercentage +
+    formData.keysPercentage
+  );
 };
 
-// Apply compound interest using CUB/SC monthly rates
-export const applyCubCompoundInterest = (
-  baseValue: number,
-  startMonth: number,
-  endMonth: number
-): number => {
-  let result = baseValue;
-  
-  // Apply each monthly CUB rate sequentially
-  for (let month = startMonth; month <= endMonth; month++) {
-    const index = getCorrectionIndex(month, "cub", 0);
-    result *= (1 + index / 100);
-  }
-  
-  return result;
-};
-
-// Generate payment schedule
-export const generatePaymentSchedule = (data: SimulationFormData): PaymentType[] => {
-  const {
-    propertyValue,
-    downPaymentValue,
-    installmentsValue,
-    installmentsCount,
-    reinforcementsValue,
-    reinforcementFrequency,
-    finalMonthsWithoutReinforcement,
-    keysValue,
-    correctionMode,
-    correctionIndex,
-    appreciationIndex,
-    resaleMonth
-  } = data;
-
+/**
+ * Generates a payment schedule based on the provided form data.
+ *
+ * @param {SimulationFormData} formData - The data used to generate the payment schedule.
+ * @returns {PaymentType[]} The generated payment schedule.
+ */
+export const generatePaymentSchedule = (formData: SimulationFormData): PaymentType[] => {
   const schedule: PaymentType[] = [];
-  let totalPaid = 0;
-  let currentPropertyValue = propertyValue;
-  let balance = propertyValue;
+  let currentBalance = formData.propertyValue - formData.downPaymentValue;
+  let totalPaid = formData.downPaymentValue;
+  let propertyValue = formData.propertyValue;
   
-  // Get the months when reinforcements will happen
+  // Initial down payment
+  schedule.push({
+    month: 0,
+    description: "Entrada",
+    amount: formData.downPaymentValue,
+    balance: currentBalance,
+    totalPaid: totalPaid,
+    propertyValue: propertyValue
+  });
+  
+  // Calculate reinforcement months
   const reinforcementMonths = getReinforcementMonths(
-    installmentsCount, 
-    reinforcementFrequency,
-    finalMonthsWithoutReinforcement
+    formData.installmentsCount,
+    formData.reinforcementFrequency,
+    formData.finalMonthsWithoutReinforcement
   );
   
-  // Month 0: Down payment
-  if (downPaymentValue > 0) {
-    totalPaid += downPaymentValue;
-    balance -= downPaymentValue;
+  for (let month = 1; month <= formData.installmentsCount; month++) {
+    let monthlyCorrection = 0;
+    
+    if (formData.correctionMode === "manual") {
+      monthlyCorrection = currentBalance * (formData.correctionIndex / 100);
+    }
+    
+    currentBalance += monthlyCorrection;
+    propertyValue += propertyValue * (formData.appreciationIndex / 100);
+    
+    let installmentAmount = formData.installmentsValue;
+    
+    // Check if it's a reinforcement month
+    if (reinforcementMonths.includes(month)) {
+      installmentAmount += formData.reinforcementsValue;
+    }
+    
+    currentBalance -= installmentAmount;
+    totalPaid += installmentAmount;
     
     schedule.push({
-      month: 0,
-      description: "Entrada",
-      amount: downPaymentValue,
-      balance,
-      totalPaid,
-      propertyValue: currentPropertyValue
+      month: month,
+      description: reinforcementMonths.includes(month)
+        ? `Parcela + Reforço (${month})`
+        : `Parcela (${month})`,
+      amount: installmentAmount,
+      balance: currentBalance > 0 ? currentBalance : 0,
+      totalPaid: totalPaid,
+      propertyValue: propertyValue > 0 ? propertyValue : 0
     });
   }
-
-  // Calculate payments for each month
-  for (let month = 1; month <= Math.max(installmentsCount, resaleMonth); month++) {
-    let monthlyPayment = 0;
-    const descriptions: string[] = [];
-    
-    // Get the correction index for this month
-    const monthlyCorrection = getCorrectionIndex(month, correctionMode, correctionIndex);
-    
-    // Apply monthly correction to remaining balance (compound interest)
-    balance = balance * (1 + monthlyCorrection / 100);
-    
-    // Apply monthly appreciation to property value
-    currentPropertyValue *= (1 + appreciationIndex / 100);
-    
-    // Regular installment payment with compound interest applied
-    if (month <= installmentsCount) {
-      let correctedInstallment = installmentsValue;
-      
-      if (correctionMode === "manual") {
-        // Apply compound interest to the base installment value
-        correctedInstallment = applyCompoundInterest(installmentsValue, correctionIndex, month - 1);
-      } else {
-        // Apply CUB/SC correction to the base installment value
-        correctedInstallment = applyCubCompoundInterest(installmentsValue, 1, month);
-      }
-      
-      monthlyPayment += correctedInstallment;
-      descriptions.push("Parcela");
-    }
-    
-    // Reinforcement payment with compound interest applied
-    if (reinforcementMonths.includes(month)) {
-      let correctedReinforcement = reinforcementsValue;
-      
-      if (correctionMode === "manual") {
-        // Apply compound interest to the base reinforcement value
-        correctedReinforcement = applyCompoundInterest(reinforcementsValue, correctionIndex, month - 1);
-      } else {
-        // Apply CUB/SC correction to the base reinforcement value
-        correctedReinforcement = applyCubCompoundInterest(reinforcementsValue, 1, month);
-      }
-      
-      monthlyPayment += correctedReinforcement;
-      descriptions.push("Reforço");
-    }
-    
-    // Keys payment (at the last installment) with compound interest applied
-    if (month === installmentsCount) {
-      let correctedKeysValue = keysValue;
-      
-      if (correctionMode === "manual") {
-        // Apply compound interest to the keys value
-        correctedKeysValue = applyCompoundInterest(keysValue, correctionIndex, month - 1);
-      } else {
-        // Apply CUB/SC correction to the keys value
-        correctedKeysValue = applyCubCompoundInterest(keysValue, 1, month);
-      }
-      
-      monthlyPayment += correctedKeysValue;
-      descriptions.push("Chaves");
-    }
-    
-    if (monthlyPayment > 0 || month === resaleMonth) {
-      totalPaid += monthlyPayment;
-      balance -= monthlyPayment;
-      
-      schedule.push({
-        month,
-        description: descriptions.join(" + "),
-        amount: monthlyPayment,
-        balance,
-        totalPaid,
-        propertyValue: currentPropertyValue
-      });
-    }
-  }
+  
+  // Add keys payment
+  totalPaid += formData.keysValue;
+  schedule.push({
+    month: formData.installmentsCount + 1,
+    description: "Chaves",
+    amount: formData.keysValue,
+    balance: 0,
+    totalPaid: totalPaid,
+    propertyValue: propertyValue
+  });
   
   return schedule;
 };
 
 /**
- * Calculate the best months for resale based on maximum profit and ROI
+ * Calculates resale profit based on a payment schedule and a resale month.
+ *
+ * @param {PaymentType[]} schedule - The payment schedule.
+ * @param {number} resaleMonth - The month in which the property is resold.
+ * @returns {{ investmentValue: number; propertyValue: number; profit: number; profitPercentage: number; remainingBalance: number }} An object containing the investment value, property value, profit, and profit percentage.
  */
-export const calculateBestResaleMonth = (schedule: PaymentType[]): {
-  bestProfitMonth: number;
-  maxProfit: number;
-  maxProfitPercentage: number;
-  bestRoiMonth: number;
-  maxRoi: number;
-  maxRoiProfit: number;
-  earlyMonth?: number;
-  earlyProfit?: number;
-  earlyProfitPercentage?: number;
-} => {
-  if (schedule.length <= 1) {
-    return {
-      bestProfitMonth: 0,
-      maxProfit: 0,
-      maxProfitPercentage: 0,
-      bestRoiMonth: 0,
-      maxRoi: 0,
-      maxRoiProfit: 0
-    };
-  }
-  
-  let bestProfitMonth = 0;
-  let maxProfit = -Infinity;
-  let maxProfitPercentage = 0;
-  
-  let bestRoiMonth = 0;
-  let maxRoi = -Infinity;
-  let maxRoiProfit = 0;
-  
-  // Skip month 0 (down payment) and start from month 1
-  for (let i = 1; i < schedule.length; i++) {
-    const payment = schedule[i];
-    
-    // Calculate profit for this month: property value - (totalPaid + remaining balance)
-    const profit = payment.propertyValue - (payment.totalPaid + payment.balance);
-    const profitPercentage = payment.totalPaid > 0 ? (profit / payment.totalPaid) * 100 : 0;
-    
-    // Track maximum absolute profit
-    if (profit > maxProfit) {
-      maxProfit = profit;
-      bestProfitMonth = payment.month;
-      maxProfitPercentage = profitPercentage;
-    }
-    
-    // Track maximum ROI
-    if (profitPercentage > maxRoi && profit > 0) {
-      maxRoi = profitPercentage;
-      bestRoiMonth = payment.month;
-      maxRoiProfit = profit;
-    }
-  }
-  
-  // Find an earlier month with decent profit (at least 70% of max profit)
-  // but only if we found a best month and we have more than 10 months in the schedule
-  let earlyMonth, earlyProfit, earlyProfitPercentage;
-  
-  if (maxProfit > 0 && schedule.length > 10 && bestProfitMonth > 12) {
-    const profitThreshold = maxProfit * 0.7; // 70% of max profit
-    
-    for (let i = 1; i < schedule.length; i++) {
-      const payment = schedule[i];
-      
-      // Skip if this is the best month or after it
-      if (payment.month >= bestProfitMonth) break;
-      
-      const profit = payment.propertyValue - (payment.totalPaid + payment.balance);
-      const profitPercentage = payment.totalPaid > 0 ? (profit / payment.totalPaid) * 100 : 0;
-      
-      // If we found a month with profit above threshold
-      if (profit > profitThreshold && payment.month < bestProfitMonth - 3) {
-        earlyMonth = payment.month;
-        earlyProfit = profit;
-        earlyProfitPercentage = profitPercentage;
-        break;
-      }
-    }
-  }
-  
-  return {
-    bestProfitMonth,
-    maxProfit,
-    maxProfitPercentage,
-    bestRoiMonth,
-    maxRoi,
-    maxRoiProfit,
-    ...(earlyMonth ? { earlyMonth, earlyProfit, earlyProfitPercentage } : {})
-  };
-};
-
 export const calculateResaleProfit = (schedule: PaymentType[], resaleMonth: number): {
   investmentValue: number;
   propertyValue: number;
@@ -395,10 +195,8 @@ export const calculateResaleProfit = (schedule: PaymentType[], resaleMonth: numb
   const investmentValue = resaleData.totalPaid;
   const propertyValue = resaleData.propertyValue;
   const remainingBalance = resaleData.balance;
-  
-  // Profit is now property value minus what was paid and what is still owed
   const profit = propertyValue - investmentValue - remainingBalance;
-  const profitPercentage = investmentValue > 0 ? (profit / investmentValue) * 100 : 0;
+  const profitPercentage = (profit / investmentValue) * 100;
   
   return {
     investmentValue,
@@ -408,3 +206,132 @@ export const calculateResaleProfit = (schedule: PaymentType[], resaleMonth: numb
     remainingBalance
   };
 };
+
+/**
+ * Calculates the maximum number of reinforcements possible based on the installment count and reinforcement frequency.
+ *
+ * @param {number} installmentsCount - The total number of installments.
+ * @param {number} reinforcementFrequency - The frequency of reinforcements in months.
+ * @returns {number} The maximum possible number of reinforcements.
+ */
+export const calculateMaxReinforcementCount = (installmentsCount: number, reinforcementFrequency: number): number => {
+  return Math.floor(installmentsCount / reinforcementFrequency);
+};
+
+/**
+ * Generates an array of months in which reinforcements will occur based on the installment count and reinforcement frequency.
+ *
+ * @param {number} installmentsCount - The total number of installments.
+ * @param {number} reinforcementFrequency - The frequency of reinforcements in months.
+ * @param {number} finalMonthsWithoutReinforcement - The number of months at the end of the installment period during which no reinforcements should occur.
+ * @returns {number[]} An array of months in which reinforcements will occur.
+ */
+export const getReinforcementMonths = (
+  installmentsCount: number,
+  reinforcementFrequency: number,
+  finalMonthsWithoutReinforcement: number
+): number[] => {
+  const months: number[] = [];
+  
+  for (let i = reinforcementFrequency; i <= installmentsCount - finalMonthsWithoutReinforcement; i += reinforcementFrequency) {
+    months.push(i);
+  }
+  
+  return months;
+};
+
+/**
+ * Calculates the best month for resale based on maximum profit and ROI (Return on Investment).
+ *
+ * @param {PaymentType[]} schedule - The payment schedule.
+ * @returns {{ bestProfitMonth: number; maxProfit: number; maxProfitPercentage: number; bestRoiMonth: number; maxRoi: number; maxRoiProfit: number }} An object containing the best month for resale based on maximum profit and ROI.
+ */
+export const calculateBestResaleMonth = (schedule: PaymentType[]): {
+  bestProfitMonth: number;
+  maxProfit: number;
+  maxProfitPercentage: number;
+  bestRoiMonth: number;
+  maxRoi: number;
+  maxRoiProfit: number;
+  earlyMonth?: number;
+  earlyProfit?: number;
+  earlyProfitPercentage?: number;
+} => {
+  let bestProfitMonth = 0;
+  let maxProfit = 0;
+  let maxProfitPercentage = 0;
+  let bestRoiMonth = 0;
+  let maxRoi = 0;
+  let maxRoiProfit = 0;
+  let earlyMonth: number | undefined = undefined;
+  let earlyProfit: number | undefined = undefined;
+  let earlyProfitPercentage: number | undefined = undefined;
+  
+  if (schedule.length === 0) {
+    return { bestProfitMonth, maxProfit, maxProfitPercentage, bestRoiMonth, maxRoi, maxRoiProfit };
+  }
+  
+  // Find the earliest month with profit
+  for (let i = 1; i < schedule.length; i++) {
+    const resaleData = schedule[i];
+    const investmentValue = resaleData.totalPaid;
+    const propertyValue = resaleData.propertyValue;
+    const remainingBalance = resaleData.balance;
+    const profit = propertyValue - investmentValue - remainingBalance;
+    
+    if (profit > 0) {
+      earlyMonth = resaleData.month;
+      earlyProfit = profit;
+      earlyProfitPercentage = (profit / investmentValue) * 100;
+      break;
+    }
+  }
+  
+  for (let i = 1; i < schedule.length; i++) {
+    const resaleData = schedule[i];
+    const investmentValue = resaleData.totalPaid;
+    const propertyValue = resaleData.propertyValue;
+    const remainingBalance = resaleData.balance;
+    const profit = propertyValue - investmentValue - remainingBalance;
+    const roi = (profit / investmentValue) * 100;
+    
+    if (profit > maxProfit) {
+      maxProfit = profit;
+      maxProfitPercentage = roi;
+      bestProfitMonth = resaleData.month;
+    }
+    
+    if (roi > maxRoi) {
+      maxRoi = roi;
+      maxRoiProfit = profit;
+      bestRoiMonth = resaleData.month;
+    }
+  }
+  
+  return {
+    bestProfitMonth,
+    maxProfit,
+    maxProfitPercentage,
+    bestRoiMonth,
+    maxRoi,
+    maxRoiProfit,
+    earlyMonth,
+    earlyProfit,
+    earlyProfitPercentage
+  };
+};
+
+/**
+ * Calculate rental income estimate based on property value
+ */
+export function calculateRentalEstimate(propertyValue: number, percentage: number = 0.5) {
+  const rentalEstimate = propertyValue * (percentage / 100);
+  const annualRental = rentalEstimate * 12;
+  const annualRentalReturn = (annualRental / propertyValue) * 100;
+  
+  return {
+    rentalEstimate,
+    annualRental,
+    annualRentalReturn
+  };
+}
