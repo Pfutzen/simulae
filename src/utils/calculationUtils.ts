@@ -292,7 +292,7 @@ export const getReinforcementMonths = (
  * Calculates the best month for resale based on maximum profit and ROI (Return on Investment).
  *
  * @param {PaymentType[]} schedule - The payment schedule.
- * @returns {{ bestProfitMonth: number; maxProfit: number; maxProfitPercentage: number; bestRoiMonth: number; maxRoi: number; maxRoiProfit: number }} An object containing the best month for resale based on maximum profit and ROI.
+ * @returns {{ bestProfitMonth: number; maxProfit: number; maxProfitPercentage: number; bestRoiMonth: number; maxRoi: number; maxRoiProfit: number; }} An object containing the best month for resale based on maximum profit and ROI.
  */
 export const calculateBestResaleMonth = (schedule: PaymentType[]): {
   bestProfitMonth: number;
@@ -324,9 +324,10 @@ export const calculateBestResaleMonth = (schedule: PaymentType[]): {
     const entry = schedule[i];
     const investmentValue = entry.totalPaid;
     const propertyValue = entry.propertyValue;
+    const remainingBalance = entry.balance;
     
-    // Simple profit calculation: property value minus total investment
-    const profit = propertyValue - investmentValue;
+    // Profit calculation: property value minus total investment minus remaining balance
+    const profit = propertyValue - investmentValue - remainingBalance;
     
     // Only calculate percentage if investment value is positive to avoid division by zero
     const profitPercentage = investmentValue > 0 ? (profit / investmentValue) * 100 : 0;
@@ -343,9 +344,10 @@ export const calculateBestResaleMonth = (schedule: PaymentType[]): {
     const entry = schedule[i];
     const investmentValue = entry.totalPaid;
     const propertyValue = entry.propertyValue;
+    const remainingBalance = entry.balance;
     
-    // Simple profit calculation: property value minus total investment
-    const profit = propertyValue - investmentValue;
+    // Profit calculation: property value minus total investment minus remaining balance
+    const profit = propertyValue - investmentValue - remainingBalance;
     
     // Only calculate percentage if investment value is positive to avoid division by zero
     const profitPercentage = investmentValue > 0 ? (profit / investmentValue) * 100 : 0;
@@ -356,7 +358,7 @@ export const calculateBestResaleMonth = (schedule: PaymentType[]): {
       bestProfitMonth = entry.month;
     }
     
-    if (profitPercentage > maxRoi) {
+    if (profitPercentage > maxRoi && profit > 0) {
       maxRoi = profitPercentage;
       maxRoiProfit = profit;
       bestRoiMonth = entry.month;
