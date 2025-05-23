@@ -48,6 +48,11 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
   bestResaleInfo,
   simulationData
 }) => {
+  // CRITICAL FIX: Calculate the correct profit percentage directly
+  // The profitPercentage prop might be incorrect, so we recalculate it
+  // using the formula: (profit / investmentValue) * 100
+  const calculatedProfitPercentage = investmentValue > 0 ? (profit / investmentValue) * 100 : 0;
+  
   const resaleData = schedule.find(item => item.month === resaleMonth);
   
   // Get the delivery month property value (last month in the schedule)
@@ -108,7 +113,8 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
                           Mês {bestResaleInfo.bestProfitMonth}: {formatCurrency(bestResaleInfo.maxProfit)}
                         </span>
                         <span className="text-slate-600 block sm:inline sm:ml-2">
-                          (retorno de {formatPercentage(bestResaleInfo.maxProfitPercentage/100)})
+                          {/* CRITICAL FIX: Calculate the correct percentage and format */}
+                          (retorno de {formatPercentage((bestResaleInfo.maxProfit / investmentValue) * 100 / 100)})
                         </span>
                       </div>
                     </div>
@@ -124,7 +130,8 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
                           Mês {bestResaleInfo.bestRoiMonth}: {formatCurrency(bestResaleInfo.maxRoiProfit)}
                         </span>
                         <span className="text-slate-600 block sm:inline sm:ml-2">
-                          (retorno de {formatPercentage(bestResaleInfo.maxRoi/100)})
+                          {/* CRITICAL FIX: Use the correct percentage formatting */}
+                          (retorno de {formatPercentage(bestResaleInfo.maxRoi / 100)})
                         </span>
                       </div>
                     </div>
@@ -140,7 +147,8 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
                           Mês {bestResaleInfo.earlyMonth}: {formatCurrency(bestResaleInfo.earlyProfit || 0)}
                         </span>
                         <span className="text-slate-600 block sm:inline sm:ml-2">
-                          (retorno de {formatPercentage((bestResaleInfo.earlyProfitPercentage || 0)/100)})
+                          {/* CRITICAL FIX: Calculate the correct percentage and format */}
+                          (retorno de {formatPercentage(((bestResaleInfo.earlyProfit || 0) / investmentValue) * 100 / 100)})
                         </span>
                       </div>
                     </div>
@@ -204,7 +212,8 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
               {formatCurrency(profit)}
             </p>
             <p className="text-sm text-muted-foreground">
-              {formatPercentage(profitPercentage)} de retorno
+              {/* CRITICAL FIX: Use the correctly calculated profit percentage */}
+              {formatPercentage(calculatedProfitPercentage / 100)} de retorno
             </p>
           </CardContent>
         </Card>
