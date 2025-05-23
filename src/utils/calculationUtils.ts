@@ -314,14 +314,11 @@ export const calculateBestResaleMonth = (schedule: PaymentType[]): {
   let earlyProfit: number | undefined = undefined;
   let earlyProfitPercentage: number | undefined = undefined;
   
-  // Minimum threshold for "early month" indicator (5% return)
-  const EARLY_MONTH_THRESHOLD = 5; // 5%
-  
   if (schedule.length === 0) {
     return { bestProfitMonth, maxProfit, maxProfitPercentage, bestRoiMonth, maxRoi, maxRoiProfit };
   }
   
-  // Find best profit and best ROI months
+  // First pass: Find best profit and best ROI months
   for (let i = 1; i < schedule.length; i++) {
     const entry = schedule[i];
     const investmentValue = entry.totalPaid;
@@ -334,13 +331,6 @@ export const calculateBestResaleMonth = (schedule: PaymentType[]): {
     // Only calculate percentage if investment value is positive to avoid division by zero
     const profitPercentage = investmentValue > 0 ? (profit / investmentValue) * 100 : 0;
     
-    // Check for early month with meaningful return (above threshold)
-    if (profit > 0 && profitPercentage >= EARLY_MONTH_THRESHOLD && earlyMonth === undefined) {
-      earlyMonth = entry.month;
-      earlyProfit = profit;
-      earlyProfitPercentage = profitPercentage;
-    }
-    
     if (profit > maxProfit) {
       maxProfit = profit;
       maxProfitPercentage = profitPercentage;
@@ -351,6 +341,28 @@ export const calculateBestResaleMonth = (schedule: PaymentType[]): {
       maxRoi = profitPercentage;
       maxRoiProfit = profit;
       bestRoiMonth = entry.month;
+    }
+  }
+  
+  // Second pass: Find "early month" with good return
+  // We'll look for months that have at least 70% of the max ROI but earlier in the timeline
+  const earlyThreshold = maxRoi * 0.7; // 70% of the maximum ROI is considered a good early return
+  
+  for (let i = 1; i < schedule.length; i++) {
+    const entry = schedule[i];
+    const investmentValue = entry.totalPaid;
+    const propertyValue = entry.propertyValue;
+    const remainingBalance = entry.balance;
+    
+    const profit = propertyValue - investmentValue - remainingBalance;
+    const profitPercentage = investmentValue > 0 ? (profit / investmentValue) * 100 : 0;
+    
+    // Find the earliest month that has at least 70% of the maximum ROI
+    if (profit > 0 && profitPercentage > earlyThreshold) {
+      earlyMonth = entry.month;
+      earlyProfit = profit;
+      earlyProfitPercentage = profitPercentage;
+      break; // Stop at the first month that meets the criteria
     }
   }
   
