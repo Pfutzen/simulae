@@ -50,6 +50,10 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
   simulationData
 }) => {
   const resaleData = schedule.find(item => item.month === resaleMonth);
+  
+  // Get the delivery month property value (last month in the schedule)
+  const deliveryMonthData = schedule.length > 0 ? schedule[schedule.length - 1] : null;
+  const deliveryPropertyValue = deliveryMonthData ? deliveryMonthData.propertyValue : propertyValue;
 
   if (schedule.length === 0) {
     return null;
@@ -211,7 +215,7 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
                   <HomeIcon className="h-6 w-6 text-sky-600" />
                   <span className="text-sm font-medium text-slate-500">Valor do Imóvel na Entrega</span>
                 </div>
-                <p className="text-2xl font-bold text-slate-800">{formatCurrency(propertyValue)}</p>
+                <p className="text-2xl font-bold text-slate-800">{formatCurrency(deliveryPropertyValue)}</p>
               </div>
               
               <div className="flex flex-col p-4 bg-slate-50 rounded-lg border border-slate-100">
