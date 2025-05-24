@@ -194,7 +194,7 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <FinancingSimulator keysValue={schedule.find(p => p.paymentType === "chaves")?.amount || 0} />
+          <FinancingSimulator keysValue={schedule.find(p => p.description === "Chaves")?.amount || 0} />
         </CardContent>
       </Card>
 
@@ -248,10 +248,10 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
                     Valor
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
-                    Correção
+                    Saldo
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
-                    Valor corrigido
+                    Total Pago
                   </th>
                 </tr>
               </thead>
@@ -262,16 +262,16 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
                       {payment.month}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      {payment.paymentType}
+                      {payment.description}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       {formatCurrency(payment.amount)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      {formatPercentage(payment.correctionRate)}
+                      {formatCurrency(payment.balance)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      {formatCurrency(payment.correctedAmount)}
+                      {formatCurrency(payment.totalPaid)}
                     </td>
                   </tr>
                 ))}
