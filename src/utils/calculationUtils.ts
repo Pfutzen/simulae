@@ -347,7 +347,7 @@ export const calculateResaleProfit = (schedule: PaymentType[], resaleMonth: numb
   const remainingBalance = resaleData.balance; // Remaining debt
   const profit = propertyValue - investmentValue - remainingBalance; // Net profit
   
-  // FIXED: Calculate profitPercentage based on investmentValue (total paid), not property value
+  // CORRECTED: Calculate profitPercentage as profit divided by investment (basic ROI calculation)
   const profitPercentage = investmentValue > 0 ? (profit / investmentValue) * 100 : 0;
   
   return {
@@ -435,7 +435,7 @@ export const calculateBestResaleMonth = (schedule: PaymentType[]): {
     // Profit calculation: property value minus total investment minus remaining balance
     const profit = propertyValue - investmentValue - remainingBalance;
     
-    // FIXED: ROI calculation based on investmentValue (totalPaid), not property value
+    // CORRECTED: Simple ROI calculation - profit divided by investment
     const roiPercentage = investmentValue > 0 ? (profit / investmentValue) * 100 : 0;
     
     // Check for best absolute profit (highest absolute value)
@@ -466,7 +466,7 @@ export const calculateBestResaleMonth = (schedule: PaymentType[]): {
     
     const profit = propertyValue - investmentValue - remainingBalance;
     
-    // FIXED: ROI calculation based on investmentValue (totalPaid), not property value
+    // CORRECTED: Simple ROI calculation - profit divided by investment
     const roiPercentage = investmentValue > 0 ? (profit / investmentValue) * 100 : 0;
     
     // Find the earliest month that has at least 70% of the maximum ROI
