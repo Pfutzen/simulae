@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -150,7 +149,6 @@ const SimulatorForm = () => {
                 value={downPaymentValue}
                 onValueChange={setDownPaymentValue}
                 totalValue={propertyValue}
-                required
               />
 
               <MonthYearInput
@@ -222,7 +220,6 @@ const SimulatorForm = () => {
                 value={keysValue}
                 onValueChange={setKeysValue}
                 totalValue={propertyValue}
-                required
               />
             </CardContent>
           </Card>
@@ -284,8 +281,24 @@ const SimulatorForm = () => {
               </Button>
               {simulationResults && (
                 <SimulationResults 
-                  results={simulationResults}
-                  formData={simulationParams}
+                  schedule={simulationResults.schedule || []}
+                  resaleMonth={resaleMonth}
+                  investmentValue={simulationResults.investmentValue || 0}
+                  propertyValue={simulationResults.propertyValue || propertyValue}
+                  profit={simulationResults.profit || 0}
+                  profitPercentage={simulationResults.profitPercentage || 0}
+                  remainingBalance={simulationResults.remainingBalance || 0}
+                  rentalPercentage={rentalPercentage}
+                  rentalEstimate={simulationResults.rentalEstimate}
+                  annualRentalReturn={simulationResults.annualRentalReturn}
+                  bestResaleInfo={simulationResults.bestResaleInfo || {
+                    bestProfitMonth: 0,
+                    maxProfit: 0,
+                    maxProfitPercentage: 0,
+                    bestRoiMonth: 0,
+                    maxRoi: 0,
+                    maxRoiProfit: 0
+                  }}
                 />
               )}
             </CardContent>
