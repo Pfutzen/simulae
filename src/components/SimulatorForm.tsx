@@ -36,6 +36,8 @@ import ReinforcementDatesControl from "./ReinforcementDatesControl";
 import { CheckCircle, AlertCircle, DollarSign, Calendar, TrendingUp, Home } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import MonthYearInput from "./MonthYearInput";
+import { calculateInstallmentsFromDeliveryDate, formatToMonthYear } from "@/utils/dateUtils";
 
 const SimulatorForm: React.FC = () => {
   const { toast } = useToast();
@@ -130,20 +132,43 @@ const SimulatorForm: React.FC = () => {
     formData.finalMonthsWithoutReinforcement
   ]);
 
-  // Auto-calculate start date when delivery date or installments count changes
+  // Auto-calculate installments count when delivery date changes
   useEffect(() => {
     if (formData.deliveryDate) {
+      const calculatedInstallments = calculateInstallmentsFromDeliveryDate(formData.deliveryDate);
       const calculatedStartDate = calculateStartDateFromDelivery(
         formData.deliveryDate, 
-        formData.installmentsCount
+        calculatedInstallments
       );
-      setFormData(prev => ({
-        ...prev,
+      
+      // Update installments count and recalculate dependent values
+      const updatedFormData = {
+        ...formData,
+        installmentsCount: calculatedInstallments,
         startDate: calculatedStartDate,
-        customReinforcementDates: undefined // Reset custom dates when dates change
-      }));
+        customReinforcementDates: undefined
+      };
+      
+      // Recalculate installment value based on new count
+      updatedFormData.installmentsValue = calculatedInstallments > 0 
+        ? calculateValue(updatedFormData.installmentsPercentage, updatedFormData.propertyValue) / calculatedInstallments
+        : 0;
+      
+      // Recalculate reinforcement value based on new installment count
+      const newReinforcementMonths = getReinforcementMonths(
+        calculatedInstallments,
+        updatedFormData.reinforcementFrequency,
+        updatedFormData.finalMonthsWithoutReinforcement
+      );
+      const reinforcementCount = newReinforcementMonths.length;
+      updatedFormData.reinforcementsValue = reinforcementCount > 0
+        ? calculateValue(updatedFormData.reinforcementsPercentage, updatedFormData.propertyValue) / reinforcementCount
+        : 0;
+      
+      setFormData(updatedFormData);
+      setReinforcementMonths(newReinforcementMonths);
     }
-  }, [formData.deliveryDate, formData.installmentsCount]);
+  }, [formData.deliveryDate]);
 
   // Handle property value change
   const handlePropertyValueChange = (value: number) => {
@@ -216,35 +241,6 @@ const SimulatorForm: React.FC = () => {
     });
   };
 
-  const handleInstallmentsCountChange = (count: number) => {
-    const totalValue = calculateValue(
-      formData.installmentsPercentage,
-      formData.propertyValue
-    );
-    const value = count > 0 ? totalValue / count : 0;
-    
-    // Recalculate reinforcement value when installment count changes
-    const months = getReinforcementMonths(
-      count, 
-      formData.reinforcementFrequency,
-      formData.finalMonthsWithoutReinforcement
-    );
-    const reinforcementCount = months.length;
-    const newReinforcementValue = reinforcementCount > 0
-      ? calculateValue(formData.reinforcementsPercentage, formData.propertyValue) / reinforcementCount
-      : formData.reinforcementsValue;
-    
-    setFormData({
-      ...formData,
-      installmentsCount: count,
-      installmentsValue: value,
-      reinforcementsValue: newReinforcementValue
-    });
-    
-    setReinforcementMonths(months);
-  };
-
-  // Handle reinforcements changes
   const handleReinforcementsValueChange = (value: number) => {
     const months = getReinforcementMonths(
       formData.installmentsCount,
@@ -385,7 +381,7 @@ const SimulatorForm: React.FC = () => {
     setFormData({
       ...formData,
       deliveryDate: date,
-      customReinforcementDates: undefined // Reset custom dates when delivery date changes
+      customReinforcementDates: undefined
     });
   };
 
@@ -579,26 +575,37 @@ const SimulatorForm: React.FC = () => {
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-4">
-                      <DatePicker
+                      <MonthYearInput
                         id="delivery-date"
                         label="Data prevista de entrega"
                         value={formData.deliveryDate}
                         onChange={handleDeliveryDateChange}
-                        placeholder="Selecione a data de entrega"
-                        disablePastDates={true}
+                        placeholder="MM/AAAA"
                         required={true}
                         className="w-full md:w-[280px]"
                       />
                       
-                      <NumberInput
-                        id="installments-count"
-                        label="Quantidade de parcelas"
-                        value={formData.installmentsCount}
-                        onChange={handleInstallmentsCountChange}
-                        min={1}
-                        noDecimals={true}
-                        className="w-full md:w-[240px]"
-                      />
+                      <div className="space-y-2">
+                        <Label className="text-sm font-medium text-slate-700">
+                          Parcelas mensais (calculado automaticamente)
+                        </Label>
+                        <div className="bg-slate-50 border border-slate-200 rounded-md px-3 py-2 text-sm">
+                          {formData.deliveryDate ? (
+                            <span className="font-medium text-slate-800">
+                              {formData.installmentsCount} parcelas
+                            </span>
+                          ) : (
+                            <span className="text-slate-500">
+                              Defina a data de entrega
+                            </span>
+                          )}
+                        </div>
+                        {formData.deliveryDate && formData.startDate && (
+                          <p className="text-xs text-slate-600">
+                            Período: {formatToMonthYear(formData.startDate)} até {formatToMonthYear(formData.deliveryDate)}
+                          </p>
+                        )}
+                      </div>
                     </div>
                     
                     {formData.deliveryDate && formData.startDate && (
@@ -614,11 +621,20 @@ const SimulatorForm: React.FC = () => {
                           </p>
                         </div>
                         
-                        {wouldStartDateBeInPast(formData.deliveryDate, formData.installmentsCount) && (
+                        {formData.installmentsCount < 6 && (
                           <Alert className="bg-amber-50">
                             <AlertCircle className="h-4 w-4 text-amber-600" />
                             <AlertDescription className="text-amber-800">
-                              Atenção: A data de entrega está muito próxima. As parcelas começariam no passado.
+                              Atenção: Prazo muito curto ({formData.installmentsCount} parcelas). Considere uma data de entrega mais distante.
+                            </AlertDescription>
+                          </Alert>
+                        )}
+                        
+                        {wouldStartDateBeInPast(formData.deliveryDate, formData.installmentsCount) && (
+                          <Alert className="bg-red-50">
+                            <AlertCircle className="h-4 w-4 text-red-600" />
+                            <AlertDescription className="text-red-800">
+                              Erro: A data de entrega está muito próxima. As parcelas começariam no passado.
                             </AlertDescription>
                           </Alert>
                         )}
@@ -840,7 +856,12 @@ const SimulatorForm: React.FC = () => {
                   <div className="flex flex-col sm:flex-row gap-3 justify-center">
                     <Button 
                       onClick={handleSimulate} 
-                      disabled={totalPercentage !== 100 || !formData.deliveryDate || wouldStartDateBeInPast(formData.deliveryDate, formData.installmentsCount)}
+                      disabled={
+                        totalPercentage !== 100 || 
+                        !formData.deliveryDate || 
+                        formData.installmentsCount < 1 ||
+                        wouldStartDateBeInPast(formData.deliveryDate, formData.installmentsCount)
+                      }
                       className="bg-simulae-600 hover:bg-simulae-700 text-white px-8 py-6 text-lg w-full sm:w-auto"
                     >
                       Simular
