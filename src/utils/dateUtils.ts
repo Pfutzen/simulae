@@ -101,6 +101,27 @@ export function wouldStartDateBeInPast(deliveryDate: Date, installmentsCount: nu
 }
 
 /**
+ * Calculate the number of installments between valuation date and delivery date
+ * @param valuationDate - The valuation date (when property was valued)
+ * @param deliveryDate - The desired delivery date
+ * @returns Number of monthly installments possible
+ */
+export function calculateInstallmentsFromValuationAndDelivery(valuationDate: Date, deliveryDate: Date): number {
+  const valuationYear = valuationDate.getFullYear();
+  const valuationMonth = valuationDate.getMonth();
+  
+  const deliveryYear = deliveryDate.getFullYear();
+  const deliveryMonth = deliveryDate.getMonth();
+  
+  // Calculate total months between valuation date and delivery date
+  const totalMonths = (deliveryYear - valuationYear) * 12 + (deliveryMonth - valuationMonth);
+  
+  // Subtract 1 month for keys payment, ensuring minimum of 1 installment
+  // First installment starts in the month AFTER valuation date
+  return Math.max(1, totalMonths - 1);
+}
+
+/**
  * Calculate the number of installments between current date and delivery date
  * @param deliveryDate - The desired delivery date
  * @returns Number of monthly installments possible
@@ -151,4 +172,33 @@ export function formatToMonthYear(date: Date): string {
   const month = (date.getMonth() + 1).toString().padStart(2, '0');
   const year = date.getFullYear();
   return `${month}/${year}`;
+}
+
+/**
+ * Check if valuation date is valid (not in future beyond current month)
+ * @param valuationDate - The valuation date to check
+ * @returns True if valid
+ */
+export function isValidValuationDate(valuationDate: Date): boolean {
+  const today = new Date();
+  const currentYear = today.getFullYear();
+  const currentMonth = today.getMonth();
+  
+  const valuationYear = valuationDate.getFullYear();
+  const valuationMonth = valuationDate.getMonth();
+  
+  // Valuation date cannot be in future beyond current month
+  return (valuationYear < currentYear) || 
+         (valuationYear === currentYear && valuationMonth <= currentMonth);
+}
+
+/**
+ * Check if delivery date is valid in relation to valuation date
+ * @param valuationDate - The valuation date
+ * @param deliveryDate - The delivery date
+ * @returns True if delivery date is at least 3 months after valuation date
+ */
+export function isValidDeliveryDate(valuationDate: Date, deliveryDate: Date): boolean {
+  const minDeliveryDate = addMonths(valuationDate, 3); // Minimum 3 months gap
+  return deliveryDate >= minDeliveryDate;
 }

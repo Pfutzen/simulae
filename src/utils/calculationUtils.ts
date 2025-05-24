@@ -28,8 +28,9 @@ export interface SimulationFormData {
   appreciationIndex: number;
   resaleMonth: number;
   rentalPercentage?: number;
-  startDate?: Date; // Calculated automatically from delivery date
-  deliveryDate?: Date; // New primary field - when user wants to receive keys
+  startDate?: Date; // Calculated automatically from valuation date
+  deliveryDate?: Date; // When user wants to receive keys
+  valuationDate?: Date; // New field - when property was valued
   customReinforcementDates?: Date[]; // New field for custom reinforcement dates
 }
 
@@ -118,6 +119,18 @@ export const calculateTotalPercentage = (formData: SimulationFormData): number =
 };
 
 /**
+ * Calculate the start date for installments based on valuation date
+ * @param valuationDate - When the property was valued
+ * @returns The calculated start date for first installment (month after valuation)
+ */
+export const calculateStartDateFromValuation = (valuationDate: Date): Date => {
+  const startDate = new Date(valuationDate);
+  // First installment is in the month AFTER valuation date
+  startDate.setMonth(startDate.getMonth() + 1);
+  return startDate;
+};
+
+/**
  * Calculate the start date based on delivery date and installments count
  * @param deliveryDate - When the property should be delivered
  * @param installmentsCount - Number of installments
@@ -157,9 +170,11 @@ export const generatePaymentSchedule = (formData: SimulationFormData): PaymentTy
   let propertyValue = formData.propertyValue;
   let correctionFactor = 1;
   
-  // Calculate start date - prefer deliveryDate over startDate
+  // Calculate start date - prefer valuationDate over deliveryDate
   let startDate: Date;
-  if (formData.deliveryDate) {
+  if (formData.valuationDate) {
+    startDate = calculateStartDateFromValuation(formData.valuationDate);
+  } else if (formData.deliveryDate) {
     startDate = calculateStartDateFromDelivery(formData.deliveryDate, formData.installmentsCount);
   } else if (formData.startDate) {
     startDate = formData.startDate;

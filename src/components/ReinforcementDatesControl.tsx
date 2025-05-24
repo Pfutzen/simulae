@@ -5,10 +5,11 @@ import { Button } from "@/components/ui/button";
 import { Calendar, Edit3, RotateCcw } from "lucide-react";
 import DatePicker from "./DatePicker";
 import { formatDateForDisplay, addMonths } from "@/utils/dateUtils";
-import { getReinforcementMonths, calculateStartDateFromDelivery } from "@/utils/calculationUtils";
+import { getReinforcementMonths, calculateStartDateFromValuation } from "@/utils/calculationUtils";
 
 interface ReinforcementDatesControlProps {
-  deliveryDate?: Date; // Changed from startDate to deliveryDate
+  valuationDate?: Date; // Changed from deliveryDate to valuationDate as primary input
+  deliveryDate?: Date; // Still needed for validation
   installmentsCount: number;
   reinforcementFrequency: number;
   finalMonthsWithoutReinforcement: number;
@@ -17,6 +18,7 @@ interface ReinforcementDatesControlProps {
 }
 
 const ReinforcementDatesControl: React.FC<ReinforcementDatesControlProps> = ({
+  valuationDate,
   deliveryDate,
   installmentsCount,
   reinforcementFrequency,
@@ -31,12 +33,12 @@ const ReinforcementDatesControl: React.FC<ReinforcementDatesControlProps> = ({
     finalMonthsWithoutReinforcement
   );
 
-  // Generate automatic dates based on delivery date
+  // Generate automatic dates based on valuation date
   const generateAutomaticDates = (): Date[] => {
-    if (!deliveryDate) return [];
+    if (!valuationDate) return [];
     
-    // Calculate start date from delivery date
-    const startDate = calculateStartDateFromDelivery(deliveryDate, installmentsCount);
+    // Calculate start date from valuation date (first installment month after valuation)
+    const startDate = calculateStartDateFromValuation(valuationDate);
     
     return reinforcementMonths.map(month => 
       addMonths(startDate, month)
@@ -90,7 +92,7 @@ const ReinforcementDatesControl: React.FC<ReinforcementDatesControlProps> = ({
                 variant="outline"
                 size="sm"
                 onClick={handleEnableCustomDates}
-                disabled={!deliveryDate}
+                disabled={!valuationDate}
                 className="flex items-center gap-1"
               >
                 <Edit3 className="h-4 w-4" />
@@ -112,13 +114,13 @@ const ReinforcementDatesControl: React.FC<ReinforcementDatesControlProps> = ({
       </CardHeader>
       
       <CardContent className="space-y-4">
-        {!deliveryDate && (
+        {!valuationDate && (
           <p className="text-amber-600 text-sm">
-            Defina a data de entrega para calcular as datas dos reforços
+            Defina a data de avaliação para calcular as datas dos reforços
           </p>
         )}
         
-        {deliveryDate && (
+        {valuationDate && (
           <div className="grid gap-3">
             {displayDates.map((date, index) => (
               <div 
