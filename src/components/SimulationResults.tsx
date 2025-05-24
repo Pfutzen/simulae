@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -299,9 +298,6 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
                     Data do Pagamento
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
-                    Mês
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
                     Tipo
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
@@ -323,9 +319,6 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
                   <tr key={index}>
                     <td className="px-6 py-4 whitespace-nowrap">
                       {payment.date ? formatDateForDisplay(payment.date) : "-"}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {payment.month}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       {payment.description}
@@ -350,6 +343,7 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
         </CardContent>
       </Card>
 
+      {/* Gráfico de Valorização */}
       <Card className="shadow">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
