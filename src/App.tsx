@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
+import PropostaComercial from "./pages/PropostaComercial";
 import AuthGuard from "./components/AuthGuard";
 
 const queryClient = new QueryClient();
@@ -24,6 +25,7 @@ const App = () => (
         {/* Protected routes */}
         <Route element={<AuthGuard requireAuth={true} />}>
           <Route path="/" element={<Index />} />
+          <Route path="/proposta-comercial" element={<PropostaComercial />} />
           {/* ADD ALL CUSTOM PROTECTED ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
         </Route>
         

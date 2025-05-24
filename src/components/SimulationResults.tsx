@@ -13,8 +13,10 @@ import {
   Home,
   Download,
   AlertCircle,
-  CheckCircle
+  CheckCircle,
+  FileText
 } from "lucide-react";
+import { Link } from "react-router-dom";
 import { formatCurrency, formatPercentage } from "@/utils/formatUtils";
 import { PaymentType } from "@/utils/calculationUtils";
 import { SavedSimulation } from "@/utils/simulationHistoryUtils";
@@ -120,7 +122,14 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
             </Alert>
           )}
 
-          <div className="flex justify-end">
+          <div className="flex justify-between">
+            <Link to="/proposta-comercial">
+              <Button variant="default" className="gap-2">
+                <FileText className="h-4 w-4" />
+                Gerar Proposta Comercial
+              </Button>
+            </Link>
+            
             <Button 
               onClick={handleExportPDF} 
               variant="secondary"
@@ -198,7 +207,6 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
         </CardContent>
       </Card>
 
-      {/* Rental Estimates */}
       <Card className="shadow">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -225,7 +233,6 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
         </CardContent>
       </Card>
 
-      {/* Payment Schedule */}
       <Card className="shadow">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -281,7 +288,6 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
         </CardContent>
       </Card>
 
-      {/* Results Chart */}
       <Card className="shadow">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">

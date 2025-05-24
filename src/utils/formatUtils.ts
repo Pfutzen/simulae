@@ -120,3 +120,14 @@ export const formatCurrency = (value: number): string => {
 export const formatPercentage = (value: number): string => {
   return `${formatToBrazilianNumber(value)}%`;
 };
+
+/**
+ * Format date to Brazilian format (dd/MM/yyyy)
+ */
+export const formatDateBR = (date: Date): string => {
+  return date.toLocaleDateString('pt-BR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric'
+  });
+};
