@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -37,12 +38,15 @@ interface SimulationResultsProps {
     bestProfitMonth: number;
     maxProfit: number;
     maxProfitPercentage: number;
+    maxProfitTotalPaid: number;
 		bestRoiMonth: number;
     maxRoi: number;
     maxRoiProfit: number;
+    maxRoiTotalPaid: number;
     earlyMonth?: number;
     earlyProfit?: number;
     earlyProfitPercentage?: number;
+    earlyTotalPaid?: number;
   };
   simulationData?: SavedSimulation;
   rentalPercentage: number;
@@ -176,6 +180,10 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
                   <span className="text-sm text-slate-600">Rentabilidade:</span>
                   <span className="font-bold text-blue-600">{formatPercentage(bestResaleInfo.maxProfitPercentage)}</span>
                 </div>
+                <div className="bg-slate-50 p-2 rounded text-xs">
+                  <span className="text-slate-600">Valor pago até o mês:</span><br/>
+                  <span className="font-medium">{formatCurrency(bestResaleInfo.maxProfitTotalPaid)}</span>
+                </div>
                 <p className="text-xs text-slate-500 mt-3">
                   Representa o maior valor bruto de lucro alcançado ao longo da simulação. Ideal para quem busca lucro máximo, mesmo que leve mais tempo.
                 </p>
@@ -204,6 +212,10 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
                   <span className="text-sm text-slate-600">Rentabilidade:</span>
                   <span className="font-bold text-blue-600">{formatPercentage(bestResaleInfo.maxRoi)}</span>
                 </div>
+                <div className="bg-slate-50 p-2 rounded text-xs">
+                  <span className="text-slate-600">Valor pago até o mês:</span><br/>
+                  <span className="font-medium">{formatCurrency(bestResaleInfo.maxRoiTotalPaid)}</span>
+                </div>
                 <p className="text-xs text-slate-500 mt-3">
                   Reflete o melhor retorno proporcional (lucro dividido pelo tempo e investimento). Indicado para quem quer otimizar o rendimento do capital investido.
                 </p>
@@ -211,7 +223,7 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
             </div>
 
             {/* Maior Lucro no Menor Prazo */}
-            {bestResaleInfo.earlyMonth && bestResaleInfo.earlyProfit && bestResaleInfo.earlyProfitPercentage && (
+            {bestResaleInfo.earlyMonth && bestResaleInfo.earlyProfit && bestResaleInfo.earlyProfitPercentage && bestResaleInfo.earlyTotalPaid && (
               <div className="bg-white p-5 rounded-lg border border-purple-200">
                 <div className="flex items-center gap-2 mb-4">
                   <span className="text-lg">⚡</span>
@@ -232,6 +244,10 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
                     <Percent className="h-4 w-4 text-slate-600" />
                     <span className="text-sm text-slate-600">Rentabilidade:</span>
                     <span className="font-bold text-blue-600">{formatPercentage(bestResaleInfo.earlyProfitPercentage)}</span>
+                  </div>
+                  <div className="bg-slate-50 p-2 rounded text-xs">
+                    <span className="text-slate-600">Valor pago até o mês:</span><br/>
+                    <span className="font-medium">{formatCurrency(bestResaleInfo.earlyTotalPaid)}</span>
                   </div>
                   <p className="text-xs text-slate-500 mt-3">
                     Aponta o melhor lucro possível em prazo reduzido. Excelente para investidores com foco em retorno mais rápido.

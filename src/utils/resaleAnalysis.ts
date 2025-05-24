@@ -25,16 +25,19 @@ export const calculateBestResaleMonth = (schedule: PaymentType[]) => {
   let bestProfitMonth = 0;
   let maxProfit = 0;
   let maxProfitPercentage = 0;
+  let maxProfitTotalPaid = 0;
 
   // Estratégia 2: Maior Percentual de Rentabilidade
   let bestRoiMonth = 0;
   let maxRoi = 0;
   let maxRoiProfit = 0;
+  let maxRoiTotalPaid = 0;
 
   // Estratégia 3: Maior Lucro no Menor Prazo (mínimo 50% de rentabilidade)
   let earlyMonth: number | undefined;
   let earlyProfit: number | undefined;
   let earlyProfitPercentage: number | undefined;
+  let earlyTotalPaid: number | undefined;
 
   for (let i = 1; i <= schedule.length; i++) {
     // Usar o totalPaid diretamente do cronograma (valores efetivamente pagos até o mês)
@@ -57,6 +60,7 @@ export const calculateBestResaleMonth = (schedule: PaymentType[]) => {
       if (profit > maxProfit) {
         maxProfit = profit;
         maxProfitPercentage = (profit / totalPaidUpToMonth) * 100;
+        maxProfitTotalPaid = totalPaidUpToMonth;
         bestProfitMonth = i;
       }
 
@@ -67,6 +71,7 @@ export const calculateBestResaleMonth = (schedule: PaymentType[]) => {
       if (currentRentability > maxRoi) {
         maxRoi = currentRentability;
         maxRoiProfit = profit;
+        maxRoiTotalPaid = totalPaidUpToMonth;
         bestRoiMonth = i;
       }
 
@@ -80,6 +85,7 @@ export const calculateBestResaleMonth = (schedule: PaymentType[]) => {
           earlyMonth = i;
           earlyProfit = profit;
           earlyProfitPercentage = currentRentability;
+          earlyTotalPaid = totalPaidUpToMonth;
         }
       }
     }
@@ -89,11 +95,14 @@ export const calculateBestResaleMonth = (schedule: PaymentType[]) => {
     bestProfitMonth,
     maxProfit,
     maxProfitPercentage,
+    maxProfitTotalPaid,
     bestRoiMonth,
     maxRoi,
     maxRoiProfit,
+    maxRoiTotalPaid,
     earlyMonth,
     earlyProfit,
-    earlyProfitPercentage
+    earlyProfitPercentage,
+    earlyTotalPaid
   };
 };
