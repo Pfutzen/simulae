@@ -1,31 +1,39 @@
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { PaymentType, formatCurrency, formatPercentage, calculateRentalEstimate } from "@/utils/calculationUtils";
 import { Button } from "@/components/ui/button";
-import ResultsChart from "./ResultsChart";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { LightbulbIcon, FileText, HomeIcon, PiggyBankIcon, TrendingUpIcon } from "lucide-react";
-import { exportToPdf } from "@/utils/pdfExport";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { 
+  TrendingUp, 
+  DollarSign, 
+  Calendar, 
+  Target, 
+  Home,
+  Download,
+  AlertCircle,
+  CheckCircle
+} from "lucide-react";
+import { formatCurrency, formatPercentage } from "@/utils/formatUtils";
+import { PaymentType } from "@/utils/calculationUtils";
 import { SavedSimulation } from "@/utils/simulationHistoryUtils";
-import { formatDateForDisplay } from "@/utils/dateUtils";
+import { generatePDF } from "@/utils/pdfExport";
+import ResultsChart from "./ResultsChart";
+import FinancingSimulator from "./FinancingSimulator";
 
 interface SimulationResultsProps {
   schedule: PaymentType[];
-  resaleMonth: number;
   investmentValue: number;
   propertyValue: number;
   profit: number;
   profitPercentage: number;
   remainingBalance: number;
-  rentalPercentage?: number;
-  rentalEstimate?: number;
-  annualRentalReturn?: number;
+  resaleMonth: number;
   bestResaleInfo: {
     bestProfitMonth: number;
     maxProfit: number;
     maxProfitPercentage: number;
-    bestRoiMonth: number;
+		bestRoiMonth: number;
     maxRoi: number;
     maxRoiProfit: number;
     earlyMonth?: number;
@@ -33,289 +41,266 @@ interface SimulationResultsProps {
     earlyProfitPercentage?: number;
   };
   simulationData?: SavedSimulation;
+  rentalPercentage: number;
+  rentalEstimate: number;
+  annualRentalReturn: number;
 }
 
 const SimulationResults: React.FC<SimulationResultsProps> = ({
   schedule,
-  resaleMonth,
   investmentValue,
   propertyValue,
   profit,
   profitPercentage,
   remainingBalance,
+  resaleMonth,
+  bestResaleInfo,
+  simulationData,
   rentalPercentage,
   rentalEstimate,
-  annualRentalReturn,
-  bestResaleInfo,
-  simulationData
+  annualRentalReturn
 }) => {
-  const calculatedProfitPercentage = investmentValue > 0 ? (profit / investmentValue) * 100 : 0;
-  
-  const resaleData = schedule.find(item => item.month === resaleMonth);
-  
-  const deliveryMonthData = schedule.length > 0 ? schedule[schedule.length - 1] : null;
-  const deliveryPropertyValue = deliveryMonthData ? deliveryMonthData.propertyValue : propertyValue;
-  
-  const rentalValues = rentalPercentage 
-    ? calculateRentalEstimate(deliveryPropertyValue, rentalPercentage)
-    : undefined;
-  
-  const calculatedRentalEstimate = rentalValues?.rentalEstimate || rentalEstimate;
-  const calculatedAnnualRentalReturn = rentalValues?.annualRentalReturn || annualRentalReturn;
-
-  if (schedule.length === 0) {
-    return null;
-  }
-
-  const handleExportPdf = () => {
-    if (simulationData) {
-      exportToPdf(simulationData);
-    }
+  const handleExportPDF = () => {
+    generatePDF(
+      schedule,
+      investmentValue,
+      propertyValue,
+      profit,
+      profitPercentage,
+      remainingBalance,
+      resaleMonth,
+      bestResaleInfo,
+      rentalEstimate,
+      annualRentalReturn,
+      simulationData?.name || "Simulação"
+    );
   };
 
   return (
-    <div className="space-y-8">
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold mt-8">Resultado da Simulação</h2>
-        
-        {simulationData && (
-          <Button 
-            onClick={handleExportPdf}
-            variant="outline" 
-            className="flex items-center gap-2"
-          >
-            <FileText size={18} />
-            Exportar PDF
-          </Button>
-        )}
-      </div>
-      
-      {(bestResaleInfo.bestProfitMonth > 0 || bestResaleInfo.bestRoiMonth > 0) && (
-        <Card className="border-l-4 border-l-yellow-400 bg-yellow-50">
-          <CardContent className="p-4">
-            <div className="flex items-start gap-3">
-              <LightbulbIcon className="h-6 w-6 text-yellow-500 mt-1 flex-shrink-0" />
-              <div className="w-full">
-                <h3 className="text-lg font-semibold text-slate-800">Melhores meses para revenda:</h3>
-                <div className="mt-2 grid gap-y-4">
-                  {bestResaleInfo.bestProfitMonth > 0 && (
-                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
-                      <div className="px-3 py-1 bg-simulae-100 text-simulae-800 font-medium rounded-lg text-center whitespace-nowrap">
-                        💰 Maior lucro
-                      </div>
-                      <div>
-                        <span className="font-medium text-lg text-simulae-800">
-                          Mês {bestResaleInfo.bestProfitMonth}: {formatCurrency(bestResaleInfo.maxProfit)}
-                        </span>
-                        <span className="text-slate-600 block sm:inline sm:ml-2">
-                          (retorno de {formatPercentage(bestResaleInfo.maxProfitPercentage / 100)})
-                        </span>
-                      </div>
-                    </div>
-                  )}
-
-                  {bestResaleInfo.bestRoiMonth > 0 && (
-                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
-                      <div className="px-3 py-1 bg-blue-100 text-blue-800 font-medium rounded-lg text-center whitespace-nowrap">
-                        📈 Maior ROI
-                      </div>
-                      <div>
-                        <span className="font-medium text-lg text-blue-800">
-                          Mês {bestResaleInfo.bestRoiMonth}: {formatCurrency(bestResaleInfo.maxRoiProfit)}
-                        </span>
-                        <span className="text-slate-600 block sm:inline sm:ml-2">
-                          (retorno de {formatPercentage(bestResaleInfo.maxRoi / 100)})
-                        </span>
-                      </div>
-                    </div>
-                  )}
-
-                  {bestResaleInfo.earlyMonth && bestResaleInfo.earlyProfit && bestResaleInfo.earlyProfitPercentage && (
-                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
-                      <div className="px-3 py-1 bg-green-100 text-green-800 font-medium rounded-lg text-center whitespace-nowrap">
-                        🕒 Mais cedo
-                      </div>
-                      <div>
-                        <span className="font-medium text-green-800">
-                          Mês {bestResaleInfo.earlyMonth}: {formatCurrency(bestResaleInfo.earlyProfit)}
-                        </span>
-                        <span className="text-slate-600 block sm:inline sm:ml-2">
-                          (retorno de {formatPercentage(bestResaleInfo.earlyProfitPercentage / 100)})
-                        </span>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
+    <div className="space-y-6">
+      {/* Profit Card */}
+      <Card className="shadow">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <TrendingUp className="h-5 w-5 text-green-600" />
+            Resultado da Revenda
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="bg-white p-4 rounded-lg border">
+              <p className="text-sm text-slate-600 mb-1">Valor investido</p>
+              <p className="text-2xl font-bold text-slate-800">
+                {formatCurrency(investmentValue)}
+              </p>
             </div>
-          </CardContent>
-        </Card>
-      )}
-      
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card className="card-shadow">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-xl">Total Investido</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl md:text-2xl font-bold text-simulae-700 truncate">
-              {formatCurrency(investmentValue)}
-            </p>
-            <p className="text-sm text-muted-foreground">
-              Até o mês {resaleMonth}
-            </p>
-          </CardContent>
-        </Card>
-        
-        <Card className="card-shadow">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-xl">Valor do Imóvel</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl md:text-2xl font-bold text-simulae-700 truncate">
-              {formatCurrency(propertyValue)}
-            </p>
-            <p className="text-sm text-muted-foreground">
-              No mês {resaleMonth}
-            </p>
-          </CardContent>
-        </Card>
-        
-        <Card className="card-shadow">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-xl">Saldo Devedor</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl md:text-2xl font-bold text-simulae-700 truncate">
-              {formatCurrency(remainingBalance)}
-            </p>
-            <p className="text-sm text-muted-foreground">
-              No mês {resaleMonth}
-            </p>
-          </CardContent>
-        </Card>
-        
-        <Card className="card-shadow">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-xl">Lucro na Revenda</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl md:text-2xl font-bold text-simulae-700 truncate">
-              {formatCurrency(profit)}
-            </p>
-            <p className="text-sm text-muted-foreground">
-              {formatPercentage(calculatedProfitPercentage / 100)} de retorno
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {rentalPercentage && calculatedRentalEstimate && calculatedAnnualRentalReturn && (
-        <Card className="card-shadow bg-white border border-slate-200">
-          <CardHeader>
-            <CardTitle className="text-xl">Estimativa de Renda com Aluguel</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="flex flex-col p-4 bg-slate-50 rounded-lg border border-slate-100">
-                <div className="flex items-center gap-3 mb-2">
-                  <HomeIcon className="h-6 w-6 text-sky-600" />
-                  <span className="text-sm font-medium text-slate-500">Valor do Imóvel na Entrega</span>
-                </div>
-                <p className="text-2xl font-bold text-slate-800">{formatCurrency(deliveryPropertyValue)}</p>
-              </div>
-              
-              <div className="flex flex-col p-4 bg-slate-50 rounded-lg border border-slate-100">
-                <div className="flex items-center gap-3 mb-2">
-                  <PiggyBankIcon className="h-6 w-6 text-emerald-600" />
-                  <span className="text-sm font-medium text-slate-500">
-                    Aluguel Estimado ({formatPercentage(rentalPercentage/100)})
-                  </span>
-                </div>
-                <p className="text-2xl font-bold text-slate-800">{formatCurrency(calculatedRentalEstimate)}<span className="text-base font-normal text-slate-500">/mês</span></p>
-                <p className="text-sm text-slate-500 mt-1">{formatCurrency(calculatedRentalEstimate * 12)}/ano</p>
-              </div>
-              
-              <div className="flex flex-col p-4 bg-slate-50 rounded-lg border border-slate-100">
-                <div className="flex items-center gap-3 mb-2">
-                  <TrendingUpIcon className="h-6 w-6 text-purple-600" />
-                  <span className="text-sm font-medium text-slate-500">Retorno com Aluguel</span>
-                </div>
-                <p className="text-2xl font-bold text-slate-800">{formatPercentage(calculatedAnnualRentalReturn/100)}<span className="text-base font-normal text-slate-500"> ao ano</span></p>
-              </div>
+            
+            <div className="bg-white p-4 rounded-lg border">
+              <p className="text-sm text-slate-600 mb-1">Valor do imóvel (revenda)</p>
+              <p className="text-2xl font-bold text-green-600">
+                {formatCurrency(propertyValue)}
+              </p>
             </div>
-          </CardContent>
-        </Card>
-      )}
+          </div>
 
-      <Tabs defaultValue="chart" className="w-full">
-        <TabsList>
-          <TabsTrigger value="chart">Gráfico</TabsTrigger>
-          <TabsTrigger value="table">Cronograma</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="chart" className="mt-6 w-full">
-          <Card className="card-shadow w-full">
-            <CardHeader>
-              <CardTitle>Evolução do Investimento</CardTitle>
-            </CardHeader>
-            <CardContent className="pt-0 px-0 sm:px-6">
-              <ResultsChart schedule={schedule} resaleMonth={resaleMonth} />
-            </CardContent>
-          </Card>
-        </TabsContent>
-        
-        <TabsContent value="table" className="mt-6">
-          <Card className="card-shadow overflow-hidden">
-            <CardHeader>
-              <CardTitle>Cronograma de Pagamentos</CardTitle>
-            </CardHeader>
-            <CardContent className="p-0">
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Mês</TableHead>
-                      <TableHead>Data</TableHead>
-                      <TableHead>Descrição</TableHead>
-                      <TableHead className="text-right">Valor</TableHead>
-                      <TableHead className="text-right">Saldo Devedor</TableHead>
-                      <TableHead className="text-right">Total Pago</TableHead>
-                      <TableHead className="text-right">Valor do Imóvel</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {schedule.map((payment) => (
-                      <TableRow key={payment.month} className={
-                        payment.month === bestResaleInfo.bestProfitMonth 
-                          ? "bg-simulae-50" 
-                          : payment.month === bestResaleInfo.bestRoiMonth 
-                            ? "bg-blue-50"
-                            : payment.month === bestResaleInfo.earlyMonth
-                              ? "bg-green-50"
-                              : payment.month === resaleMonth
-                                ? "bg-amber-50"
-                                : ""
-                      }>
-                        <TableCell>{payment.month}</TableCell>
-                        <TableCell>
-                          {payment.date ? formatDateForDisplay(payment.date) : "-"}
-                        </TableCell>
-                        <TableCell>{payment.description}</TableCell>
-                        <TableCell className="text-right">{formatCurrency(payment.amount)}</TableCell>
-                        <TableCell className="text-right">{formatCurrency(payment.balance)}</TableCell>
-                        <TableCell className="text-right">{formatCurrency(payment.totalPaid)}</TableCell>
-                        <TableCell className="text-right">{formatCurrency(payment.propertyValue)}</TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="bg-white p-4 rounded-lg border">
+              <p className="text-sm text-slate-600 mb-1">Lucro obtido</p>
+              <p className="text-2xl font-bold text-green-600">
+                {formatCurrency(profit)}
+              </p>
+            </div>
+            
+            <div className="bg-white p-4 rounded-lg border">
+              <p className="text-sm text-slate-600 mb-1">Lucratividade</p>
+              <p className="text-2xl font-bold text-green-600">
+                {formatPercentage(profitPercentage)}
+              </p>
+            </div>
+          </div>
+
+          {remainingBalance > 0 && (
+            <Alert className="bg-red-50 border-red-200">
+              <AlertCircle className="h-4 w-4 text-red-600" />
+              <AlertDescription className="text-red-800">
+                <strong>Atenção:</strong> ainda há um saldo devedor de{" "}
+                {formatCurrency(remainingBalance)} após {resaleMonth} meses.
+              </AlertDescription>
+            </Alert>
+          )}
+
+          <div className="flex justify-end">
+            <Button 
+              onClick={handleExportPDF} 
+              variant="secondary"
+              className="gap-2"
+            >
+              <Download className="h-4 w-4" />
+              Exportar PDF
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Best Resale Recommendations */}
+      <Card className="shadow">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Target className="h-5 w-5 text-orange-600" />
+            Melhores Meses para Revenda
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="bg-white p-4 rounded-lg border">
+              <p className="text-sm text-slate-600 mb-1">
+                Mês de maior lucro
+              </p>
+              <p className="text-2xl font-bold text-orange-600">
+                {bestResaleInfo.bestProfitMonth} meses
+              </p>
+              <p className="text-sm text-slate-500 mt-1">
+                Lucro: {formatCurrency(bestResaleInfo.maxProfit)}
+              </p>
+            </div>
+
+            <div className="bg-white p-4 rounded-lg border">
+              <p className="text-sm text-slate-600 mb-1">
+                Mês de maior lucratividade
+              </p>
+              <p className="text-2xl font-bold text-orange-600">
+                {bestResaleInfo.bestRoiMonth} meses
+              </p>
+              <p className="text-sm text-slate-500 mt-1">
+                Lucro: {formatCurrency(bestResaleInfo.maxRoiProfit)}
+              </p>
+            </div>
+
+            {bestResaleInfo.earlyMonth && bestResaleInfo.earlyProfit && bestResaleInfo.earlyProfitPercentage && (
+              <div className="bg-white p-4 rounded-lg border">
+                <p className="text-sm text-slate-600 mb-1">
+                  Revenda antecipada (menor prazo)
+                </p>
+                <p className="text-2xl font-bold text-orange-600">
+                  {bestResaleInfo.earlyMonth} meses
+                </p>
+                <p className="text-sm text-slate-500 mt-1">
+                  Lucro: {formatCurrency(bestResaleInfo.earlyProfit)}
+                </p>
               </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Financing Simulation */}
+      <Card className="shadow">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Home className="h-5 w-5 text-purple-600" />
+            Simulação de Financiamento
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <FinancingSimulator keysValue={schedule.find(p => p.type === "chaves")?.value || 0} />
+        </CardContent>
+      </Card>
+
+      {/* Rental Estimates */}
+      <Card className="shadow">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Home className="h-5 w-5 text-purple-600" />
+            Estimativa de Aluguel
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="bg-white p-4 rounded-lg border">
+              <p className="text-sm text-slate-600 mb-1">Aluguel mensal estimado</p>
+              <p className="text-2xl font-bold text-purple-600">
+                {formatCurrency(rentalEstimate)}
+              </p>
+            </div>
+            
+            <div className="bg-white p-4 rounded-lg border">
+              <p className="text-sm text-slate-600 mb-1">Retorno anual estimado</p>
+              <p className="text-2xl font-bold text-purple-600">
+                {formatPercentage(annualRentalReturn)}
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Payment Schedule */}
+      <Card className="shadow">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Calendar className="h-5 w-5 text-blue-600" />
+            Cronograma de Pagamentos
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-slate-200">
+              <thead className="bg-slate-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                    Mês
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                    Tipo
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                    Valor
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                    Correção
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                    Valor corrigido
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-slate-200">
+                {schedule.map((payment, index) => (
+                  <tr key={index}>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {payment.month}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {payment.type}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {formatCurrency(payment.value)}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {formatPercentage(payment.correction)}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {formatCurrency(payment.correctedValue)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Results Chart */}
+      <Card className="shadow">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <TrendingUp className="h-5 w-5 text-indigo-600" />
+            Gráfico de Valorização
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ResultsChart schedule={schedule} />
+        </CardContent>
+      </Card>
     </div>
   );
 };
