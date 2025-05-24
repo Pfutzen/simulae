@@ -27,6 +27,7 @@ import { saveSimulation, getSimulations, SavedSimulation } from "@/utils/simulat
 import { wouldStartDateBeInPast, formatToMonthYear, calculateInstallmentsFromValuationAndDelivery } from "@/utils/dateUtils";
 import PropertyValueInput from "./PropertyValueInput";
 import PercentageValueInput from "./PercentageValueInput";
+import PercentageValidationIndicator from "./PercentageValidationIndicator";
 import NumberInput from "./NumberInput";
 import PercentageSlider from "./PercentageSlider";
 import CorrectionSelector from "./CorrectionSelector";
@@ -558,6 +559,9 @@ const SimulatorForm: React.FC = () => {
     setSimulations(simulations.filter(sim => sim.id !== id));
   };
 
+  // Check if percentage fields have validation errors
+  const isPercentageValid = totalPercentage === 100;
+
   return (
     <div className="space-y-8 max-w-5xl mx-auto">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -573,6 +577,12 @@ const SimulatorForm: React.FC = () => {
                 <PropertyValueInput
                   value={formData.propertyValue}
                   onChange={handlePropertyValueChange}
+                />
+
+                {/* Indicador de Validação dos Percentuais */}
+                <PercentageValidationIndicator 
+                  totalPercentage={totalPercentage}
+                  className="mb-6"
                 />
 
                 {/* Cronograma de Pagamentos */}
@@ -675,6 +685,7 @@ const SimulatorForm: React.FC = () => {
                       noDecimalsForPercentage={true}
                       valueInputClassName="w-full md:w-[240px]"
                       percentageInputClassName="w-full md:w-[120px]"
+                      hasError={!isPercentageValid}
                     />
                     
                     <div className="space-y-4">
@@ -690,6 +701,7 @@ const SimulatorForm: React.FC = () => {
                         valueInputClassName="w-full md:w-[240px]"
                         percentageInputClassName="w-full md:w-[120px]"
                         installmentsCount={formData.installmentsCount}
+                        hasError={!isPercentageValid}
                       />
                     </div>
                   </div>
@@ -716,6 +728,7 @@ const SimulatorForm: React.FC = () => {
                           valueInputClassName="w-full md:w-[240px]"
                           percentageInputClassName="w-full md:w-[120px]"
                           installmentsCount={reinforcementMonths.length}
+                          hasError={!isPercentageValid}
                         />
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <NumberInput
@@ -752,6 +765,7 @@ const SimulatorForm: React.FC = () => {
                         noDecimalsForPercentage={true}
                         valueInputClassName="w-full md:w-[240px]"
                         percentageInputClassName="w-full md:w-[120px]"
+                        hasError={!isPercentageValid}
                       />
                     </div>
 
@@ -873,7 +887,7 @@ const SimulatorForm: React.FC = () => {
                     <Button 
                       onClick={handleSimulate} 
                       disabled={
-                        totalPercentage !== 100 || 
+                        !isPercentageValid || 
                         !formData.valuationDate || 
                         !formData.deliveryDate ||
                         formData.installmentsCount < 1

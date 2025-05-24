@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import CurrencyInput from "./CurrencyInput";
 import PercentageInput from "./PercentageInput";
+import { cn } from "@/lib/utils";
 
 interface PercentageValueInputProps {
   label: string;
@@ -16,7 +17,8 @@ interface PercentageValueInputProps {
   noDecimalsForPercentage?: boolean;
   valueInputClassName?: string;
   percentageInputClassName?: string;
-  installmentsCount?: number; // Add optional prop for installments count
+  installmentsCount?: number;
+  hasError?: boolean; // New prop for validation error
 }
 
 const PercentageValueInput: React.FC<PercentageValueInputProps> = ({
@@ -30,7 +32,8 @@ const PercentageValueInput: React.FC<PercentageValueInputProps> = ({
   noDecimalsForPercentage = false,
   valueInputClassName = "",
   percentageInputClassName = "",
-  installmentsCount = 1 // Default to 1 if not provided
+  installmentsCount = 1,
+  hasError = false
 }) => {
   const handleValueChange = (newValue: number) => {
     onValueChange(newValue);
@@ -77,7 +80,12 @@ const PercentageValueInput: React.FC<PercentageValueInputProps> = ({
   };
   
   return (
-    <div className="space-y-4">
+    <div className={cn(
+      "space-y-4 p-3 rounded-lg border-2 transition-colors",
+      hasError 
+        ? "border-red-300 bg-red-50" 
+        : "border-transparent"
+    )}>
       <Label className="text-base font-medium">{label}</Label>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         <div>
@@ -88,7 +96,10 @@ const PercentageValueInput: React.FC<PercentageValueInputProps> = ({
             id={`${label}-value`}
             value={value}
             onChange={handleValueChange}
-            className={`${valueInputClassName}`}
+            className={cn(
+              valueInputClassName,
+              hasError && "border-red-500 focus:ring-red-500"
+            )}
           />
         </div>
         
@@ -101,7 +112,10 @@ const PercentageValueInput: React.FC<PercentageValueInputProps> = ({
             value={percentage}
             onChange={handlePercentageChange}
             noDecimals={noDecimalsForPercentage}
-            className={`${percentageInputClassName}`}
+            className={cn(
+              percentageInputClassName,
+              hasError && "border-red-500 focus:ring-red-500"
+            )}
           />
         </div>
       </div>
