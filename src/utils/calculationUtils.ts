@@ -395,6 +395,7 @@ export const getReinforcementMonths = (
 /**
  * Calculates the best month for resale based on maximum profit and ROI (Return on Investment).
  * FIXED: Properly calculates ROI based on totalPaid (investment) not property value
+ * FIXED: Correctly identifies different months for different strategies
  *
  * @param {PaymentType[]} schedule - The payment schedule.
  * @returns {{ bestProfitMonth: number; maxProfit: number; maxProfitPercentage: number; bestRoiMonth: number; maxRoi: number; maxRoiProfit: number; earlyMonth?: number; earlyProfit?: number; earlyProfitPercentage?: number; }} An object containing the best month for resale based on maximum profit and ROI.
@@ -424,7 +425,7 @@ export const calculateBestResaleMonth = (schedule: PaymentType[]): {
     return { bestProfitMonth, maxProfit, maxProfitPercentage, bestRoiMonth, maxRoi, maxRoiProfit };
   }
   
-  // First pass: Find best profit and best ROI months
+  // First pass: Find best profit and best ROI months (separately)
   for (let i = 1; i < schedule.length; i++) {
     const entry = schedule[i];
     const investmentValue = entry.totalPaid; // Total paid by buyer until this month
@@ -437,14 +438,15 @@ export const calculateBestResaleMonth = (schedule: PaymentType[]): {
     // FIXED: ROI calculation based on investmentValue (totalPaid), not property value
     const roiPercentage = investmentValue > 0 ? (profit / investmentValue) * 100 : 0;
     
-    // Check for best absolute profit
+    // Check for best absolute profit (highest absolute value)
     if (profit > maxProfit) {
       maxProfit = profit;
-      maxProfitPercentage = roiPercentage; // Use the corrected ROI calculation
+      maxProfitPercentage = roiPercentage; // Store the ROI for this specific month
       bestProfitMonth = entry.month;
     }
     
     // Check for best ROI percentage (only if profit is positive)
+    // This should be SEPARATE from best profit - different month could have better ROI
     if (profit > 0 && roiPercentage > maxRoi) {
       maxRoi = roiPercentage;
       maxRoiProfit = profit;
@@ -468,7 +470,7 @@ export const calculateBestResaleMonth = (schedule: PaymentType[]): {
     const roiPercentage = investmentValue > 0 ? (profit / investmentValue) * 100 : 0;
     
     // Find the earliest month that has at least 70% of the maximum ROI
-    if (profit > 0 && roiPercentage > earlyThreshold) {
+    if (profit > 0 && roiPercentage >= earlyThreshold) {
       earlyMonth = entry.month;
       earlyProfit = profit;
       earlyProfitPercentage = roiPercentage;
