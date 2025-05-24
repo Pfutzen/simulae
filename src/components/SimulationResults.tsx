@@ -173,7 +173,7 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
                 <div className="flex items-center gap-2">
                   <Percent className="h-4 w-4 text-slate-600" />
                   <span className="text-sm text-slate-600">Rentabilidade:</span>
-                  <span className="font-bold text-blue-600">{formatPercentage(bestResaleInfo.maxProfitPercentage / 100)}</span>
+                  <span className="font-bold text-blue-600">{formatPercentage(bestResaleInfo.maxProfitPercentage)}</span>
                 </div>
                 <p className="text-xs text-slate-500 mt-3">
                   Representa o maior valor bruto de lucro alcançado ao longo da simulação. Ideal para quem busca lucro máximo, mesmo que leve mais tempo.
@@ -201,7 +201,7 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
                 <div className="flex items-center gap-2">
                   <Percent className="h-4 w-4 text-slate-600" />
                   <span className="text-sm text-slate-600">Rentabilidade:</span>
-                  <span className="font-bold text-blue-600">{formatPercentage(bestResaleInfo.maxRoi / 100)}</span>
+                  <span className="font-bold text-blue-600">{formatPercentage(bestResaleInfo.maxRoi)}</span>
                 </div>
                 <p className="text-xs text-slate-500 mt-3">
                   Reflete o melhor retorno proporcional (lucro dividido pelo tempo e investimento). Indicado para quem quer otimizar o rendimento do capital investido.
@@ -230,7 +230,7 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
                   <div className="flex items-center gap-2">
                     <Percent className="h-4 w-4 text-slate-600" />
                     <span className="text-sm text-slate-600">Rentabilidade:</span>
-                    <span className="font-bold text-blue-600">{formatPercentage(bestResaleInfo.earlyProfitPercentage / 100)}</span>
+                    <span className="font-bold text-blue-600">{formatPercentage(bestResaleInfo.earlyProfitPercentage)}</span>
                   </div>
                   <p className="text-xs text-slate-500 mt-3">
                     Aponta o melhor lucro possível em prazo reduzido. Excelente para investidores com foco em retorno mais rápido.
