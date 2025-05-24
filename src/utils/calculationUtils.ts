@@ -33,6 +33,9 @@ export interface SimulationFormData {
   customReinforcementDates?: Date[]; // New field for custom reinforcement dates
 }
 
+// Add alias for backward compatibility
+export type SimulationParams = SimulationFormData;
+
 // CUB correction data for the last 12 months
 export interface CubCorrectionItem {
   month: number;
@@ -469,3 +472,18 @@ export function calculateRentalEstimate(propertyValue: number, percentage: numbe
     annualRentalReturn
   };
 }
+
+/**
+ * Main simulation calculation function
+ */
+export const calculateSimulation = async (params: SimulationParams) => {
+  const schedule = generatePaymentSchedule(params);
+  const bestResaleInfo = calculateBestResaleMonth(schedule);
+  
+  return {
+    schedule,
+    bestResaleInfo,
+    totalInvestment: schedule[schedule.length - 1]?.totalPaid || 0,
+    finalPropertyValue: schedule[schedule.length - 1]?.propertyValue || 0
+  };
+};

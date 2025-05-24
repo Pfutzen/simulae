@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -67,7 +68,7 @@ const SimulatorForm = () => {
       propertyValue,
       downPaymentPercentage,
       downPaymentValue,
-      installmentsCount,
+      installmentsCount: calculatedInstallments,
       installmentsValue,
       reinforcementFrequency,
       reinforcementsValue,
@@ -78,8 +79,13 @@ const SimulatorForm = () => {
       appreciationIndex,
       resaleMonth,
       rentalPercentage,
-      startDate: deliveryDate ? new Date(deliveryDate.getFullYear(), deliveryDate.getMonth() - installmentsCount - 1, 1) : undefined,
-      customReinforcementDates
+      startDate: deliveryDate ? new Date(deliveryDate.getFullYear(), deliveryDate.getMonth() - calculatedInstallments - 1, 1) : undefined,
+      customReinforcementDates,
+      deliveryDate,
+      // Required fields for SimulationFormData interface
+      installmentsPercentage: 0,
+      reinforcementsPercentage: 0,
+      correctionMode: "manual" as const
     };
 
     setSimulationParams(params);
@@ -133,15 +139,13 @@ const SimulatorForm = () => {
             </CardHeader>
             <CardContent className="space-y-4">
               <PropertyValueInput
-                label="Valor do imóvel"
                 value={propertyValue}
                 onChange={setPropertyValue}
-                required
               />
 
               <PercentageValueInput
                 label="Entrada"
-                percentageValue={downPaymentPercentage}
+                percentage={downPaymentPercentage}
                 onPercentageChange={setDownPaymentPercentage}
                 absoluteValue={downPaymentValue}
                 onAbsoluteChange={setDownPaymentValue}
@@ -176,10 +180,8 @@ const SimulatorForm = () => {
               </div>
 
               <PropertyValueInput
-                label="Valor da parcela mensal"
                 value={installmentsValue}
                 onChange={setInstallmentsValue}
-                required
               />
             </CardContent>
           </Card>
@@ -194,6 +196,7 @@ const SimulatorForm = () => {
             </CardHeader>
             <CardContent className="space-y-4">
               <NumberInput
+                id="reinforcement-frequency"
                 label="Frequência dos reforços (meses)"
                 value={reinforcementFrequency}
                 onChange={setReinforcementFrequency}
@@ -201,11 +204,11 @@ const SimulatorForm = () => {
                 max={120}
               />
               <PropertyValueInput
-                label="Valor dos reforços"
                 value={reinforcementsValue}
                 onChange={setReinforcementsValue}
               />
               <NumberInput
+                id="final-months"
                 label="Meses finais sem reforço"
                 value={finalMonthsWithoutReinforcement}
                 onChange={setFinalMonthsWithoutReinforcement}
@@ -214,7 +217,7 @@ const SimulatorForm = () => {
               />
               <PercentageValueInput
                 label="Chaves"
-                percentageValue={keysPercentage}
+                percentage={keysPercentage}
                 onPercentageChange={setKeysPercentage}
                 absoluteValue={keysValue}
                 onAbsoluteChange={setKeysValue}
@@ -234,15 +237,17 @@ const SimulatorForm = () => {
             </CardHeader>
             <CardContent className="space-y-4">
               <CorrectionSelector
-                value={correctionIndex}
-                onChange={setCorrectionIndex}
+                value="manual"
+                onChange={() => {}}
               />
               <PercentageInput
+                id="appreciation"
                 label="Valorização anual do imóvel"
                 value={appreciationIndex}
                 onChange={setAppreciationIndex}
               />
               <NumberInput
+                id="resale-month"
                 label="Mês para revenda"
                 value={resaleMonth}
                 onChange={setResaleMonth}
@@ -250,6 +255,7 @@ const SimulatorForm = () => {
                 max={600}
               />
               <PercentageInput
+                id="rental"
                 label="Percentual para aluguel"
                 value={rentalPercentage}
                 onChange={setRentalPercentage}
@@ -273,7 +279,10 @@ const SimulatorForm = () => {
                 {isCalculating ? "Calculando..." : "Calcular"}
               </Button>
               {simulationResults && (
-                <SimulationResults results={simulationResults} params={simulationParams} />
+                <SimulationResults 
+                  data={simulationResults}
+                  formData={simulationParams}
+                />
               )}
             </CardContent>
           </Card>
@@ -293,7 +302,12 @@ const SimulatorForm = () => {
       )}
 
       {/* Simulation History */}
-      <SimulationHistory history={simulationHistory} setHistory={setSimulationHistory} />
+      <SimulationHistory 
+        simulations={simulationHistory}
+        onLoadSimulation={(simulation) => {
+          // Load simulation logic here
+        }}
+      />
     </div>
   );
 };
