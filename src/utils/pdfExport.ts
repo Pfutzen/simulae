@@ -53,7 +53,6 @@ export function exportToPdf(simulation: SavedSimulation): void {
   
   yPos += 5;
   
-  // Format percentages correctly
   doc.text(`Entrada: ${formatCurrency(simulation.formData.downPaymentValue)} (${formatPercentage(simulation.formData.downPaymentPercentage/100)})`, 20, yPos);
   
   yPos += 5;
@@ -74,17 +73,14 @@ export function exportToPdf(simulation: SavedSimulation): void {
   
   yPos += 5;
   
-  // Format percentages correctly
   doc.text(`Chaves: ${formatCurrency(simulation.formData.keysValue)} (${formatPercentage(simulation.formData.keysPercentage/100)})`, 20, yPos);
   
   yPos += 5;
   
-  // Format percentages correctly
   doc.text(`Correção: ${formatPercentage(simulation.formData.correctionIndex/100)} ao mês`, 20, yPos);
   
   yPos += 5;
   
-  // Format percentages correctly
   doc.text(`Valorização: ${formatPercentage(simulation.formData.appreciationIndex/100)} ao mês`, 20, yPos);
   
   yPos += 5;
@@ -95,7 +91,7 @@ export function exportToPdf(simulation: SavedSimulation): void {
   yPos += 10;
   doc.line(20, yPos, pageWidth - 20, yPos);
   
-  // Section: Results
+  // Section: Results - Use the exact values from simulation.results
   yPos += 10;
   
   doc.setFontSize(14);
@@ -118,13 +114,11 @@ export function exportToPdf(simulation: SavedSimulation): void {
   
   yPos += 5;
   
-  // CRITICAL FIX: Use direct calculation for profit percentage - no need to divide by 100 
-  // because the calculation is already correct (profit/investment * 100)
-  const profitPercentage = (simulation.results.profit / simulation.results.investmentValue) * 100;
-  doc.text(`Lucro na revenda: ${formatCurrency(simulation.results.profit)} (${formatPercentage(profitPercentage/100)})`, 20, yPos);
+  // Use the profit percentage directly from results - it should already be calculated correctly
+  doc.text(`Lucro na revenda: ${formatCurrency(simulation.results.profit)} (${formatPercentage(simulation.results.profitPercentage/100)})`, 20, yPos);
   
   // Add rental information if available
-  if (simulation.formData.rentalPercentage) {
+  if (simulation.formData.rentalPercentage && simulation.results.rentalEstimate) {
     yPos += 10;
     
     // Rental section header
@@ -137,15 +131,8 @@ export function exportToPdf(simulation: SavedSimulation): void {
     // Get the delivery month property value (last month in the schedule)
     const deliveryPropertyValue = getDeliveryPropertyValue(simulation);
     
-    // Calculate rental information using the delivery property value
-    const rentalData = calculateRentalEstimate(
-      deliveryPropertyValue,
-      simulation.formData.rentalPercentage
-    );
-    
     doc.setFontSize(12);
     doc.setFont("helvetica", "normal");
-    // Format percentages correctly
     doc.text(`Percentual para aluguel: ${formatPercentage(simulation.formData.rentalPercentage/100)}`, 20, yPos);
     
     yPos += 5;
@@ -154,23 +141,24 @@ export function exportToPdf(simulation: SavedSimulation): void {
     
     yPos += 5;
     
-    doc.text(`Aluguel mensal estimado: ${formatCurrency(rentalData.rentalEstimate)}`, 20, yPos);
+    // Use the rental values from simulation.results
+    doc.text(`Aluguel mensal estimado: ${formatCurrency(simulation.results.rentalEstimate)}`, 20, yPos);
     
     yPos += 5;
     
-    doc.text(`Renda anual: ${formatCurrency(rentalData.annualRental)}`, 20, yPos);
+    const annualRental = simulation.results.rentalEstimate * 12;
+    doc.text(`Renda anual: ${formatCurrency(annualRental)}`, 20, yPos);
     
     yPos += 5;
     
-    // Format percentages correctly
-    doc.text(`Rentabilidade anual: ${formatPercentage(rentalData.annualRentalReturn/100)}`, 20, yPos);
+    doc.text(`Rentabilidade anual: ${formatPercentage(simulation.results.annualRentalReturn/100)}`, 20, yPos);
   }
   
   // Add horizontal line
   yPos += 10;
   doc.line(20, yPos, pageWidth - 20, yPos);
   
-  // Best months for resale
+  // Best months for resale - Use the exact values from simulation.bestResaleInfo
   if (simulation.bestResaleInfo) {
     yPos += 10;
     
@@ -184,10 +172,8 @@ export function exportToPdf(simulation: SavedSimulation): void {
     doc.setFont("helvetica", "normal");
     
     if (simulation.bestResaleInfo.bestProfitMonth > 0) {
-      // CRITICAL FIX: Recalculate the profit percentage correctly
-      const maxProfitPercentage = simulation.bestResaleInfo.maxProfit / simulation.results.investmentValue * 100;
       doc.text(
-        `Maior lucro: Mês ${simulation.bestResaleInfo.bestProfitMonth} - ${formatCurrency(simulation.bestResaleInfo.maxProfit)} (${formatPercentage(maxProfitPercentage/100)})`,
+        `Maior lucro: Mês ${simulation.bestResaleInfo.bestProfitMonth} - ${formatCurrency(simulation.bestResaleInfo.maxProfit)} (${formatPercentage(simulation.bestResaleInfo.maxProfitPercentage/100)})`,
         20,
         yPos
       );
@@ -196,7 +182,6 @@ export function exportToPdf(simulation: SavedSimulation): void {
     }
     
     if (simulation.bestResaleInfo.bestRoiMonth > 0) {
-      // CRITICAL FIX: Use maxRoi correctly - this should already be a proper percentage
       doc.text(
         `Maior ROI: Mês ${simulation.bestResaleInfo.bestRoiMonth} - ${formatCurrency(simulation.bestResaleInfo.maxRoiProfit)} (${formatPercentage(simulation.bestResaleInfo.maxRoi/100)})`,
         20,
@@ -206,11 +191,9 @@ export function exportToPdf(simulation: SavedSimulation): void {
       yPos += 5;
     }
     
-    if (simulation.bestResaleInfo.earlyMonth) {
-      // CRITICAL FIX: Recalculate the early profit percentage correctly if it exists
-      const earlyProfitPercentage = (simulation.bestResaleInfo.earlyProfit || 0) / simulation.results.investmentValue * 100;
+    if (simulation.bestResaleInfo.earlyMonth && simulation.bestResaleInfo.earlyProfit && simulation.bestResaleInfo.earlyProfitPercentage) {
       doc.text(
-        `Mais cedo: Mês ${simulation.bestResaleInfo.earlyMonth} - ${formatCurrency(simulation.bestResaleInfo.earlyProfit || 0)} (${formatPercentage(earlyProfitPercentage/100)})`,
+        `Mais cedo: Mês ${simulation.bestResaleInfo.earlyMonth} - ${formatCurrency(simulation.bestResaleInfo.earlyProfit)} (${formatPercentage(simulation.bestResaleInfo.earlyProfitPercentage/100)})`,
         20,
         yPos
       );
