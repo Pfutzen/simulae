@@ -54,7 +54,7 @@ export const calculateBestResaleMonth = (schedule: PaymentType[]) => {
       }
 
       // Estratégia 2: Maior Percentual de Rentabilidade
-      // Calcula: (Lucro / Valor Investido até o mês) * 100
+      // Fórmula correta: (Lucro / Valor Investido até o mês) * 100
       const rentabilityPercentage = (profit / investedUpToMonth) * 100;
       
       // Só considerar se a rentabilidade for pelo menos 10%
