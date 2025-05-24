@@ -13,7 +13,7 @@ import ReinforcementDatesControl from "./ReinforcementDatesControl";
 import SimulationResults from "./SimulationResults";
 import SimulationHistory from "./SimulationHistory";
 import { Calculator, TrendingUp, Calendar, Home } from "lucide-react";
-import { calculateSimulation, SimulationParams } from "@/utils/calculationUtils";
+import { calculateSimulation, SimulationParams, SimulationFormData } from "@/utils/calculationUtils";
 import { calculateInstallmentsFromDeliveryDate } from "@/utils/dateUtils";
 
 const SimulatorForm = () => {
@@ -34,7 +34,7 @@ const SimulatorForm = () => {
   const [deliveryDate, setDeliveryDate] = useState<Date | undefined>(undefined);
   const [customReinforcementDates, setCustomReinforcementDates] = useState<Date[] | undefined>(undefined);
   const [simulationResults, setSimulationResults] = useState<any>(null);
-  const [simulationParams, setSimulationParams] = useState<SimulationParams | null>(null);
+  const [simulationParams, setSimulationParams] = useState<SimulationFormData | null>(null);
   const [simulationHistory, setSimulationHistory] = useState<any[]>([]);
   const [isCalculating, setIsCalculating] = useState<boolean>(false);
   
@@ -64,7 +64,7 @@ const SimulatorForm = () => {
   const handleCalculate = async () => {
     setIsCalculating(true);
 
-    const params: SimulationParams = {
+    const params: SimulationFormData = {
       propertyValue,
       downPaymentPercentage,
       downPaymentValue,
@@ -147,9 +147,9 @@ const SimulatorForm = () => {
                 label="Entrada"
                 percentage={downPaymentPercentage}
                 onPercentageChange={setDownPaymentPercentage}
-                absoluteValue={downPaymentValue}
-                onAbsoluteChange={setDownPaymentValue}
-                baseValue={propertyValue}
+                value={downPaymentValue}
+                onValueChange={setDownPaymentValue}
+                totalValue={propertyValue}
                 required
               />
 
@@ -219,9 +219,9 @@ const SimulatorForm = () => {
                 label="Chaves"
                 percentage={keysPercentage}
                 onPercentageChange={setKeysPercentage}
-                absoluteValue={keysValue}
-                onAbsoluteChange={setKeysValue}
-                baseValue={propertyValue}
+                value={keysValue}
+                onValueChange={setKeysValue}
+                totalValue={propertyValue}
                 required
               />
             </CardContent>
@@ -240,12 +240,14 @@ const SimulatorForm = () => {
                 value="manual"
                 onChange={() => {}}
               />
-              <PercentageInput
-                id="appreciation"
-                label="Valorização anual do imóvel"
-                value={appreciationIndex}
-                onChange={setAppreciationIndex}
-              />
+              <div className="space-y-2">
+                <label className="text-base font-medium">Valorização anual do imóvel</label>
+                <PercentageInput
+                  id="appreciation"
+                  value={appreciationIndex}
+                  onChange={setAppreciationIndex}
+                />
+              </div>
               <NumberInput
                 id="resale-month"
                 label="Mês para revenda"
@@ -254,12 +256,14 @@ const SimulatorForm = () => {
                 min={0}
                 max={600}
               />
-              <PercentageInput
-                id="rental"
-                label="Percentual para aluguel"
-                value={rentalPercentage}
-                onChange={setRentalPercentage}
-              />
+              <div className="space-y-2">
+                <label className="text-base font-medium">Percentual para aluguel</label>
+                <PercentageInput
+                  id="rental"
+                  value={rentalPercentage}
+                  onChange={setRentalPercentage}
+                />
+              </div>
             </CardContent>
           </Card>
         </div>
@@ -280,7 +284,7 @@ const SimulatorForm = () => {
               </Button>
               {simulationResults && (
                 <SimulationResults 
-                  data={simulationResults}
+                  results={simulationResults}
                   formData={simulationParams}
                 />
               )}
@@ -304,8 +308,14 @@ const SimulatorForm = () => {
       {/* Simulation History */}
       <SimulationHistory 
         simulations={simulationHistory}
-        onLoadSimulation={(simulation) => {
+        onViewSimulation={(simulation) => {
           // Load simulation logic here
+        }}
+        onDuplicateSimulation={(simulation) => {
+          // Duplicate simulation logic here
+        }}
+        onDeleteSimulation={(id) => {
+          setSimulationHistory(prev => prev.filter(sim => sim.id !== id));
         }}
       />
     </div>
