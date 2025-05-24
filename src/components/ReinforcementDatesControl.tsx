@@ -1,14 +1,13 @@
-
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Calendar, Edit3, RotateCcw } from "lucide-react";
-import DatePicker from "./DatePicker";
-import { formatDateForDisplay, addMonths } from "@/utils/dateUtils";
+import MonthYearInput from "./MonthYearInput";
+import { formatToMonthYear, addMonths } from "@/utils/dateUtils";
 import { getReinforcementMonths, calculateStartDateFromDelivery } from "@/utils/calculationUtils";
 
 interface ReinforcementDatesControlProps {
-  deliveryDate?: Date; // Changed from startDate to deliveryDate
+  deliveryDate?: Date;
   installmentsCount: number;
   reinforcementFrequency: number;
   finalMonthsWithoutReinforcement: number;
@@ -133,16 +132,15 @@ const ReinforcementDatesControl: React.FC<ReinforcementDatesControlProps> = ({
                 
                 {isUsingCustomDates ? (
                   <div className="w-48">
-                    <DatePicker
+                    <MonthYearInput
                       value={date}
                       onChange={(newDate) => handleCustomDateChange(index, newDate)}
-                      placeholder="Selecionar data"
-                      disablePastDates={true}
+                      placeholder="MM/AAAA"
                     />
                   </div>
                 ) : (
                   <div className="text-sm font-medium text-blue-600">
-                    {formatDateForDisplay(date)}
+                    {formatToMonthYear(date)}
                   </div>
                 )}
               </div>
