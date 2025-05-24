@@ -21,12 +21,17 @@ export const calculateResaleProfit = (
 };
 
 export const calculateBestResaleMonth = (schedule: PaymentType[]) => {
+  // Estratégia 1: Maior Valor de Lucro Absoluto
   let bestProfitMonth = 0;
   let maxProfit = 0;
   let maxProfitPercentage = 0;
+
+  // Estratégia 2: Maior Percentual de Rentabilidade
   let bestRoiMonth = 0;
   let maxRoi = 0;
   let maxRoiProfit = 0;
+
+  // Estratégia 3: Maior Lucro no Menor Prazo
   let earlyMonth: number | undefined;
   let earlyProfit: number | undefined;
   let earlyProfitPercentage: number | undefined;
@@ -41,42 +46,46 @@ export const calculateBestResaleMonth = (schedule: PaymentType[]) => {
     // Calcular saldo devedor restante
     const remainingBalance = schedule[i - 1]?.balance || 0;
     
-    // Calcular lucro: valor do imóvel - valor investido - saldo devedor
+    // Fórmula oficial: Lucro = Valor do Imóvel no mês - Valor investido até o mês
     const profit = currentPropertyValue - investedUpToMonth - remainingBalance;
     
     // Só considerar se houver lucro positivo e valor de revenda maior que investido
     if (profit > 0 && currentPropertyValue > investedUpToMonth) {
-      // Estratégia 1: Maior Lucro Absoluto
+      
+      // ESTRATÉGIA 1: Maior Valor de Lucro Absoluto
+      // Objetivo: identificar o mês com o maior valor bruto de lucro
       if (profit > maxProfit) {
         maxProfit = profit;
         maxProfitPercentage = (profit / investedUpToMonth) * 100;
         bestProfitMonth = i;
       }
 
-      // Estratégia 2: Maior Percentual de Rentabilidade
-      // Calcular rentabilidade real para este mês específico
+      // ESTRATÉGIA 2: Maior Percentual de Rentabilidade
+      // Fórmula: (Lucro / Valor investido até o mês) × 100
+      // Objetivo: maior retorno proporcional (%) sobre o que foi investido
       const currentRentability = (profit / investedUpToMonth) * 100;
       
-      // Só considerar se a rentabilidade for pelo menos 10%
-      if (currentRentability >= 10) {
-        // Buscar o MAIOR percentual de rentabilidade de todos os meses
-        if (currentRentability > maxRoi) {
-          maxRoi = currentRentability;
-          maxRoiProfit = profit;
-          bestRoiMonth = i;
-        }
+      // Considerar todos os meses com lucro positivo
+      if (currentRentability > maxRoi) {
+        maxRoi = currentRentability;
+        maxRoiProfit = profit;
+        bestRoiMonth = i;
       }
 
-      // Estratégia 3: Maior Lucro no Menor Prazo (primeiros 12 meses)
-      if (i <= 12) {
-        // Só considera se a rentabilidade for pelo menos 30%
-        const earlyRentability = (profit / investedUpToMonth) * 100;
-        if (earlyRentability >= 30) {
-          if (earlyProfit === undefined || profit > earlyProfit) {
-            earlyMonth = i;
-            earlyProfit = profit;
-            earlyProfitPercentage = earlyRentability;
-          }
+      // ESTRATÉGIA 3: Maior Lucro no Menor Prazo
+      // Objetivo: menor número de meses com lucro relevante
+      // Critério: lucro > 10% do valor investido até aquele mês
+      const profitThreshold = investedUpToMonth * 0.10; // 10% do valor investido
+      
+      if (profit >= profitThreshold) {
+        // Se ainda não temos um mês definido, ou se encontramos um mês menor
+        // com lucro maior, atualizar
+        if (earlyMonth === undefined || 
+            i < earlyMonth || 
+            (i === earlyMonth && profit > (earlyProfit || 0))) {
+          earlyMonth = i;
+          earlyProfit = profit;
+          earlyProfitPercentage = currentRentability;
         }
       }
     }
