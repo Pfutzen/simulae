@@ -1,16 +1,14 @@
 
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ArrowLeft, FileText, Download, Copy, FileDown } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
-import { formatCurrency } from "@/utils/formatUtils";
 import { SavedSimulation, getActiveSimulation } from "@/utils/simulationHistoryUtils";
+import { generatePropostaPDF } from "@/utils/propostaPdfExport";
+import { generatePropostaWord } from "@/utils/propostaWordExport";
+import { copyPropostaToClipboard } from "@/utils/propostaTextExport";
 import PropostaForm from "@/components/PropostaForm";
 import PropostaPreview from "@/components/PropostaPreview";
 import { PropostaData } from "@/types/proposta";
@@ -44,27 +42,60 @@ const PropostaComercial: React.FC = () => {
   }, []);
 
   const handleExportPDF = () => {
-    // TODO: Implementar exportação PDF
-    toast({
-      title: "Funcionalidade em desenvolvimento",
-      description: "A exportação em PDF será implementada em breve.",
-    });
+    if (!activeSimulation) return;
+    
+    try {
+      generatePropostaPDF(propostagData, activeSimulation);
+      toast({
+        title: "PDF gerado com sucesso!",
+        description: "O arquivo PDF foi baixado.",
+      });
+    } catch (error) {
+      console.error('Erro ao gerar PDF:', error);
+      toast({
+        title: "Erro ao gerar PDF",
+        description: "Ocorreu um erro ao gerar o arquivo PDF.",
+        variant: "destructive"
+      });
+    }
   };
 
-  const handleExportWord = () => {
-    // TODO: Implementar exportação Word
-    toast({
-      title: "Funcionalidade em desenvolvimento", 
-      description: "A exportação em Word será implementada em breve.",
-    });
+  const handleExportWord = async () => {
+    if (!activeSimulation) return;
+    
+    try {
+      await generatePropostaWord(propostagData, activeSimulation);
+      toast({
+        title: "Documento Word gerado com sucesso!",
+        description: "O arquivo Word foi baixado.",
+      });
+    } catch (error) {
+      console.error('Erro ao gerar Word:', error);
+      toast({
+        title: "Erro ao gerar Word",
+        description: "Ocorreu um erro ao gerar o documento Word.",
+        variant: "destructive"
+      });
+    }
   };
 
-  const handleCopyText = () => {
-    // TODO: Implementar cópia como texto
-    toast({
-      title: "Funcionalidade em desenvolvimento",
-      description: "A cópia como texto será implementada em breve.",
-    });
+  const handleCopyText = async () => {
+    if (!activeSimulation) return;
+    
+    try {
+      await copyPropostaToClipboard(propostagData, activeSimulation);
+      toast({
+        title: "Texto copiado!",
+        description: "A proposta foi copiada para a área de transferência.",
+      });
+    } catch (error) {
+      console.error('Erro ao copiar texto:', error);
+      toast({
+        title: "Erro ao copiar texto",
+        description: "Ocorreu um erro ao copiar o texto.",
+        variant: "destructive"
+      });
+    }
   };
 
   if (!activeSimulation) {
