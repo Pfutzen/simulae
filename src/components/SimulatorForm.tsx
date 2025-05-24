@@ -83,19 +83,24 @@ const SimulatorForm: React.FC = () => {
     bestProfitMonth: number;
     maxProfit: number;
     maxProfitPercentage: number;
+    maxProfitTotalPaid: number;
     bestRoiMonth: number;
     maxRoi: number;
     maxRoiProfit: number;
+    maxRoiTotalPaid: number;
     earlyMonth?: number;
     earlyProfit?: number;
     earlyProfitPercentage?: number;
+    earlyTotalPaid?: number;
   }>({ 
     bestProfitMonth: 0, 
     maxProfit: 0, 
     maxProfitPercentage: 0,
+    maxProfitTotalPaid: 0,
     bestRoiMonth: 0,
     maxRoi: 0,
-    maxRoiProfit: 0
+    maxRoiProfit: 0,
+    maxRoiTotalPaid: 0
   });
   
   const [currentSimulation, setCurrentSimulation] = useState<SavedSimulation | undefined>(undefined);
