@@ -1,7 +1,8 @@
+
 import { format } from 'date-fns';
 import { addMonths as addMonthsToDate } from 'date-fns';
 
-export type CorrectionMode = "manual" | "igpm" | "ipca";
+export type CorrectionMode = "manual" | "cub";
 
 export interface SimulationFormData {
   propertyValue: number;
@@ -34,7 +35,24 @@ export interface PaymentType {
   balance: number;
   totalPaid: number;
   propertyValue: number;
+  month?: number;
 }
+
+// CUB/SC correction data for the last 12 months
+export const CUB_CORRECTION_DATA = [
+  { month: 1, description: "Janeiro 2024", percentage: 0.75 },
+  { month: 2, description: "Fevereiro 2024", percentage: 0.68 },
+  { month: 3, description: "Março 2024", percentage: 0.82 },
+  { month: 4, description: "Abril 2024", percentage: 0.71 },
+  { month: 5, description: "Maio 2024", percentage: 0.79 },
+  { month: 6, description: "Junho 2024", percentage: 0.65 },
+  { month: 7, description: "Julho 2024", percentage: 0.73 },
+  { month: 8, description: "Agosto 2024", percentage: 0.67 },
+  { month: 9, description: "Setembro 2024", percentage: 0.74 },
+  { month: 10, description: "Outubro 2024", percentage: 0.69 },
+  { month: 11, description: "Novembro 2024", percentage: 0.72 },
+  { month: 12, description: "Dezembro 2024", percentage: 0.76 }
+];
 
 export const calculatePercentage = (value: number, total: number): number => {
   if (total === 0) return 0;
@@ -99,6 +117,11 @@ export const calculateStartDateFromValuation = (valuationDate: Date): Date => {
   return addMonthsToDate(valuationDate, 1);
 };
 
+// Helper function to add months (using date-fns)
+const addMonths = (date: Date, months: number): Date => {
+  return addMonthsToDate(date, months);
+};
+
 export const generatePaymentSchedule = (data: SimulationFormData): PaymentType[] => {
   const schedule: PaymentType[] = [];
   
@@ -117,7 +140,8 @@ export const generatePaymentSchedule = (data: SimulationFormData): PaymentType[]
     amount: data.downPaymentValue,
     balance: data.propertyValue - data.downPaymentValue,
     totalPaid: data.downPaymentValue,
-    propertyValue: data.propertyValue
+    propertyValue: data.propertyValue,
+    month: 0
   });
 
   let currentDate = new Date(startDate);
@@ -160,12 +184,10 @@ export const generatePaymentSchedule = (data: SimulationFormData): PaymentType[]
     let correctedAmount = installmentAmount;
     if (data.correctionMode === "manual" && data.correctionIndex > 0) {
       correctedAmount = installmentAmount * Math.pow(1 + data.correctionIndex / 100, i - 1);
-    } else if (data.correctionMode === "igpm") {
-      // Aplicar IGP-M (simulado como 0.8% ao mês para exemplo)
-      correctedAmount = installmentAmount * Math.pow(1.008, i - 1);
-    } else if (data.correctionMode === "ipca") {
-      // Aplicar IPCA (simulado como 0.4% ao mês para exemplo)
-      correctedAmount = installmentAmount * Math.pow(1.004, i - 1);
+    } else if (data.correctionMode === "cub") {
+      // Aplicar CUB/SC (usar média dos últimos 12 meses)
+      const avgCubCorrection = CUB_CORRECTION_DATA.reduce((sum, item) => sum + item.percentage, 0) / CUB_CORRECTION_DATA.length;
+      correctedAmount = installmentAmount * Math.pow(1 + avgCubCorrection / 100, i - 1);
     }
 
     totalPaid += correctedAmount;
@@ -182,7 +204,8 @@ export const generatePaymentSchedule = (data: SimulationFormData): PaymentType[]
       amount: correctedAmount,
       balance,
       totalPaid,
-      propertyValue: currentPropertyValue
+      propertyValue: currentPropertyValue,
+      month: i
     });
 
     currentDate = addMonthsToDate(currentDate, 1);
@@ -198,7 +221,8 @@ export const generatePaymentSchedule = (data: SimulationFormData): PaymentType[]
     amount: data.keysValue,
     balance: Math.max(0, data.propertyValue - totalPaid),
     totalPaid,
-    propertyValue: finalPropertyValue
+    propertyValue: finalPropertyValue,
+    month: data.installmentsCount + 1
   });
 
   return schedule;
@@ -286,5 +310,13 @@ export const formatCurrency = (value: number): string => {
   return value.toLocaleString('pt-BR', {
     style: 'currency',
     currency: 'BRL',
+  });
+};
+
+export const formatPercentage = (value: number): string => {
+  return value.toLocaleString('pt-BR', {
+    style: 'percent',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
   });
 };
