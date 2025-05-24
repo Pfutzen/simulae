@@ -142,6 +142,16 @@ export function calculateInstallmentsFromDeliveryDate(deliveryDate: Date): numbe
 }
 
 /**
+ * Calculate the start date for installments based on valuation date
+ * The first installment starts in the month AFTER the valuation date
+ * @param valuationDate - The valuation date
+ * @returns The start date for the first installment
+ */
+export function calculateStartDateFromValuation(valuationDate: Date): Date {
+  return addMonths(valuationDate, 1);
+}
+
+/**
  * Parse month/year string (MM/AAAA) to Date object
  * @param monthYear - String in format MM/AAAA
  * @returns Date object or null if invalid
