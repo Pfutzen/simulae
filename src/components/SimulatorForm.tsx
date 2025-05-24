@@ -430,6 +430,119 @@ const SimulatorForm: React.FC = () => {
     });
   };
 
+  const handleSimulate = () => {
+    if (totalPercentage !== 100) {
+      toast({
+        title: "Percentuais incorretos",
+        description: "A soma dos percentuais deve ser exatamente 100%",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const paymentSchedule = generatePaymentSchedule(formData);
+    setSchedule(paymentSchedule);
+    
+    const effectiveResaleMonth = customResaleEnabled 
+      ? formData.resaleMonth 
+      : formData.installmentsCount;
+      
+    const results = calculateResaleProfit(paymentSchedule, effectiveResaleMonth);
+    
+    const rentalData = calculateRentalEstimate(
+      results.propertyValue, 
+      formData.rentalPercentage
+    );
+    
+    setResaleResults({
+      ...results,
+      rentalEstimate: rentalData.rentalEstimate,
+      annualRentalReturn: rentalData.annualRentalReturn
+    });
+    
+    const bestResale = calculateBestResaleMonth(paymentSchedule);
+    setBestResaleInfo(bestResale);
+    
+    setCurrentSimulation(undefined);
+    
+    toast({
+      title: "✅ Simulação calculada com sucesso",
+      description: "Confira os resultados abaixo"
+    });
+  };
+
+  const handleSaveSimulation = () => {
+    if (!simulationName.trim()) {
+      toast({
+        title: "Nome obrigatório",
+        description: "Digite um nome para a simulação",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (schedule.length === 0) {
+      toast({
+        title: "Simule primeiro",
+        description: "Execute a simulação antes de salvar",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const simulation: SavedSimulation = {
+      id: Date.now().toString(),
+      name: simulationName,
+      timestamp: Date.now(),
+      formData,
+      schedule,
+      results: resaleResults,
+      bestResaleInfo
+    };
+
+    saveSimulation(simulation);
+    const updatedSimulations = getSimulations();
+    setSimulations(updatedSimulations);
+    setSimulationName("");
+    
+    toast({
+      title: "✅ Simulação salva",
+      description: `"${simulation.name}" foi salva no histórico`
+    });
+  };
+
+  const handleViewSimulation = (simulation: SavedSimulation) => {
+    setFormData(simulation.formData);
+    setSchedule(simulation.schedule);
+    setResaleResults(simulation.results);
+    setBestResaleInfo(simulation.bestResaleInfo);
+    setCurrentSimulation(simulation);
+    setActiveTab("simulator");
+    
+    toast({
+      title: "Simulação carregada",
+      description: `"${simulation.name}" foi carregada`
+    });
+  };
+
+  const handleDuplicateSimulation = (simulation: SavedSimulation) => {
+    setFormData(simulation.formData);
+    setSchedule([]);
+    setCurrentSimulation(undefined);
+    setSimulationName(`${simulation.name} - Cópia`);
+    setActiveTab("simulator");
+    
+    toast({
+      title: "Simulação duplicada",
+      description: "Os dados foram copiados. Faça os ajustes necessários e simule novamente."
+    });
+  };
+
+  const handleDeleteSimulation = (id: string) => {
+    const updatedSimulations = simulations.filter(sim => sim.id !== id);
+    setSimulations(updatedSimulations);
+  };
+
   const isPercentageValid = totalPercentage === 100;
 
   return (
