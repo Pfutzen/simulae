@@ -58,10 +58,13 @@ export const calculateBestResaleMonth = (schedule: PaymentType[]) => {
       const rentabilityPercentage = (profit / investedUpToMonth) * 100;
       
       // Só considerar se a rentabilidade for pelo menos 10%
-      if (rentabilityPercentage >= 10 && rentabilityPercentage > maxRentability) {
-        maxRentability = rentabilityPercentage;
-        maxRentabilityProfit = profit;
-        bestRentabilityMonth = i;
+      if (rentabilityPercentage >= 10) {
+        // Buscar o MAIOR percentual de rentabilidade, independente do lucro absoluto
+        if (rentabilityPercentage > maxRentability) {
+          maxRentability = rentabilityPercentage;
+          maxRentabilityProfit = profit;
+          bestRentabilityMonth = i;
+        }
       }
 
       // Estratégia 3: Maior Lucro no Menor Prazo (primeiros 12 meses)
