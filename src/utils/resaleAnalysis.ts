@@ -24,9 +24,9 @@ export const calculateBestResaleMonth = (schedule: PaymentType[]) => {
   let bestProfitMonth = 0;
   let maxProfit = 0;
   let maxProfitPercentage = 0;
-  let bestRentabilityMonth = 0;
-  let maxRentability = 0;
-  let maxRentabilityProfit = 0;
+  let bestRoiMonth = 0;
+  let maxRoi = 0;
+  let maxRoiProfit = 0;
   let earlyMonth: number | undefined;
   let earlyProfit: number | undefined;
   let earlyProfitPercentage: number | undefined;
@@ -54,27 +54,28 @@ export const calculateBestResaleMonth = (schedule: PaymentType[]) => {
       }
 
       // Estratégia 2: Maior Percentual de Rentabilidade
-      // Fórmula correta: (Lucro / Valor Investido até o mês) * 100
-      const rentabilityPercentage = (profit / investedUpToMonth) * 100;
+      // Calcular rentabilidade real para este mês específico
+      const currentRentability = (profit / investedUpToMonth) * 100;
       
       // Só considerar se a rentabilidade for pelo menos 10%
-      if (rentabilityPercentage >= 10) {
-        // Buscar o MAIOR percentual de rentabilidade, independente do lucro absoluto
-        if (rentabilityPercentage > maxRentability) {
-          maxRentability = rentabilityPercentage;
-          maxRentabilityProfit = profit;
-          bestRentabilityMonth = i;
+      if (currentRentability >= 10) {
+        // Buscar o MAIOR percentual de rentabilidade de todos os meses
+        if (currentRentability > maxRoi) {
+          maxRoi = currentRentability;
+          maxRoiProfit = profit;
+          bestRoiMonth = i;
         }
       }
 
       // Estratégia 3: Maior Lucro no Menor Prazo (primeiros 12 meses)
       if (i <= 12) {
         // Só considera se a rentabilidade for pelo menos 30%
-        if (rentabilityPercentage >= 30) {
+        const earlyRentability = (profit / investedUpToMonth) * 100;
+        if (earlyRentability >= 30) {
           if (earlyProfit === undefined || profit > earlyProfit) {
             earlyMonth = i;
             earlyProfit = profit;
-            earlyProfitPercentage = rentabilityPercentage;
+            earlyProfitPercentage = earlyRentability;
           }
         }
       }
@@ -85,9 +86,9 @@ export const calculateBestResaleMonth = (schedule: PaymentType[]) => {
     bestProfitMonth,
     maxProfit,
     maxProfitPercentage,
-    bestRoiMonth: bestRentabilityMonth,
-    maxRoi: maxRentability,
-    maxRoiProfit: maxRentabilityProfit,
+    bestRoiMonth,
+    maxRoi,
+    maxRoiProfit,
     earlyMonth,
     earlyProfit,
     earlyProfitPercentage
