@@ -131,6 +131,12 @@ export function exportToPdf(simulation: SavedSimulation): void {
     // Get the delivery month property value (last month in the schedule)
     const deliveryPropertyValue = getDeliveryPropertyValue(simulation);
     
+    // CRITICAL FIX: Use the rentalEstimate directly from simulation.results
+    // instead of recalculating it, as it should already be the correct value
+    const rentalEstimate = simulation.results.rentalEstimate;
+    const annualRental = rentalEstimate * 12;
+    const annualRentalReturn = simulation.results.annualRentalReturn || ((annualRental / deliveryPropertyValue) * 100);
+    
     doc.setFontSize(12);
     doc.setFont("helvetica", "normal");
     doc.text(`Percentual para aluguel: ${formatPercentage(simulation.formData.rentalPercentage/100)}`, 20, yPos);
@@ -141,17 +147,16 @@ export function exportToPdf(simulation: SavedSimulation): void {
     
     yPos += 5;
     
-    // Use the rental values from simulation.results
-    doc.text(`Aluguel mensal estimado: ${formatCurrency(simulation.results.rentalEstimate)}`, 20, yPos);
+    // Use the rental estimate directly from simulation.results
+    doc.text(`Aluguel mensal estimado: ${formatCurrency(rentalEstimate)}`, 20, yPos);
     
     yPos += 5;
     
-    const annualRental = simulation.results.rentalEstimate * 12;
     doc.text(`Renda anual: ${formatCurrency(annualRental)}`, 20, yPos);
     
     yPos += 5;
     
-    doc.text(`Rentabilidade anual: ${formatPercentage(simulation.results.annualRentalReturn/100)}`, 20, yPos);
+    doc.text(`Rentabilidade anual: ${formatPercentage(annualRentalReturn/100)}`, 20, yPos);
   }
   
   // Add horizontal line
