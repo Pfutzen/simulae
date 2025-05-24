@@ -62,19 +62,9 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
   annualRentalReturn
 }) => {
   const handleExportPDF = () => {
-    generatePDF(
-      schedule,
-      investmentValue,
-      propertyValue,
-      profit,
-      profitPercentage,
-      remainingBalance,
-      resaleMonth,
-      bestResaleInfo,
-      rentalEstimate,
-      annualRentalReturn,
-      simulationData?.name || "Simulação"
-    );
+    if (simulationData) {
+      generatePDF(simulationData);
+    }
   };
 
   return (
@@ -135,6 +125,7 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
               onClick={handleExportPDF} 
               variant="secondary"
               className="gap-2"
+              disabled={!simulationData}
             >
               <Download className="h-4 w-4" />
               Exportar PDF
