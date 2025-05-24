@@ -28,6 +28,8 @@ import PercentageSlider from "./PercentageSlider";
 import CorrectionSelector from "./CorrectionSelector";
 import SimulationResults from "./SimulationResults";
 import SimulationHistory from "./SimulationHistory";
+import DatePicker from "./DatePicker";
+import ReinforcementDatesControl from "./ReinforcementDatesControl";
 import { CheckCircle, AlertCircle, DollarSign, Calendar, TrendingUp, Home } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -47,14 +49,16 @@ const SimulatorForm: React.FC = () => {
     reinforcementsValue: 16666.67,
     reinforcementsPercentage: 20,
     reinforcementFrequency: 6,
-    finalMonthsWithoutReinforcement: 5, // Default to 5 months without reinforcement at the end
+    finalMonthsWithoutReinforcement: 5,
     keysValue: 250000,
     keysPercentage: 50,
     correctionMode: "manual",
     correctionIndex: 0.5,
     appreciationIndex: 1.35,
     resaleMonth: 24,
-    rentalPercentage: 0.5 // Default rental percentage (0.5%)
+    rentalPercentage: 0.5,
+    startDate: undefined, // New field
+    customReinforcementDates: undefined // New field
   });
 
   const [totalPercentage, setTotalPercentage] = useState<number>(0);
@@ -357,6 +361,42 @@ const SimulatorForm: React.FC = () => {
     setFormData({ ...formData, rentalPercentage: value });
   };
 
+  // Handle start date change
+  const handleStartDateChange = (date: Date | undefined) => {
+    setFormData({
+      ...formData,
+      startDate: date,
+      customReinforcementDates: undefined // Reset custom dates when start date changes
+    });
+  };
+
+  // Handle custom reinforcement dates change
+  const handleCustomReinforcementDatesChange = (dates: Date[] | undefined) => {
+    setFormData({
+      ...formData,
+      customReinforcementDates: dates
+    });
+  };
+
+  // Format reinforcement months for display
+  const getReinforcementMonthsText = (): string => {
+    if (reinforcementMonths.length === 0) {
+      return "Nenhum reforço será aplicado";
+    }
+    return `Reforços nos meses: ${reinforcementMonths.join(", ")}`;
+  };
+
+  // Calculate difference from 100%
+  const calculateDifference = (): string => {
+    const difference = totalPercentage - 100;
+    if (difference === 0) return "";
+    
+    const formattedDifference = Math.abs(difference).toFixed(2);
+    return difference > 0 
+      ? `(${formattedDifference}% acima)` 
+      : `(${formattedDifference}% abaixo)`;
+  };
+
   // Run simulation
   const handleSimulate = () => {
     if (totalPercentage !== 100) {
@@ -368,34 +408,38 @@ const SimulatorForm: React.FC = () => {
       return;
     }
 
+    if (!formData.startDate) {
+      toast({
+        title: "Data inicial obrigatória",
+        description: "Por favor, selecione a data inicial da simulação",
+        variant: "destructive"
+      });
+      return;
+    }
+
     const paymentSchedule = generatePaymentSchedule(formData);
     setSchedule(paymentSchedule);
     
-    // If custom resale is not enabled, use the last installment month (keys payment)
     const effectiveResaleMonth = customResaleEnabled 
       ? formData.resaleMonth 
       : formData.installmentsCount;
       
     const results = calculateResaleProfit(paymentSchedule, effectiveResaleMonth);
     
-    // Calculate rental income
     const rentalData = calculateRentalEstimate(
       results.propertyValue, 
       formData.rentalPercentage
     );
     
-    // Combine results with default values for optional properties
     setResaleResults({
       ...results,
       rentalEstimate: rentalData.rentalEstimate,
       annualRentalReturn: rentalData.annualRentalReturn
     });
     
-    // Calculate best resale month
     const bestResale = calculateBestResaleMonth(paymentSchedule);
     setBestResaleInfo(bestResale);
     
-    // Reset current simulation when running a new simulation
     setCurrentSimulation(undefined);
     
     toast({
@@ -481,25 +525,6 @@ const SimulatorForm: React.FC = () => {
     setSimulations(simulations.filter(sim => sim.id !== id));
   };
 
-  // Format reinforcement months for display
-  const getReinforcementMonthsText = (): string => {
-    if (reinforcementMonths.length === 0) {
-      return "Nenhum reforço será aplicado";
-    }
-    return `Reforços nos meses: ${reinforcementMonths.join(", ")}`;
-  };
-
-  // Calculate difference from 100%
-  const calculateDifference = (): string => {
-    const difference = totalPercentage - 100;
-    if (difference === 0) return "";
-    
-    const formattedDifference = Math.abs(difference).toFixed(2);
-    return difference > 0 
-      ? `(${formattedDifference}% acima)` 
-      : `(${formattedDifference}% abaixo)`;
-  };
-
   return (
     <div className="space-y-8 max-w-5xl mx-auto">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -516,6 +541,38 @@ const SimulatorForm: React.FC = () => {
                   value={formData.propertyValue}
                   onChange={handlePropertyValueChange}
                 />
+
+                {/* Data Inicial da Simulação */}
+                <div className="rounded-lg border border-slate-200 p-5">
+                  <div className="flex items-center mb-4 gap-2">
+                    <Calendar className="h-5 w-5 text-green-600" />
+                    <h3 className="text-lg font-semibold text-slate-800">Data Inicial da Simulação</h3>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <DatePicker
+                      id="start-date"
+                      label="Data de início"
+                      value={formData.startDate}
+                      onChange={handleStartDateChange}
+                      placeholder="Selecione a data inicial"
+                      disablePastDates={true}
+                      required={true}
+                      className="w-full md:w-[280px]"
+                    />
+                    {formData.startDate && (
+                      <div className="flex flex-col justify-center">
+                        <p className="text-sm text-slate-600">
+                          <strong>Data de entrega prevista:</strong>{" "}
+                          {(() => {
+                            const deliveryDate = new Date(formData.startDate);
+                            deliveryDate.setMonth(deliveryDate.getMonth() + formData.installmentsCount + 1);
+                            return deliveryDate.toLocaleDateString('pt-BR');
+                          })()}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
                 
                 <Alert className={totalPercentage === 100 ? "bg-green-50" : "bg-amber-50"}>
                   <div className="flex items-center gap-2">
@@ -587,61 +644,68 @@ const SimulatorForm: React.FC = () => {
                     <Calendar className="h-5 w-5 text-blue-600" />
                     <h3 className="text-lg font-semibold text-slate-800">Reforços Programados</h3>
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-4">
+                  <div className="grid grid-cols-1 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-4">
+                        <PercentageValueInput
+                          label="Reforços"
+                          valueLabel="Valor por reforço (R$)"
+                          value={formData.reinforcementsValue}
+                          percentage={formData.reinforcementsPercentage}
+                          totalValue={formData.propertyValue}
+                          onValueChange={handleReinforcementsValueChange}
+                          onPercentageChange={handleReinforcementsPercentageChange}
+                          noDecimalsForPercentage={true}
+                          valueInputClassName="w-full md:w-[240px]"
+                          percentageInputClassName="w-full md:w-[120px]"
+                          installmentsCount={reinforcementMonths.length}
+                        />
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <NumberInput
+                            id="reinforcement-frequency"
+                            label="Frequência (meses)"
+                            value={formData.reinforcementFrequency}
+                            onChange={handleReinforcementFrequencyChange}
+                            min={0}
+                            suffix="meses"
+                            noDecimals={true}
+                            className="w-full"
+                          />
+                          <NumberInput
+                            id="final-months-without-reinforcement"
+                            label="Meses finais sem reforço"
+                            value={formData.finalMonthsWithoutReinforcement}
+                            onChange={handleFinalMonthsWithoutReinforcementChange}
+                            min={0}
+                            max={formData.installmentsCount - 1}
+                            suffix="meses"
+                            noDecimals={true}
+                            className="w-full"
+                          />
+                        </div>
+                      </div>
+                      
                       <PercentageValueInput
-                        label="Reforços"
-                        valueLabel="Valor por reforço (R$)"
-                        value={formData.reinforcementsValue}
-                        percentage={formData.reinforcementsPercentage}
+                        label="Chaves"
+                        value={formData.keysValue}
+                        percentage={formData.keysPercentage}
                         totalValue={formData.propertyValue}
-                        onValueChange={handleReinforcementsValueChange}
-                        onPercentageChange={handleReinforcementsPercentageChange}
+                        onValueChange={handleKeysValueChange}
+                        onPercentageChange={handleKeysPercentageChange}
                         noDecimalsForPercentage={true}
                         valueInputClassName="w-full md:w-[240px]"
                         percentageInputClassName="w-full md:w-[120px]"
-                        installmentsCount={reinforcementMonths.length}
                       />
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <NumberInput
-                          id="reinforcement-frequency"
-                          label="Frequência (meses)"
-                          value={formData.reinforcementFrequency}
-                          onChange={handleReinforcementFrequencyChange}
-                          min={0}
-                          suffix="meses"
-                          noDecimals={true}
-                          className="w-full"
-                        />
-                        <NumberInput
-                          id="final-months-without-reinforcement"
-                          label="Meses finais sem reforço"
-                          value={formData.finalMonthsWithoutReinforcement}
-                          onChange={handleFinalMonthsWithoutReinforcementChange}
-                          min={0}
-                          max={formData.installmentsCount - 1}
-                          suffix="meses"
-                          noDecimals={true}
-                          className="w-full"
-                        />
-                      </div>
-                      {reinforcementMonths.length > 0 && (
-                        <div className="text-sm text-blue-600 mt-1">
-                          {getReinforcementMonthsText()}
-                        </div>
-                      )}
                     </div>
-                    
-                    <PercentageValueInput
-                      label="Chaves"
-                      value={formData.keysValue}
-                      percentage={formData.keysPercentage}
-                      totalValue={formData.propertyValue}
-                      onValueChange={handleKeysValueChange}
-                      onPercentageChange={handleKeysPercentageChange}
-                      noDecimalsForPercentage={true}
-                      valueInputClassName="w-full md:w-[240px]"
-                      percentageInputClassName="w-full md:w-[120px]"
+
+                    {/* Controle de Datas dos Reforços */}
+                    <ReinforcementDatesControl
+                      startDate={formData.startDate}
+                      installmentsCount={formData.installmentsCount}
+                      reinforcementFrequency={formData.reinforcementFrequency}
+                      finalMonthsWithoutReinforcement={formData.finalMonthsWithoutReinforcement}
+                      customDates={formData.customReinforcementDates}
+                      onCustomDatesChange={handleCustomReinforcementDatesChange}
                     />
                   </div>
                 </div>
@@ -750,7 +814,7 @@ const SimulatorForm: React.FC = () => {
                   <div className="flex flex-col sm:flex-row gap-3 justify-center">
                     <Button 
                       onClick={handleSimulate} 
-                      disabled={totalPercentage !== 100}
+                      disabled={totalPercentage !== 100 || !formData.startDate}
                       className="bg-simulae-600 hover:bg-simulae-700 text-white px-8 py-6 text-lg w-full sm:w-auto"
                     >
                       Simular

@@ -2,26 +2,23 @@ import jsPDF from 'jspdf';
 import { SavedSimulation } from './simulationHistoryUtils';
 import { formatCurrency, formatPercentage } from './calculationUtils';
 import { calculateRentalEstimate } from './calculationUtils';
+import { formatDateBR } from './dateUtils';
 
 // Function to export the simulation to a PDF
 export function exportToPdf(simulation: SavedSimulation): void {
-  // Define the document structure
   const doc = new jsPDF({
     orientation: 'portrait',
     unit: 'mm',
     format: 'a4'
   });
   
-  // Add the logo
   const logoHeight = 20;
   const pageWidth = doc.internal.pageSize.getWidth();
   const logoWidth = 60;
   const logoX = (pageWidth - logoWidth) / 2;
   
-  // Use the Simulae logo
   doc.addImage("/lovable-uploads/c2a68237-fb14-4957-891c-3d3581836ace.png", "PNG", logoX, 10, logoWidth, logoHeight);
   
-  // Add header information
   const headerY = logoHeight + 15;
   doc.setFontSize(16);
   doc.setFont("helvetica", "bold");
@@ -32,8 +29,17 @@ export function exportToPdf(simulation: SavedSimulation): void {
   doc.text(`Nome: ${simulation.name}`, 20, headerY + 10);
   doc.text(`Data: ${new Intl.DateTimeFormat('pt-BR').format(simulation.timestamp)}`, 20, headerY + 15);
   
-  // Add horizontal line
-  const lineY = headerY + 20;
+  // Add start date and delivery date if available
+  if (simulation.formData.startDate) {
+    doc.text(`Data inicial: ${formatDateBR(simulation.formData.startDate)}`, 20, headerY + 20);
+    
+    // Calculate delivery date
+    const deliveryDate = new Date(simulation.formData.startDate);
+    deliveryDate.setMonth(deliveryDate.getMonth() + simulation.formData.installmentsCount + 1);
+    doc.text(`Data de entrega: ${formatDateBR(deliveryDate)}`, 20, headerY + 25);
+  }
+  
+  const lineY = simulation.formData.startDate ? headerY + 30 : headerY + 20;
   doc.setDrawColor(200, 200, 200);
   doc.line(20, lineY, pageWidth - 20, lineY);
   

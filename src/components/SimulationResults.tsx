@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -8,6 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { LightbulbIcon, FileText, HomeIcon, PiggyBankIcon, TrendingUpIcon } from "lucide-react";
 import { exportToPdf } from "@/utils/pdfExport";
 import { SavedSimulation } from "@/utils/simulationHistoryUtils";
+import { formatDateBR } from "@/utils/dateUtils";
 
 interface SimulationResultsProps {
   schedule: PaymentType[];
@@ -48,23 +50,17 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
   bestResaleInfo,
   simulationData
 }) => {
-  // CRITICAL FIX: Calculate the correct profit percentage directly
-  // The profitPercentage prop might be incorrect, so we recalculate it
-  // using the formula: (profit / investmentValue) * 100
   const calculatedProfitPercentage = investmentValue > 0 ? (profit / investmentValue) * 100 : 0;
   
   const resaleData = schedule.find(item => item.month === resaleMonth);
   
-  // Get the delivery month property value (last month in the schedule)
   const deliveryMonthData = schedule.length > 0 ? schedule[schedule.length - 1] : null;
   const deliveryPropertyValue = deliveryMonthData ? deliveryMonthData.propertyValue : propertyValue;
   
-  // Calculate rental values using the delivery property value
   const rentalValues = rentalPercentage 
     ? calculateRentalEstimate(deliveryPropertyValue, rentalPercentage)
     : undefined;
   
-  // Use the newly calculated values or fall back to the props
   const calculatedRentalEstimate = rentalValues?.rentalEstimate || rentalEstimate;
   const calculatedAnnualRentalReturn = rentalValues?.annualRentalReturn || annualRentalReturn;
 
@@ -282,6 +278,7 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
                   <TableHeader>
                     <TableRow>
                       <TableHead>Mês</TableHead>
+                      <TableHead>Data</TableHead>
                       <TableHead>Descrição</TableHead>
                       <TableHead className="text-right">Valor</TableHead>
                       <TableHead className="text-right">Saldo Devedor</TableHead>
@@ -303,6 +300,9 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
                                 : ""
                       }>
                         <TableCell>{payment.month}</TableCell>
+                        <TableCell>
+                          {payment.date ? formatDateBR(payment.date) : "-"}
+                        </TableCell>
                         <TableCell>{payment.description}</TableCell>
                         <TableCell className="text-right">{formatCurrency(payment.amount)}</TableCell>
                         <TableCell className="text-right">{formatCurrency(payment.balance)}</TableCell>

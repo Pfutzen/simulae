@@ -7,6 +7,7 @@ export interface PaymentType {
   balance: number;
   totalPaid: number;
   propertyValue: number;
+  date?: Date; // New field for payment date
 }
 
 export interface SimulationFormData {
@@ -26,7 +27,9 @@ export interface SimulationFormData {
   correctionIndex: number;
   appreciationIndex: number;
   resaleMonth: number;
-  rentalPercentage?: number; // New field for rental percentage
+  rentalPercentage?: number;
+  startDate?: Date; // New field for simulation start date
+  customReinforcementDates?: Date[]; // New field for custom reinforcement dates
 }
 
 // CUB correction data for the last 12 months
@@ -124,7 +127,10 @@ export const generatePaymentSchedule = (formData: SimulationFormData): PaymentTy
   let currentBalance = formData.propertyValue - formData.downPaymentValue;
   let totalPaid = formData.downPaymentValue;
   let propertyValue = formData.propertyValue;
-  let correctionFactor = 1; // Track cumulative correction factor
+  let correctionFactor = 1;
+  
+  // Use start date or default to today for backward compatibility
+  const startDate = formData.startDate || new Date();
   
   // Initial down payment
   schedule.push({
@@ -133,15 +139,35 @@ export const generatePaymentSchedule = (formData: SimulationFormData): PaymentTy
     amount: formData.downPaymentValue,
     balance: currentBalance,
     totalPaid: totalPaid,
-    propertyValue: propertyValue
+    propertyValue: propertyValue,
+    date: new Date(startDate) // Use start date for down payment
   });
   
-  // Calculate reinforcement months
+  // Calculate reinforcement months and dates
   const reinforcementMonths = getReinforcementMonths(
     formData.installmentsCount,
     formData.reinforcementFrequency,
     formData.finalMonthsWithoutReinforcement
   );
+  
+  // Create a map of reinforcement dates
+  const reinforcementDateMap = new Map<number, Date>();
+  
+  if (formData.customReinforcementDates && formData.customReinforcementDates.length > 0) {
+    // Use custom dates if provided
+    formData.customReinforcementDates.forEach((date, index) => {
+      if (index < reinforcementMonths.length) {
+        reinforcementDateMap.set(reinforcementMonths[index], date);
+      }
+    });
+  } else {
+    // Generate automatic dates based on frequency
+    reinforcementMonths.forEach(month => {
+      const reinforcementDate = new Date(startDate);
+      reinforcementDate.setMonth(startDate.getMonth() + month);
+      reinforcementDateMap.set(month, reinforcementDate);
+    });
+  }
   
   // Initial values (not corrected)
   let baseInstallmentAmount = formData.installmentsValue;
@@ -152,11 +178,14 @@ export const generatePaymentSchedule = (formData: SimulationFormData): PaymentTy
     let monthlyCorrection = 0;
     let correctionPercentage = 0;
     
+    // Calculate payment date for this month
+    const paymentDate = new Date(startDate);
+    paymentDate.setMonth(startDate.getMonth() + month);
+    
     // Calculate monthly correction percentage
     if (formData.correctionMode === "manual") {
       correctionPercentage = formData.correctionIndex / 100;
     } else if (formData.correctionMode === "cub") {
-      // Use CUB correction data - cycle through the last 12 months
       const cubIndex = (month - 1) % 12;
       correctionPercentage = CUB_CORRECTION_DATA[cubIndex].percentage / 100;
     }
@@ -193,7 +222,8 @@ export const generatePaymentSchedule = (formData: SimulationFormData): PaymentTy
       amount: paymentAmount,
       balance: currentBalance > 0 ? currentBalance : 0,
       totalPaid: totalPaid,
-      propertyValue: propertyValue > 0 ? propertyValue : 0
+      propertyValue: propertyValue > 0 ? propertyValue : 0,
+      date: paymentDate
     });
   }
   
@@ -201,13 +231,18 @@ export const generatePaymentSchedule = (formData: SimulationFormData): PaymentTy
   const correctedKeysValue = baseKeysValue * correctionFactor;
   totalPaid += correctedKeysValue;
   
+  // Keys payment date (one month after last installment)
+  const keysDate = new Date(startDate);
+  keysDate.setMonth(startDate.getMonth() + formData.installmentsCount + 1);
+  
   schedule.push({
     month: formData.installmentsCount + 1,
     description: "Chaves",
     amount: correctedKeysValue,
     balance: 0,
     totalPaid: totalPaid,
-    propertyValue: propertyValue
+    propertyValue: propertyValue,
+    date: keysDate
   });
   
   return schedule;
