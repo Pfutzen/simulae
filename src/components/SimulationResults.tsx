@@ -15,7 +15,9 @@ import {
   AlertCircle,
   CheckCircle,
   FileText,
-  Percent
+  Percent,
+  CreditCard,
+  Building
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { formatCurrency, formatPercentage } from "@/utils/formatUtils";
@@ -72,6 +74,12 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
     if (simulationData) {
       generatePDF(simulationData);
     }
+  };
+
+  // Helper function to get property value at specific month
+  const getPropertyValueAtMonth = (month: number) => {
+    const payment = schedule.find(p => p.month === month);
+    return payment?.propertyValue || 0;
   };
 
   return (
@@ -180,9 +188,15 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
                   <span className="text-sm text-slate-600">Rentabilidade:</span>
                   <span className="font-bold text-blue-600">{formatPercentage(bestResaleInfo.maxProfitPercentage)}</span>
                 </div>
-                <div className="bg-slate-50 p-2 rounded text-xs">
-                  <span className="text-slate-600">Valor pago até o mês:</span><br/>
-                  <span className="font-medium">{formatCurrency(bestResaleInfo.maxProfitTotalPaid)}</span>
+                <div className="flex items-center gap-2">
+                  <CreditCard className="h-4 w-4 text-slate-600" />
+                  <span className="text-sm text-slate-600">Valor pago até aqui:</span>
+                  <span className="font-bold text-slate-800">{formatCurrency(bestResaleInfo.maxProfitTotalPaid)}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Building className="h-4 w-4 text-slate-600" />
+                  <span className="text-sm text-slate-600">Valor de revenda:</span>
+                  <span className="font-bold text-green-600">{formatCurrency(getPropertyValueAtMonth(bestResaleInfo.bestProfitMonth))}</span>
                 </div>
                 <p className="text-xs text-slate-500 mt-3">
                   Representa o maior valor bruto de lucro alcançado ao longo da simulação. Ideal para quem busca lucro máximo, mesmo que leve mais tempo.
@@ -212,9 +226,15 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
                   <span className="text-sm text-slate-600">Rentabilidade:</span>
                   <span className="font-bold text-blue-600">{formatPercentage(bestResaleInfo.maxRoi)}</span>
                 </div>
-                <div className="bg-slate-50 p-2 rounded text-xs">
-                  <span className="text-slate-600">Valor pago até o mês:</span><br/>
-                  <span className="font-medium">{formatCurrency(bestResaleInfo.maxRoiTotalPaid)}</span>
+                <div className="flex items-center gap-2">
+                  <CreditCard className="h-4 w-4 text-slate-600" />
+                  <span className="text-sm text-slate-600">Valor pago até aqui:</span>
+                  <span className="font-bold text-slate-800">{formatCurrency(bestResaleInfo.maxRoiTotalPaid)}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Building className="h-4 w-4 text-slate-600" />
+                  <span className="text-sm text-slate-600">Valor de revenda:</span>
+                  <span className="font-bold text-green-600">{formatCurrency(getPropertyValueAtMonth(bestResaleInfo.bestRoiMonth))}</span>
                 </div>
                 <p className="text-xs text-slate-500 mt-3">
                   Reflete o melhor retorno proporcional (lucro dividido pelo tempo e investimento). Indicado para quem quer otimizar o rendimento do capital investido.
@@ -245,9 +265,15 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
                     <span className="text-sm text-slate-600">Rentabilidade:</span>
                     <span className="font-bold text-blue-600">{formatPercentage(bestResaleInfo.earlyProfitPercentage)}</span>
                   </div>
-                  <div className="bg-slate-50 p-2 rounded text-xs">
-                    <span className="text-slate-600">Valor pago até o mês:</span><br/>
-                    <span className="font-medium">{formatCurrency(bestResaleInfo.earlyTotalPaid)}</span>
+                  <div className="flex items-center gap-2">
+                    <CreditCard className="h-4 w-4 text-slate-600" />
+                    <span className="text-sm text-slate-600">Valor pago até aqui:</span>
+                    <span className="font-bold text-slate-800">{formatCurrency(bestResaleInfo.earlyTotalPaid)}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Building className="h-4 w-4 text-slate-600" />
+                    <span className="text-sm text-slate-600">Valor de revenda:</span>
+                    <span className="font-bold text-green-600">{formatCurrency(getPropertyValueAtMonth(bestResaleInfo.earlyMonth))}</span>
                   </div>
                   <p className="text-xs text-slate-500 mt-3">
                     Aponta o melhor lucro possível em prazo reduzido. Excelente para investidores com foco em retorno mais rápido.
@@ -359,7 +385,6 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
         </CardContent>
       </Card>
 
-      {/* Gráfico de Valorização */}
       <Card className="shadow">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
