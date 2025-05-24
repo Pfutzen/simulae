@@ -3,7 +3,7 @@ import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Calendar, Edit3, RotateCcw } from "lucide-react";
-import DatePicker from "./DatePicker";
+import MonthYearPicker from "./MonthYearPicker";
 import { formatDateForDisplay, addMonths } from "@/utils/dateUtils";
 import { getReinforcementMonths, calculateStartDateFromValuation } from "@/utils/calculationUtils";
 
@@ -134,11 +134,11 @@ const ReinforcementDatesControl: React.FC<ReinforcementDatesControlProps> = ({
                 </div>
                 
                 {isUsingCustomDates ? (
-                  <div className="w-48">
-                    <DatePicker
+                  <div className="w-52">
+                    <MonthYearPicker
                       value={date}
                       onChange={(newDate) => handleCustomDateChange(index, newDate)}
-                      placeholder="Selecionar data"
+                      placeholder="MM/AAAA"
                       disablePastDates={true}
                     />
                   </div>
@@ -154,7 +154,7 @@ const ReinforcementDatesControl: React.FC<ReinforcementDatesControlProps> = ({
         
         {isUsingCustomDates && (
           <div className="text-xs text-slate-500 mt-2">
-            💡 Você pode editar as datas individualmente. O cálculo dos valores permanece baseado na frequência configurada.
+            💡 Você pode editar as datas digitando diretamente (MM/AAAA) ou usando o calendário. O cálculo dos valores permanece baseado na frequência configurada.
           </div>
         )}
       </CardContent>
