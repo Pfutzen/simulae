@@ -18,11 +18,9 @@ import {
   calculateRentalEstimate,
   calculateStartDateFromDelivery,
   calculateDeliveryDateFromStart,
-  calculateStartDateFromValuation,
-  SimulationFormData,
-  PaymentType,
-  CorrectionMode
+  calculateStartDateFromValuation
 } from "@/utils/calculationUtils";
+import { SimulationFormData, PaymentType, CorrectionMode } from "@/utils/types";
 import { saveSimulation, getSimulations, SavedSimulation } from "@/utils/simulationHistoryUtils";
 import { wouldStartDateBeInPast, formatToMonthYear, calculateInstallmentsFromValuationAndDelivery } from "@/utils/dateUtils";
 import PropertyValueInput from "./PropertyValueInput";

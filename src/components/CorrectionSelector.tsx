@@ -10,7 +10,8 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { CorrectionMode, CUB_CORRECTION_DATA } from "@/utils/calculationUtils";
+import { CorrectionMode } from "@/utils/types";
+import { CUB_CORRECTION_DATA } from "@/utils/correctionData";
 import { HelpCircle } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
