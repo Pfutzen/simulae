@@ -37,8 +37,8 @@ export const calculateBestResaleMonth = (schedule: PaymentType[]) => {
   let earlyProfitPercentage: number | undefined;
 
   for (let i = 1; i <= schedule.length; i++) {
-    // Calcular valor investido até este mês
-    const investedUpToMonth = schedule.slice(0, i).reduce((acc, payment) => acc + payment.amount, 0);
+    // Usar o totalPaid diretamente do cronograma (valores efetivamente pagos até o mês)
+    const totalPaidUpToMonth = schedule[i - 1]?.totalPaid || 0;
     
     // Calcular valor do imóvel no mês atual
     const currentPropertyValue = schedule[i - 1]?.propertyValue || 0;
@@ -46,23 +46,23 @@ export const calculateBestResaleMonth = (schedule: PaymentType[]) => {
     // Calcular saldo devedor restante
     const remainingBalance = schedule[i - 1]?.balance || 0;
     
-    // Fórmula: Lucro = Valor do Imóvel no mês - Valor investido até o mês - Saldo devedor
-    const profit = currentPropertyValue - investedUpToMonth - remainingBalance;
+    // Fórmula: Lucro = Valor do Imóvel no mês - Valor pago até o mês - Saldo devedor
+    const profit = currentPropertyValue - totalPaidUpToMonth - remainingBalance;
     
     // Só considerar se houver lucro positivo
-    if (profit > 0 && currentPropertyValue > investedUpToMonth) {
+    if (profit > 0 && currentPropertyValue > totalPaidUpToMonth) {
       
       // ESTRATÉGIA 1: Maior Valor de Lucro Absoluto
       // Objetivo: maior retorno financeiro em valor absoluto
       if (profit > maxProfit) {
         maxProfit = profit;
-        maxProfitPercentage = (profit / investedUpToMonth) * 100;
+        maxProfitPercentage = (profit / totalPaidUpToMonth) * 100;
         bestProfitMonth = i;
       }
 
       // ESTRATÉGIA 2: Maior Percentual de Rentabilidade
-      // Objetivo: maior retorno em percentual
-      const currentRentability = (profit / investedUpToMonth) * 100;
+      // Objetivo: maior retorno em percentual baseado no valor pago até o mês
+      const currentRentability = (profit / totalPaidUpToMonth) * 100;
       
       if (currentRentability > maxRoi) {
         maxRoi = currentRentability;
