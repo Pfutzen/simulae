@@ -14,4 +14,7 @@ export interface PropostaData {
   areaPrivativa: string;
   numeroVagas: string;
   possuiBox: boolean;
+  
+  // Datas personalizadas dos reforços
+  customReinforcementDates?: Date[];
 }

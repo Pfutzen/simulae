@@ -2,10 +2,10 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { ArrowLeft, FileText, Download, Copy, FileDown } from "lucide-react";
+import { ArrowLeft, FileText, Download, Copy, FileDown, RefreshCw } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
-import { SavedSimulation, getActiveSimulation } from "@/utils/simulationHistoryUtils";
+import { SavedSimulation, getActiveSimulation, saveSimulation } from "@/utils/simulationHistoryUtils";
 import { generatePropostaPDF } from "@/utils/propostaPdfExport";
 import { generatePropostaWord } from "@/utils/propostaWordExport";
 import { copyPropostaToClipboard } from "@/utils/propostaTextExport";
@@ -30,6 +30,9 @@ const PropostaComercial: React.FC = () => {
     areaPrivativa: '',
     numeroVagas: '',
     possuiBox: false,
+    
+    // Novas datas de reforço personalizadas
+    customReinforcementDates: undefined,
   });
   
   const { toast } = useToast();
@@ -38,8 +41,59 @@ const PropostaComercial: React.FC = () => {
     const simulation = getActiveSimulation();
     if (simulation) {
       setActiveSimulation(simulation);
+      // Se a simulação tem datas customizadas, carregar no form
+      if (simulation.formData.customReinforcementDates) {
+        setPropostaData(prev => ({
+          ...prev,
+          customReinforcementDates: simulation.formData.customReinforcementDates
+        }));
+      }
     }
   }, []);
+
+  const handleUpdateSimulationDates = () => {
+    if (!activeSimulation || !propostagData.customReinforcementDates) {
+      toast({
+        title: "Não é possível atualizar",
+        description: "Nenhuma data de reforço personalizada foi definida.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      // Criar nova simulação com as datas atualizadas
+      const updatedFormData = {
+        ...activeSimulation.formData,
+        customReinforcementDates: propostagData.customReinforcementDates
+      };
+
+      // Salvar a simulação atualizada
+      const updatedSimulation = saveSimulation({
+        name: `${activeSimulation.name} (Atualizado)`,
+        timestamp: Date.now(),
+        formData: updatedFormData,
+        schedule: activeSimulation.schedule,
+        results: activeSimulation.results,
+        bestResaleInfo: activeSimulation.bestResaleInfo
+      });
+
+      // Atualizar o estado local
+      setActiveSimulation(updatedSimulation);
+
+      toast({
+        title: "✅ Simulação atualizada com sucesso",
+        description: "Os novos reforços foram aplicados à simulação ativa.",
+      });
+    } catch (error) {
+      console.error('Erro ao atualizar simulação:', error);
+      toast({
+        title: "Erro ao atualizar simulação",
+        description: "Ocorreu um erro ao salvar as novas datas.",
+        variant: "destructive"
+      });
+    }
+  };
 
   const handleExportPDF = () => {
     if (!activeSimulation) return;
@@ -161,11 +215,35 @@ const PropostaComercial: React.FC = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Formulário */}
-          <div>
+          <div className="space-y-6">
             <PropostaForm 
               data={propostagData}
               onChange={setPropostaData}
+              simulation={activeSimulation}
             />
+            
+            {/* Botão para atualizar simulação */}
+            {propostagData.customReinforcementDates && propostagData.customReinforcementDates.length > 0 && (
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-sm font-medium text-blue-800">Datas de reforço personalizadas</h3>
+                    <p className="text-xs text-blue-600 mt-1">
+                      Você definiu datas personalizadas para os reforços. Clique para atualizar a simulação ativa.
+                    </p>
+                  </div>
+                  <Button
+                    onClick={handleUpdateSimulationDates}
+                    variant="outline"
+                    size="sm"
+                    className="gap-2 bg-white hover:bg-blue-50"
+                  >
+                    <RefreshCw className="h-4 w-4" />
+                    Atualizar simulação com essas datas
+                  </Button>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Preview */}
