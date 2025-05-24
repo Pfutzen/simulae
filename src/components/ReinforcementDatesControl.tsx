@@ -5,10 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Calendar, Edit3, RotateCcw } from "lucide-react";
 import DatePicker from "./DatePicker";
 import { formatDateForDisplay, addMonths } from "@/utils/dateUtils";
-import { getReinforcementMonths } from "@/utils/calculationUtils";
+import { getReinforcementMonths, calculateStartDateFromDelivery } from "@/utils/calculationUtils";
 
 interface ReinforcementDatesControlProps {
-  startDate?: Date;
+  deliveryDate?: Date; // Changed from startDate to deliveryDate
   installmentsCount: number;
   reinforcementFrequency: number;
   finalMonthsWithoutReinforcement: number;
@@ -17,7 +17,7 @@ interface ReinforcementDatesControlProps {
 }
 
 const ReinforcementDatesControl: React.FC<ReinforcementDatesControlProps> = ({
-  startDate,
+  deliveryDate,
   installmentsCount,
   reinforcementFrequency,
   finalMonthsWithoutReinforcement,
@@ -31,9 +31,12 @@ const ReinforcementDatesControl: React.FC<ReinforcementDatesControlProps> = ({
     finalMonthsWithoutReinforcement
   );
 
-  // Generate automatic dates based on start date and months
+  // Generate automatic dates based on delivery date
   const generateAutomaticDates = (): Date[] => {
-    if (!startDate) return [];
+    if (!deliveryDate) return [];
+    
+    // Calculate start date from delivery date
+    const startDate = calculateStartDateFromDelivery(deliveryDate, installmentsCount);
     
     return reinforcementMonths.map(month => 
       addMonths(startDate, month)
@@ -87,7 +90,7 @@ const ReinforcementDatesControl: React.FC<ReinforcementDatesControlProps> = ({
                 variant="outline"
                 size="sm"
                 onClick={handleEnableCustomDates}
-                disabled={!startDate}
+                disabled={!deliveryDate}
                 className="flex items-center gap-1"
               >
                 <Edit3 className="h-4 w-4" />
@@ -109,13 +112,13 @@ const ReinforcementDatesControl: React.FC<ReinforcementDatesControlProps> = ({
       </CardHeader>
       
       <CardContent className="space-y-4">
-        {!startDate && (
+        {!deliveryDate && (
           <p className="text-amber-600 text-sm">
-            Defina a data inicial da simulação para calcular as datas dos reforços
+            Defina a data de entrega para calcular as datas dos reforços
           </p>
         )}
         
-        {startDate && (
+        {deliveryDate && (
           <div className="grid gap-3">
             {displayDates.map((date, index) => (
               <div 

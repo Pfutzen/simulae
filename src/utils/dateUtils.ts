@@ -25,6 +25,16 @@ export function addMonths(date: Date, months: number): Date {
 }
 
 /**
+ * Subtract months from a date while maintaining the same day of the month
+ * @param date - The starting date
+ * @param months - Number of months to subtract
+ * @returns New date with months subtracted
+ */
+export function subtractMonths(date: Date, months: number): Date {
+  return addMonths(date, -months);
+}
+
+/**
  * Format date to Brazilian format (dd/MM/yyyy)
  * @param date - Date to format
  * @returns Formatted date string
@@ -61,8 +71,9 @@ export function generateMonthlyDates(startDate: Date, count: number): Date[] {
 export function isDateInPast(date: Date): boolean {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  date.setHours(0, 0, 0, 0);
-  return date < today;
+  const checkDate = new Date(date);
+  checkDate.setHours(0, 0, 0, 0);
+  return checkDate < today;
 }
 
 /**
@@ -76,4 +87,15 @@ export function formatDateForDisplay(date: Date): string {
     month: 'long',
     year: 'numeric'
   });
+}
+
+/**
+ * Calculate if start date would be in the past based on delivery date and installments
+ * @param deliveryDate - The desired delivery date
+ * @param installmentsCount - Number of installments
+ * @returns True if the calculated start date would be in the past
+ */
+export function wouldStartDateBeInPast(deliveryDate: Date, installmentsCount: number): boolean {
+  const calculatedStartDate = subtractMonths(deliveryDate, installmentsCount + 1);
+  return isDateInPast(calculatedStartDate);
 }

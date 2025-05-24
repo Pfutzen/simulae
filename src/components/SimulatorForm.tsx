@@ -16,11 +16,14 @@ import {
   getReinforcementMonths,
   calculateBestResaleMonth,
   calculateRentalEstimate,
+  calculateStartDateFromDelivery,
+  calculateDeliveryDateFromStart,
   SimulationFormData,
   PaymentType,
   CorrectionMode
 } from "@/utils/calculationUtils";
 import { saveSimulation, getSimulations, SavedSimulation } from "@/utils/simulationHistoryUtils";
+import { wouldStartDateBeInPast, formatDateBR } from "@/utils/dateUtils";
 import PropertyValueInput from "./PropertyValueInput";
 import PercentageValueInput from "./PercentageValueInput";
 import NumberInput from "./NumberInput";
@@ -57,8 +60,9 @@ const SimulatorForm: React.FC = () => {
     appreciationIndex: 1.35,
     resaleMonth: 24,
     rentalPercentage: 0.5,
-    startDate: undefined, // New field
-    customReinforcementDates: undefined // New field
+    startDate: undefined, // Calculated automatically from delivery date
+    deliveryDate: undefined, // New primary field
+    customReinforcementDates: undefined
   });
 
   const [totalPercentage, setTotalPercentage] = useState<number>(0);
@@ -125,6 +129,21 @@ const SimulatorForm: React.FC = () => {
     formData.reinforcementFrequency,
     formData.finalMonthsWithoutReinforcement
   ]);
+
+  // Auto-calculate start date when delivery date or installments count changes
+  useEffect(() => {
+    if (formData.deliveryDate) {
+      const calculatedStartDate = calculateStartDateFromDelivery(
+        formData.deliveryDate, 
+        formData.installmentsCount
+      );
+      setFormData(prev => ({
+        ...prev,
+        startDate: calculatedStartDate,
+        customReinforcementDates: undefined // Reset custom dates when dates change
+      }));
+    }
+  }, [formData.deliveryDate, formData.installmentsCount]);
 
   // Handle property value change
   const handlePropertyValueChange = (value: number) => {
@@ -361,12 +380,12 @@ const SimulatorForm: React.FC = () => {
     setFormData({ ...formData, rentalPercentage: value });
   };
 
-  // Handle start date change
-  const handleStartDateChange = (date: Date | undefined) => {
+  // Handle delivery date change
+  const handleDeliveryDateChange = (date: Date | undefined) => {
     setFormData({
       ...formData,
-      startDate: date,
-      customReinforcementDates: undefined // Reset custom dates when start date changes
+      deliveryDate: date,
+      customReinforcementDates: undefined // Reset custom dates when delivery date changes
     });
   };
 
@@ -408,10 +427,20 @@ const SimulatorForm: React.FC = () => {
       return;
     }
 
-    if (!formData.startDate) {
+    if (!formData.deliveryDate) {
       toast({
-        title: "Data inicial obrigatória",
-        description: "Por favor, selecione a data inicial da simulação",
+        title: "Data de entrega obrigatória",
+        description: "Por favor, selecione a data prevista de entrega",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Check if calculated start date would be in the past
+    if (wouldStartDateBeInPast(formData.deliveryDate, formData.installmentsCount)) {
+      toast({
+        title: "Data de entrega muito próxima",
+        description: "A data de entrega está muito próxima. As parcelas começariam no passado.",
         variant: "destructive"
       });
       return;
@@ -542,55 +571,61 @@ const SimulatorForm: React.FC = () => {
                   onChange={handlePropertyValueChange}
                 />
 
-                {/* Data Inicial da Simulação */}
+                {/* Cronograma de Pagamentos */}
                 <div className="rounded-lg border border-slate-200 p-5">
                   <div className="flex items-center mb-4 gap-2">
                     <Calendar className="h-5 w-5 text-green-600" />
-                    <h3 className="text-lg font-semibold text-slate-800">Data Inicial da Simulação</h3>
+                    <h3 className="text-lg font-semibold text-slate-800">Cronograma de Pagamentos</h3>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <DatePicker
-                      id="start-date"
-                      label="Data de início"
-                      value={formData.startDate}
-                      onChange={handleStartDateChange}
-                      placeholder="Selecione a data inicial"
-                      disablePastDates={true}
-                      required={true}
-                      className="w-full md:w-[280px]"
-                    />
-                    {formData.startDate && (
-                      <div className="flex flex-col justify-center">
-                        <p className="text-sm text-slate-600">
-                          <strong>Data de entrega prevista:</strong>{" "}
-                          {(() => {
-                            const deliveryDate = new Date(formData.startDate);
-                            deliveryDate.setMonth(deliveryDate.getMonth() + formData.installmentsCount + 1);
-                            return deliveryDate.toLocaleDateString('pt-BR');
-                          })()}
-                        </p>
+                    <div className="space-y-4">
+                      <DatePicker
+                        id="delivery-date"
+                        label="Data prevista de entrega"
+                        value={formData.deliveryDate}
+                        onChange={handleDeliveryDateChange}
+                        placeholder="Selecione a data de entrega"
+                        disablePastDates={true}
+                        required={true}
+                        className="w-full md:w-[280px]"
+                      />
+                      
+                      <NumberInput
+                        id="installments-count"
+                        label="Quantidade de parcelas"
+                        value={formData.installmentsCount}
+                        onChange={handleInstallmentsCountChange}
+                        min={1}
+                        noDecimals={true}
+                        className="w-full md:w-[240px]"
+                      />
+                    </div>
+                    
+                    {formData.deliveryDate && formData.startDate && (
+                      <div className="flex flex-col justify-center space-y-3">
+                        <div className="bg-blue-50 p-3 rounded-lg">
+                          <p className="text-sm text-blue-800">
+                            <strong>Início das parcelas:</strong>{" "}
+                            {formatDateBR(formData.startDate)}
+                          </p>
+                          <p className="text-sm text-blue-800">
+                            <strong>Entrega do imóvel:</strong>{" "}
+                            {formatDateBR(formData.deliveryDate)}
+                          </p>
+                        </div>
+                        
+                        {wouldStartDateBeInPast(formData.deliveryDate, formData.installmentsCount) && (
+                          <Alert className="bg-amber-50">
+                            <AlertCircle className="h-4 w-4 text-amber-600" />
+                            <AlertDescription className="text-amber-800">
+                              Atenção: A data de entrega está muito próxima. As parcelas começariam no passado.
+                            </AlertDescription>
+                          </Alert>
+                        )}
                       </div>
                     )}
                   </div>
                 </div>
-                
-                <Alert className={totalPercentage === 100 ? "bg-green-50" : "bg-amber-50"}>
-                  <div className="flex items-center gap-2">
-                    {totalPercentage === 100 ? (
-                      <CheckCircle className="h-5 w-5 text-green-600" />
-                    ) : (
-                      <AlertCircle className="h-5 w-5 text-amber-600" />
-                    )}
-                    <AlertDescription className={totalPercentage === 100 ? "text-green-800" : "text-amber-800"}>
-                      Total atual: {totalPercentage.toFixed(2)}%
-                      {totalPercentage !== 100 && (
-                        <span className="font-medium ml-1">
-                          {calculateDifference()}
-                        </span>
-                      )}
-                    </AlertDescription>
-                  </div>
-                </Alert>
                 
                 {/* Bloco: Entrada e Parcelamento */}
                 <div className="rounded-lg border border-slate-200 p-5">
@@ -624,15 +659,6 @@ const SimulatorForm: React.FC = () => {
                         valueInputClassName="w-full md:w-[240px]"
                         percentageInputClassName="w-full md:w-[120px]"
                         installmentsCount={formData.installmentsCount}
-                      />
-                      <NumberInput
-                        id="installments-count"
-                        label="Quantidade de parcelas"
-                        value={formData.installmentsCount}
-                        onChange={handleInstallmentsCountChange}
-                        min={1}
-                        noDecimals={true}
-                        className="w-full md:w-[240px]"
                       />
                     </div>
                   </div>
@@ -700,7 +726,7 @@ const SimulatorForm: React.FC = () => {
 
                     {/* Controle de Datas dos Reforços */}
                     <ReinforcementDatesControl
-                      startDate={formData.startDate}
+                      deliveryDate={formData.deliveryDate}
                       installmentsCount={formData.installmentsCount}
                       reinforcementFrequency={formData.reinforcementFrequency}
                       finalMonthsWithoutReinforcement={formData.finalMonthsWithoutReinforcement}
@@ -814,7 +840,7 @@ const SimulatorForm: React.FC = () => {
                   <div className="flex flex-col sm:flex-row gap-3 justify-center">
                     <Button 
                       onClick={handleSimulate} 
-                      disabled={totalPercentage !== 100 || !formData.startDate}
+                      disabled={totalPercentage !== 100 || !formData.deliveryDate || wouldStartDateBeInPast(formData.deliveryDate, formData.installmentsCount)}
                       className="bg-simulae-600 hover:bg-simulae-700 text-white px-8 py-6 text-lg w-full sm:w-auto"
                     >
                       Simular
