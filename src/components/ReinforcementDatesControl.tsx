@@ -2,7 +2,7 @@
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Calendar, Edit3, RotateCcw } from "lucide-react";
+import { Calendar, Edit3, RotateCcw, RefreshCw } from "lucide-react";
 import MonthYearPicker from "./MonthYearPicker";
 import { formatDateForDisplay, addMonths } from "@/utils/dateUtils";
 import { getReinforcementMonths, calculateStartDateFromValuation } from "@/utils/calculationUtils";
@@ -15,6 +15,8 @@ interface ReinforcementDatesControlProps {
   finalMonthsWithoutReinforcement: number;
   customDates?: Date[];
   onCustomDatesChange: (dates: Date[] | undefined) => void;
+  onUpdateSimulation?: () => void;
+  hasSchedule?: boolean;
 }
 
 const ReinforcementDatesControl: React.FC<ReinforcementDatesControlProps> = ({
@@ -24,7 +26,9 @@ const ReinforcementDatesControl: React.FC<ReinforcementDatesControlProps> = ({
   reinforcementFrequency,
   finalMonthsWithoutReinforcement,
   customDates,
-  onCustomDatesChange
+  onCustomDatesChange,
+  onUpdateSimulation,
+  hasSchedule = false
 }) => {
   // Calculate automatic reinforcement months
   const reinforcementMonths = getReinforcementMonths(
@@ -63,6 +67,12 @@ const ReinforcementDatesControl: React.FC<ReinforcementDatesControlProps> = ({
     const newDates = [...customDates];
     newDates[index] = date;
     onCustomDatesChange(newDates);
+  };
+
+  const handleUpdateSimulation = () => {
+    if (onUpdateSimulation) {
+      onUpdateSimulation();
+    }
   };
 
   if (reinforcementMonths.length === 0) {
@@ -153,8 +163,26 @@ const ReinforcementDatesControl: React.FC<ReinforcementDatesControlProps> = ({
         )}
         
         {isUsingCustomDates && (
-          <div className="text-xs text-slate-500 mt-2">
-            💡 Você pode editar as datas digitando diretamente (MM/AAAA) ou usando o calendário. O cálculo dos valores permanece baseado na frequência configurada.
+          <div className="space-y-3">
+            <div className="text-xs text-slate-500">
+              💡 Você pode editar as datas digitando diretamente (MM/AAAA) ou usando o calendário. O cálculo dos valores permanece baseado na frequência configurada.
+            </div>
+            
+            {hasSchedule && onUpdateSimulation && (
+              <div className="pt-2 border-t border-slate-200">
+                <Button
+                  onClick={handleUpdateSimulation}
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white gap-2"
+                  size="sm"
+                >
+                  <RefreshCw className="h-4 w-4" />
+                  Atualizar reforços na simulação
+                </Button>
+                <p className="text-xs text-slate-500 mt-2 text-center">
+                  Clique para recalcular o cronograma com as novas datas
+                </p>
+              </div>
+            )}
           </div>
         )}
       </CardContent>

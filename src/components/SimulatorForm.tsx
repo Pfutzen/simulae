@@ -65,7 +65,7 @@ const SimulatorForm: React.FC = () => {
     rentalPercentage: 0.5,
     startDate: undefined,
     deliveryDate: undefined,
-    valuationDate: undefined, // New field for valuation date
+    valuationDate: undefined,
     customReinforcementDates: undefined
   });
 
@@ -103,13 +103,11 @@ const SimulatorForm: React.FC = () => {
   const [currentSimulation, setCurrentSimulation] = useState<SavedSimulation | undefined>(undefined);
   const [customResaleEnabled, setCustomResaleEnabled] = useState<boolean>(true);
 
-  // Load saved simulations on component mount
   useEffect(() => {
     const savedSimulations = getSimulations();
     setSimulations(savedSimulations);
   }, []);
 
-  // Calculate total percentage whenever relevant form values change
   useEffect(() => {
     const total = calculateTotalPercentage(formData);
     setTotalPercentage(total);
@@ -120,7 +118,6 @@ const SimulatorForm: React.FC = () => {
     formData.keysPercentage
   ]);
 
-  // Calculate reinforcement months whenever the frequency, installment count, or finalMonthsWithoutReinforcement changes
   useEffect(() => {
     const months = getReinforcementMonths(
       formData.installmentsCount, 
@@ -134,7 +131,6 @@ const SimulatorForm: React.FC = () => {
     formData.finalMonthsWithoutReinforcement
   ]);
 
-  // Auto-calculate installments count when valuation date and delivery date change
   useEffect(() => {
     if (formData.valuationDate && formData.deliveryDate) {
       const calculatedInstallments = calculateInstallmentsFromValuationAndDelivery(
@@ -143,7 +139,6 @@ const SimulatorForm: React.FC = () => {
       );
       const calculatedStartDate = calculateStartDateFromValuation(formData.valuationDate);
       
-      // Update installments count and recalculate dependent values
       const updatedFormData = {
         ...formData,
         installmentsCount: calculatedInstallments,
@@ -151,12 +146,10 @@ const SimulatorForm: React.FC = () => {
         customReinforcementDates: undefined
       };
       
-      // Recalculate installment value based on new count
       updatedFormData.installmentsValue = calculatedInstallments > 0 
         ? calculateValue(updatedFormData.installmentsPercentage, updatedFormData.propertyValue) / calculatedInstallments
         : 0;
       
-      // Recalculate reinforcement value based on new installment count
       const newReinforcementMonths = getReinforcementMonths(
         calculatedInstallments,
         updatedFormData.reinforcementFrequency,
@@ -172,11 +165,9 @@ const SimulatorForm: React.FC = () => {
     }
   }, [formData.valuationDate, formData.deliveryDate]);
 
-  // Handle property value change
   const handlePropertyValueChange = (value: number) => {
     const newData = { ...formData, propertyValue: value };
     
-    // Update all values based on percentages
     newData.downPaymentValue = calculateValue(
       newData.downPaymentPercentage,
       value
@@ -186,7 +177,6 @@ const SimulatorForm: React.FC = () => {
       value
     ) / newData.installmentsCount;
     
-    // Calculate reinforcement value based on actual number of reinforcements
     const months = getReinforcementMonths(
       newData.installmentsCount, 
       newData.reinforcementFrequency,
@@ -203,7 +193,6 @@ const SimulatorForm: React.FC = () => {
     setReinforcementMonths(months);
   };
 
-  // Handle down payment changes
   const handleDownPaymentValueChange = (value: number) => {
     const percentage = calculatePercentage(value, formData.propertyValue);
     setFormData({
@@ -222,7 +211,6 @@ const SimulatorForm: React.FC = () => {
     });
   };
 
-  // Handle installments changes
   const handleInstallmentsValueChange = (value: number) => {
     const totalValue = value * formData.installmentsCount;
     const percentage = calculatePercentage(totalValue, formData.propertyValue);
@@ -285,7 +273,6 @@ const SimulatorForm: React.FC = () => {
     );
     const count = months.length;
     
-    // Calculate new per-reinforcement value
     const totalValue = calculateValue(
       formData.reinforcementsPercentage,
       formData.propertyValue
@@ -301,7 +288,6 @@ const SimulatorForm: React.FC = () => {
     setReinforcementMonths(months);
   };
 
-  // Handle final months without reinforcement change
   const handleFinalMonthsWithoutReinforcementChange = (months: number) => {
     const newMonths = getReinforcementMonths(
       formData.installmentsCount,
@@ -310,7 +296,6 @@ const SimulatorForm: React.FC = () => {
     );
     const count = newMonths.length;
     
-    // Recalculate reinforcement value based on new count of reinforcement months
     const totalValue = calculateValue(
       formData.reinforcementsPercentage,
       formData.propertyValue
@@ -326,7 +311,6 @@ const SimulatorForm: React.FC = () => {
     setReinforcementMonths(newMonths);
   };
 
-  // Handle keys payment changes
   const handleKeysValueChange = (value: number) => {
     const percentage = calculatePercentage(value, formData.propertyValue);
     setFormData({
@@ -345,12 +329,10 @@ const SimulatorForm: React.FC = () => {
     });
   };
 
-  // Handle correction mode change
   const handleCorrectionModeChange = (mode: CorrectionMode) => {
     setFormData({ ...formData, correctionMode: mode });
   };
 
-  // Handle other inputs
   const handleCorrectionIndexChange = (value: number) => {
     setFormData({ ...formData, correctionIndex: value });
   };
@@ -363,22 +345,18 @@ const SimulatorForm: React.FC = () => {
     setFormData({ ...formData, resaleMonth: value });
   };
 
-  // Toggle custom resale month
   const handleCustomResaleToggle = (checked: boolean) => {
     setCustomResaleEnabled(checked);
   };
 
-  // Handle simulation name change
   const handleSimulationNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSimulationName(e.target.value);
   };
 
-  // Handle rental percentage change
   const handleRentalPercentageChange = (value: number) => {
     setFormData({ ...formData, rentalPercentage: value });
   };
 
-  // Handle valuation date change
   const handleValuationDateChange = (date: Date | undefined) => {
     setFormData({
       ...formData,
@@ -387,7 +365,6 @@ const SimulatorForm: React.FC = () => {
     });
   };
 
-  // Handle delivery date change
   const handleDeliveryDateChange = (date: Date | undefined) => {
     setFormData({
       ...formData,
@@ -396,7 +373,6 @@ const SimulatorForm: React.FC = () => {
     });
   };
 
-  // Handle custom reinforcement dates change
   const handleCustomReinforcementDatesChange = (dates: Date[] | undefined) => {
     setFormData({
       ...formData,
@@ -404,49 +380,20 @@ const SimulatorForm: React.FC = () => {
     });
   };
 
-  // Format reinforcement months for display
-  const getReinforcementMonthsText = (): string => {
-    if (reinforcementMonths.length === 0) {
-      return "Nenhum reforço será aplicado";
+  const handleUpdateSimulationWithCustomDates = () => {
+    if (!formData.customReinforcementDates || formData.customReinforcementDates.length === 0) {
+      toast({
+        title: "Nenhuma data personalizada",
+        description: "Defina datas personalizadas para os reforços antes de atualizar a simulação",
+        variant: "destructive"
+      });
+      return;
     }
-    return `Reforços nos meses: ${reinforcementMonths.join(", ")}`;
-  };
 
-  // Calculate difference from 100%
-  const calculateDifference = (): string => {
-    const difference = totalPercentage - 100;
-    if (difference === 0) return "";
-    
-    const formattedDifference = Math.abs(difference).toFixed(2);
-    return difference > 0 
-      ? `(${formattedDifference}% acima)` 
-      : `(${formattedDifference}% abaixo)`;
-  };
-
-  // Run simulation
-  const handleSimulate = () => {
     if (totalPercentage !== 100) {
       toast({
         title: "Percentuais incorretos",
         description: "A soma dos percentuais deve ser exatamente 100%",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    if (!formData.valuationDate) {
-      toast({
-        title: "Data de avaliação obrigatória",
-        description: "Por favor, selecione a data de avaliação",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    if (!formData.deliveryDate) {
-      toast({
-        title: "Data de entrega obrigatória",
-        description: "Por favor, selecione a data prevista de entrega",
         variant: "destructive"
       });
       return;
@@ -478,88 +425,11 @@ const SimulatorForm: React.FC = () => {
     setCurrentSimulation(undefined);
     
     toast({
-      title: "Simulação realizada com sucesso",
-      description: "Veja os resultados abaixo"
+      title: "✅ Reforços atualizados com sucesso",
+      description: "A simulação foi recalculada com as novas datas dos reforços"
     });
   };
 
-  // Save the current simulation
-  const handleSaveSimulation = () => {
-    if (!simulationName.trim()) {
-      toast({
-        title: "Nome obrigatório",
-        description: "Por favor, dê um nome para esta simulação",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    if (schedule.length === 0) {
-      toast({
-        title: "Simulação não realizada",
-        description: "Execute a simulação antes de salvar",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    const simulation = saveSimulation({
-      name: simulationName,
-      timestamp: Date.now(),
-      formData,
-      schedule,
-      results: resaleResults,
-      bestResaleInfo
-    });
-
-    setSimulations([simulation, ...simulations]);
-    setCurrentSimulation(simulation);
-    
-    toast({
-      title: "Simulação salva",
-      description: "A simulação foi salva no histórico"
-    });
-  };
-
-  // View a saved simulation
-  const handleViewSimulation = (simulation: SavedSimulation) => {
-    setFormData(simulation.formData);
-    setSchedule(generatePaymentSchedule(simulation.formData));
-    setResaleResults(simulation.results);
-    setBestResaleInfo(simulation.bestResaleInfo);
-    setSimulationName(`Cópia de: ${simulation.name}`);
-    setCurrentSimulation(simulation);
-    setActiveTab("simulator");
-    setCustomResaleEnabled(true);
-
-    toast({
-      title: "Simulação carregada",
-      description: "A simulação foi carregada com sucesso"
-    });
-  };
-
-  // Duplicate a simulation
-  const handleDuplicateSimulation = (simulation: SavedSimulation) => {
-    setFormData(simulation.formData);
-    setSchedule(generatePaymentSchedule(simulation.formData));
-    setResaleResults(simulation.results);
-    setBestResaleInfo(simulation.bestResaleInfo);
-    setSimulationName(`Cópia de: ${simulation.name}`);
-    setActiveTab("simulator");
-    setCurrentSimulation(undefined);
-
-    toast({
-      title: "Simulação duplicada",
-      description: "Edite a simulação conforme necessário e salve"
-    });
-  };
-
-  // Delete a simulation from state
-  const handleDeleteSimulation = (id: string) => {
-    setSimulations(simulations.filter(sim => sim.id !== id));
-  };
-
-  // Check if percentage fields have validation errors
   const isPercentageValid = totalPercentage === 100;
 
   return (
@@ -579,13 +449,11 @@ const SimulatorForm: React.FC = () => {
                   onChange={handlePropertyValueChange}
                 />
 
-                {/* Indicador de Validação dos Percentuais */}
                 <PercentageValidationIndicator 
                   totalPercentage={totalPercentage}
                   className="mb-6"
                 />
 
-                {/* Cronograma de Pagamentos */}
                 <div className="rounded-lg border border-slate-200 p-5">
                   <div className="flex items-center mb-4 gap-2">
                     <Calendar className="h-5 w-5 text-green-600" />
@@ -668,7 +536,6 @@ const SimulatorForm: React.FC = () => {
                   </div>
                 </div>
                 
-                {/* Bloco: Entrada e Parcelamento */}
                 <div className="rounded-lg border border-slate-200 p-5">
                   <div className="flex items-center mb-4 gap-2">
                     <DollarSign className="h-5 w-5 text-simulae-600" />
@@ -707,7 +574,6 @@ const SimulatorForm: React.FC = () => {
                   </div>
                 </div>
                 
-                {/* Bloco: Reforços Programados */}
                 <div className="rounded-lg border border-slate-200 p-5">
                   <div className="flex items-center mb-4 gap-2">
                     <Calendar className="h-5 w-5 text-blue-600" />
@@ -769,7 +635,6 @@ const SimulatorForm: React.FC = () => {
                       />
                     </div>
 
-                    {/* Controle de Datas dos Reforços */}
                     <ReinforcementDatesControl
                       valuationDate={formData.valuationDate}
                       deliveryDate={formData.deliveryDate}
@@ -778,11 +643,12 @@ const SimulatorForm: React.FC = () => {
                       finalMonthsWithoutReinforcement={formData.finalMonthsWithoutReinforcement}
                       customDates={formData.customReinforcementDates}
                       onCustomDatesChange={handleCustomReinforcementDatesChange}
+                      onUpdateSimulation={handleUpdateSimulationWithCustomDates}
+                      hasSchedule={schedule.length > 0}
                     />
                   </div>
                 </div>
                 
-                {/* Bloco: Correção Monetária e Valorização */}
                 <div className="rounded-lg border border-slate-200 p-5">
                   <div className="flex items-center mb-4 gap-2">
                     <TrendingUp className="h-5 w-5 text-green-600" />
@@ -824,7 +690,6 @@ const SimulatorForm: React.FC = () => {
                   </div>
                 </div>
                 
-                {/* Bloco: Revenda e Aluguel */}
                 <div className="rounded-lg border border-slate-200 p-5">
                   <div className="flex items-center mb-4 gap-2">
                     <Home className="h-5 w-5 text-purple-600" />
