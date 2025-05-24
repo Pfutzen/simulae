@@ -1,4 +1,3 @@
-
 import jsPDF from 'jspdf';
 import { SavedSimulation } from './simulationHistoryUtils';
 import { formatCurrency, formatPercentage } from './calculationUtils';
@@ -131,11 +130,12 @@ export function exportToPdf(simulation: SavedSimulation): void {
     // Get the delivery month property value (last month in the schedule)
     const deliveryPropertyValue = getDeliveryPropertyValue(simulation);
     
-    // CRITICAL FIX: Use the rentalEstimate directly from simulation.results
-    // instead of recalculating it, as it should already be the correct value
-    const rentalEstimate = simulation.results.rentalEstimate;
+    // CRITICAL FIX: Calculate the rental estimate based on the delivery property value
+    // This ensures the calculation matches what's shown in the UI
+    const correctRentalEstimate = calculateRentalEstimate(deliveryPropertyValue, simulation.formData.rentalPercentage);
+    const rentalEstimate = correctRentalEstimate.rentalEstimate;
     const annualRental = rentalEstimate * 12;
-    const annualRentalReturn = simulation.results.annualRentalReturn || ((annualRental / deliveryPropertyValue) * 100);
+    const annualRentalReturn = correctRentalEstimate.annualRentalReturn;
     
     doc.setFontSize(12);
     doc.setFont("helvetica", "normal");
@@ -147,7 +147,7 @@ export function exportToPdf(simulation: SavedSimulation): void {
     
     yPos += 5;
     
-    // Use the rental estimate directly from simulation.results
+    // Use the correctly calculated rental estimate
     doc.text(`Aluguel mensal estimado: ${formatCurrency(rentalEstimate)}`, 20, yPos);
     
     yPos += 5;
