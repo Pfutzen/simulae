@@ -77,16 +77,13 @@ export function isDateInPast(date: Date): boolean {
 }
 
 /**
- * Format date for display in reinforcement controls
+ * Format date for display in reinforcement controls and payment schedule
+ * Uses MM/YYYY format for cleaner display
  * @param date - Date to format
- * @returns Formatted date string with month name
+ * @returns Formatted date string as MM/YYYY
  */
 export function formatDateForDisplay(date: Date): string {
-  return date.toLocaleDateString('pt-BR', {
-    day: '2-digit',
-    month: 'long',
-    year: 'numeric'
-  });
+  return formatToMonthYear(date);
 }
 
 /**
@@ -102,6 +99,7 @@ export function wouldStartDateBeInPast(deliveryDate: Date, installmentsCount: nu
 
 /**
  * Calculate the number of installments between valuation date and delivery date
+ * Fixed logic: First installment starts in the month AFTER valuation date (entrada)
  * @param valuationDate - The valuation date (when property was valued)
  * @param deliveryDate - The desired delivery date
  * @returns Number of monthly installments possible
@@ -116,13 +114,14 @@ export function calculateInstallmentsFromValuationAndDelivery(valuationDate: Dat
   // Calculate total months between valuation date and delivery date
   const totalMonths = (deliveryYear - valuationYear) * 12 + (deliveryMonth - valuationMonth);
   
-  // Subtract 1 month for keys payment, ensuring minimum of 1 installment
-  // First installment starts in the month AFTER valuation date
+  // First installment starts in the month AFTER valuation (entrada paid in valuation month)
+  // Subtract 1 month for keys payment at delivery
   return Math.max(1, totalMonths - 1);
 }
 
 /**
  * Calculate the number of installments between current date and delivery date
+ * Fixed logic: First installment starts in the month AFTER current date (entrada)
  * @param deliveryDate - The desired delivery date
  * @returns Number of monthly installments possible
  */
@@ -137,7 +136,8 @@ export function calculateInstallmentsFromDeliveryDate(deliveryDate: Date): numbe
   // Calculate total months between current date and delivery date
   const totalMonths = (deliveryYear - currentYear) * 12 + (deliveryMonth - currentMonth);
   
-  // Subtract 1 month for keys payment, ensuring minimum of 1 installment
+  // First installment starts in the month AFTER current date (entrada paid this month)
+  // Subtract 1 month for keys payment at delivery
   return Math.max(1, totalMonths - 1);
 }
 

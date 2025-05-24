@@ -120,18 +120,20 @@ export const calculateTotalPercentage = (formData: SimulationFormData): number =
 
 /**
  * Calculate the start date for installments based on valuation date
- * @param valuationDate - When the property was valued
+ * FIXED: First installment is in the month AFTER valuation (entrada is paid in valuation month)
+ * @param valuationDate - When the property was valued (and entrada is paid)
  * @returns The calculated start date for first installment (month after valuation)
  */
 export const calculateStartDateFromValuation = (valuationDate: Date): Date => {
   const startDate = new Date(valuationDate);
-  // First installment is in the month AFTER valuation date
+  // First installment is in the month AFTER valuation date (entrada paid in valuation month)
   startDate.setMonth(startDate.getMonth() + 1);
   return startDate;
 };
 
 /**
  * Calculate the start date based on delivery date and installments count
+ * FIXED: Accounts for entrada being paid before first installment
  * @param deliveryDate - When the property should be delivered
  * @param installmentsCount - Number of installments
  * @returns The calculated start date for first installment
@@ -139,6 +141,7 @@ export const calculateStartDateFromValuation = (valuationDate: Date): Date => {
 export const calculateStartDateFromDelivery = (deliveryDate: Date, installmentsCount: number): Date => {
   const startDate = new Date(deliveryDate);
   // Subtract the number of installments plus 1 month for keys payment
+  // This gives us the month when first installment should be paid
   startDate.setMonth(startDate.getMonth() - (installmentsCount + 1));
   return startDate;
 };
@@ -158,7 +161,7 @@ export const calculateDeliveryDateFromStart = (startDate: Date, installmentsCoun
 
 /**
  * Generates a payment schedule based on the provided form data.
- * Now works with either startDate or deliveryDate as primary input
+ * FIXED: Proper date logic - entrada in valuation month, first installment in next month
  *
  * @param {SimulationFormData} formData - The data used to generate the payment schedule.
  * @returns {PaymentType[]} The generated payment schedule.
@@ -170,20 +173,29 @@ export const generatePaymentSchedule = (formData: SimulationFormData): PaymentTy
   let propertyValue = formData.propertyValue;
   let correctionFactor = 1;
   
-  // Calculate start date - prefer valuationDate over deliveryDate
-  let startDate: Date;
+  // Calculate valuation/entrada date and start date for first installment
+  let valuationDate: Date;
+  let firstInstallmentDate: Date;
+  
   if (formData.valuationDate) {
-    startDate = calculateStartDateFromValuation(formData.valuationDate);
+    valuationDate = formData.valuationDate;
+    firstInstallmentDate = calculateStartDateFromValuation(formData.valuationDate);
   } else if (formData.deliveryDate) {
-    startDate = calculateStartDateFromDelivery(formData.deliveryDate, formData.installmentsCount);
+    firstInstallmentDate = calculateStartDateFromDelivery(formData.deliveryDate, formData.installmentsCount);
+    valuationDate = new Date(firstInstallmentDate);
+    valuationDate.setMonth(firstInstallmentDate.getMonth() - 1); // Entrada in previous month
   } else if (formData.startDate) {
-    startDate = formData.startDate;
+    firstInstallmentDate = formData.startDate;
+    valuationDate = new Date(firstInstallmentDate);
+    valuationDate.setMonth(firstInstallmentDate.getMonth() - 1); // Entrada in previous month
   } else {
     // Fallback to today for backward compatibility
-    startDate = new Date();
+    valuationDate = new Date();
+    firstInstallmentDate = new Date();
+    firstInstallmentDate.setMonth(valuationDate.getMonth() + 1);
   }
   
-  // Initial down payment
+  // Initial down payment (entrada) - paid in valuation month
   schedule.push({
     month: 0,
     description: "Entrada",
@@ -191,7 +203,7 @@ export const generatePaymentSchedule = (formData: SimulationFormData): PaymentTy
     balance: currentBalance,
     totalPaid: totalPaid,
     propertyValue: propertyValue,
-    date: new Date(startDate) // Use start date for down payment
+    date: valuationDate
   });
   
   // Calculate reinforcement months and dates
@@ -214,8 +226,8 @@ export const generatePaymentSchedule = (formData: SimulationFormData): PaymentTy
   } else {
     // Generate automatic dates based on frequency
     reinforcementMonths.forEach(month => {
-      const reinforcementDate = new Date(startDate);
-      reinforcementDate.setMonth(startDate.getMonth() + month);
+      const reinforcementDate = new Date(firstInstallmentDate);
+      reinforcementDate.setMonth(firstInstallmentDate.getMonth() + month - 1); // month-1 because month 1 is first installment
       reinforcementDateMap.set(month, reinforcementDate);
     });
   }
@@ -230,8 +242,8 @@ export const generatePaymentSchedule = (formData: SimulationFormData): PaymentTy
     let correctionPercentage = 0;
     
     // Calculate payment date for this month
-    const paymentDate = new Date(startDate);
-    paymentDate.setMonth(startDate.getMonth() + month);
+    const paymentDate = new Date(firstInstallmentDate);
+    paymentDate.setMonth(firstInstallmentDate.getMonth() + month - 1); // month-1 because month 1 is first installment
     
     // Calculate monthly correction percentage
     if (formData.correctionMode === "manual") {
@@ -284,8 +296,8 @@ export const generatePaymentSchedule = (formData: SimulationFormData): PaymentTy
   
   // Keys payment date - use deliveryDate if available, otherwise calculate
   const keysDate = formData.deliveryDate || (() => {
-    const calculated = new Date(startDate);
-    calculated.setMonth(startDate.getMonth() + formData.installmentsCount + 1);
+    const calculated = new Date(firstInstallmentDate);
+    calculated.setMonth(firstInstallmentDate.getMonth() + formData.installmentsCount);
     return calculated;
   })();
   

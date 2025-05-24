@@ -18,12 +18,13 @@ import {
   calculateRentalEstimate,
   calculateStartDateFromDelivery,
   calculateDeliveryDateFromStart,
+  calculateStartDateFromValuation,
   SimulationFormData,
   PaymentType,
   CorrectionMode
 } from "@/utils/calculationUtils";
 import { saveSimulation, getSimulations, SavedSimulation } from "@/utils/simulationHistoryUtils";
-import { wouldStartDateBeInPast, formatDateBR } from "@/utils/dateUtils";
+import { wouldStartDateBeInPast, formatToMonthYear, calculateInstallmentsFromValuationAndDelivery } from "@/utils/dateUtils";
 import PropertyValueInput from "./PropertyValueInput";
 import PercentageValueInput from "./PercentageValueInput";
 import NumberInput from "./NumberInput";
@@ -37,7 +38,6 @@ import { CheckCircle, AlertCircle, DollarSign, Calendar, TrendingUp, Home } from
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import MonthYearInput from "./MonthYearInput";
-import { calculateInstallmentsFromDeliveryDate, formatToMonthYear } from "@/utils/dateUtils";
 
 const SimulatorForm: React.FC = () => {
   const { toast } = useToast();
@@ -62,8 +62,9 @@ const SimulatorForm: React.FC = () => {
     appreciationIndex: 1.35,
     resaleMonth: 24,
     rentalPercentage: 0.5,
-    startDate: undefined, // Calculated automatically from delivery date
-    deliveryDate: undefined, // New primary field
+    startDate: undefined,
+    deliveryDate: undefined,
+    valuationDate: undefined, // New field for valuation date
     customReinforcementDates: undefined
   });
 
@@ -75,8 +76,8 @@ const SimulatorForm: React.FC = () => {
     profit: 0,
     profitPercentage: 0,
     remainingBalance: 0,
-    rentalEstimate: 0, // Initialize with default value
-    annualRentalReturn: 0 // Initialize with default value
+    rentalEstimate: 0,
+    annualRentalReturn: 0
   });
   const [reinforcementMonths, setReinforcementMonths] = useState<number[]>([]);
   const [bestResaleInfo, setBestResaleInfo] = useState<{
@@ -132,14 +133,14 @@ const SimulatorForm: React.FC = () => {
     formData.finalMonthsWithoutReinforcement
   ]);
 
-  // Auto-calculate installments count when delivery date changes
+  // Auto-calculate installments count when valuation date and delivery date change
   useEffect(() => {
-    if (formData.deliveryDate) {
-      const calculatedInstallments = calculateInstallmentsFromDeliveryDate(formData.deliveryDate);
-      const calculatedStartDate = calculateStartDateFromDelivery(
-        formData.deliveryDate, 
-        calculatedInstallments
+    if (formData.valuationDate && formData.deliveryDate) {
+      const calculatedInstallments = calculateInstallmentsFromValuationAndDelivery(
+        formData.valuationDate, 
+        formData.deliveryDate
       );
+      const calculatedStartDate = calculateStartDateFromValuation(formData.valuationDate);
       
       // Update installments count and recalculate dependent values
       const updatedFormData = {
@@ -168,7 +169,7 @@ const SimulatorForm: React.FC = () => {
       setFormData(updatedFormData);
       setReinforcementMonths(newReinforcementMonths);
     }
-  }, [formData.deliveryDate]);
+  }, [formData.valuationDate, formData.deliveryDate]);
 
   // Handle property value change
   const handlePropertyValueChange = (value: number) => {
@@ -376,6 +377,15 @@ const SimulatorForm: React.FC = () => {
     setFormData({ ...formData, rentalPercentage: value });
   };
 
+  // Handle valuation date change
+  const handleValuationDateChange = (date: Date | undefined) => {
+    setFormData({
+      ...formData,
+      valuationDate: date,
+      customReinforcementDates: undefined
+    });
+  };
+
   // Handle delivery date change
   const handleDeliveryDateChange = (date: Date | undefined) => {
     setFormData({
@@ -423,20 +433,19 @@ const SimulatorForm: React.FC = () => {
       return;
     }
 
-    if (!formData.deliveryDate) {
+    if (!formData.valuationDate) {
       toast({
-        title: "Data de entrega obrigatória",
-        description: "Por favor, selecione a data prevista de entrega",
+        title: "Data de avaliação obrigatória",
+        description: "Por favor, selecione a data de avaliação",
         variant: "destructive"
       });
       return;
     }
 
-    // Check if calculated start date would be in the past
-    if (wouldStartDateBeInPast(formData.deliveryDate, formData.installmentsCount)) {
+    if (!formData.deliveryDate) {
       toast({
-        title: "Data de entrega muito próxima",
-        description: "A data de entrega está muito próxima. As parcelas começariam no passado.",
+        title: "Data de entrega obrigatória",
+        description: "Por favor, selecione a data prevista de entrega",
         variant: "destructive"
       });
       return;
@@ -497,12 +506,11 @@ const SimulatorForm: React.FC = () => {
       name: simulationName,
       timestamp: Date.now(),
       formData,
-      schedule, // Save the payment schedule
+      schedule,
       results: resaleResults,
       bestResaleInfo
     });
 
-    // Update local state with the new simulation
     setSimulations([simulation, ...simulations]);
     setCurrentSimulation(simulation);
     
@@ -521,7 +529,7 @@ const SimulatorForm: React.FC = () => {
     setSimulationName(`Cópia de: ${simulation.name}`);
     setCurrentSimulation(simulation);
     setActiveTab("simulator");
-    setCustomResaleEnabled(true); // Enable custom resale when loading a simulation
+    setCustomResaleEnabled(true);
 
     toast({
       title: "Simulação carregada",
@@ -537,7 +545,7 @@ const SimulatorForm: React.FC = () => {
     setBestResaleInfo(simulation.bestResaleInfo);
     setSimulationName(`Cópia de: ${simulation.name}`);
     setActiveTab("simulator");
-    setCurrentSimulation(undefined); // Reset current simulation when duplicating
+    setCurrentSimulation(undefined);
 
     toast({
       title: "Simulação duplicada",
@@ -576,6 +584,16 @@ const SimulatorForm: React.FC = () => {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-4">
                       <MonthYearInput
+                        id="valuation-date"
+                        label="Data de avaliação"
+                        value={formData.valuationDate}
+                        onChange={handleValuationDateChange}
+                        placeholder="MM/AAAA"
+                        required={true}
+                        className="w-full md:w-[280px]"
+                      />
+                      
+                      <MonthYearInput
                         id="delivery-date"
                         label="Data prevista de entrega"
                         value={formData.deliveryDate}
@@ -590,51 +608,48 @@ const SimulatorForm: React.FC = () => {
                           Parcelas mensais (calculado automaticamente)
                         </Label>
                         <div className="bg-slate-50 border border-slate-200 rounded-md px-3 py-2 text-sm">
-                          {formData.deliveryDate ? (
+                          {formData.valuationDate && formData.deliveryDate ? (
                             <span className="font-medium text-slate-800">
                               {formData.installmentsCount} parcelas
                             </span>
                           ) : (
                             <span className="text-slate-500">
-                              Defina a data de entrega
+                              Defina as datas de avaliação e entrega
                             </span>
                           )}
                         </div>
-                        {formData.deliveryDate && formData.startDate && (
+                        {formData.valuationDate && formData.deliveryDate && formData.startDate && (
                           <p className="text-xs text-slate-600">
-                            Período: {formatToMonthYear(formData.startDate)} até {formatToMonthYear(formData.deliveryDate)}
+                            Entrada: {formatToMonthYear(formData.valuationDate)}<br/>
+                            Parcelas: {formatToMonthYear(formData.startDate)} até {formatToMonthYear(formData.deliveryDate)}<br/>
+                            Chaves: {formatToMonthYear(formData.deliveryDate)}
                           </p>
                         )}
                       </div>
                     </div>
                     
-                    {formData.deliveryDate && formData.startDate && (
+                    {formData.valuationDate && formData.deliveryDate && formData.startDate && (
                       <div className="flex flex-col justify-center space-y-3">
                         <div className="bg-blue-50 p-3 rounded-lg">
                           <p className="text-sm text-blue-800">
-                            <strong>Início das parcelas:</strong>{" "}
-                            {formatDateBR(formData.startDate)}
+                            <strong>Entrada paga em:</strong>{" "}
+                            {formatToMonthYear(formData.valuationDate)}
                           </p>
                           <p className="text-sm text-blue-800">
-                            <strong>Entrega do imóvel:</strong>{" "}
-                            {formatDateBR(formData.deliveryDate)}
+                            <strong>Primeira parcela:</strong>{" "}
+                            {formatToMonthYear(formData.startDate)}
+                          </p>
+                          <p className="text-sm text-blue-800">
+                            <strong>Entrega das chaves:</strong>{" "}
+                            {formatToMonthYear(formData.deliveryDate)}
                           </p>
                         </div>
                         
-                        {formData.installmentsCount < 6 && (
+                        {formData.installmentsCount < 3 && (
                           <Alert className="bg-amber-50">
                             <AlertCircle className="h-4 w-4 text-amber-600" />
                             <AlertDescription className="text-amber-800">
                               Atenção: Prazo muito curto ({formData.installmentsCount} parcelas). Considere uma data de entrega mais distante.
-                            </AlertDescription>
-                          </Alert>
-                        )}
-                        
-                        {wouldStartDateBeInPast(formData.deliveryDate, formData.installmentsCount) && (
-                          <Alert className="bg-red-50">
-                            <AlertCircle className="h-4 w-4 text-red-600" />
-                            <AlertDescription className="text-red-800">
-                              Erro: A data de entrega está muito próxima. As parcelas começariam no passado.
                             </AlertDescription>
                           </Alert>
                         )}
@@ -742,6 +757,7 @@ const SimulatorForm: React.FC = () => {
 
                     {/* Controle de Datas dos Reforços */}
                     <ReinforcementDatesControl
+                      valuationDate={formData.valuationDate}
                       deliveryDate={formData.deliveryDate}
                       installmentsCount={formData.installmentsCount}
                       reinforcementFrequency={formData.reinforcementFrequency}
@@ -858,9 +874,9 @@ const SimulatorForm: React.FC = () => {
                       onClick={handleSimulate} 
                       disabled={
                         totalPercentage !== 100 || 
-                        !formData.deliveryDate || 
-                        formData.installmentsCount < 1 ||
-                        wouldStartDateBeInPast(formData.deliveryDate, formData.installmentsCount)
+                        !formData.valuationDate || 
+                        !formData.deliveryDate ||
+                        formData.installmentsCount < 1
                       }
                       className="bg-simulae-600 hover:bg-simulae-700 text-white px-8 py-6 text-lg w-full sm:w-auto"
                     >

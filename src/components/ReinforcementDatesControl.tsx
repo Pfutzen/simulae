@@ -8,8 +8,8 @@ import { formatDateForDisplay, addMonths } from "@/utils/dateUtils";
 import { getReinforcementMonths, calculateStartDateFromValuation } from "@/utils/calculationUtils";
 
 interface ReinforcementDatesControlProps {
-  valuationDate?: Date; // Changed from deliveryDate to valuationDate as primary input
-  deliveryDate?: Date; // Still needed for validation
+  valuationDate?: Date;
+  deliveryDate?: Date;
   installmentsCount: number;
   reinforcementFrequency: number;
   finalMonthsWithoutReinforcement: number;
@@ -41,7 +41,7 @@ const ReinforcementDatesControl: React.FC<ReinforcementDatesControlProps> = ({
     const startDate = calculateStartDateFromValuation(valuationDate);
     
     return reinforcementMonths.map(month => 
-      addMonths(startDate, month)
+      addMonths(startDate, month - 1) // month-1 because month 1 is first installment
     );
   };
 

@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -9,7 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { LightbulbIcon, FileText, HomeIcon, PiggyBankIcon, TrendingUpIcon } from "lucide-react";
 import { exportToPdf } from "@/utils/pdfExport";
 import { SavedSimulation } from "@/utils/simulationHistoryUtils";
-import { formatDateBR } from "@/utils/dateUtils";
+import { formatDateForDisplay } from "@/utils/dateUtils";
 
 interface SimulationResultsProps {
   schedule: PaymentType[];
@@ -153,6 +152,7 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
         </Card>
       )}
       
+      
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <Card className="card-shadow">
           <CardHeader className="pb-2">
@@ -205,7 +205,6 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
               {formatCurrency(profit)}
             </p>
             <p className="text-sm text-muted-foreground">
-              {/* CRITICAL FIX: Use the correctly calculated profit percentage */}
               {formatPercentage(calculatedProfitPercentage / 100)} de retorno
             </p>
           </CardContent>
@@ -301,7 +300,7 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
                       }>
                         <TableCell>{payment.month}</TableCell>
                         <TableCell>
-                          {payment.date ? formatDateBR(payment.date) : "-"}
+                          {payment.date ? formatDateForDisplay(payment.date) : "-"}
                         </TableCell>
                         <TableCell>{payment.description}</TableCell>
                         <TableCell className="text-right">{formatCurrency(payment.amount)}</TableCell>
