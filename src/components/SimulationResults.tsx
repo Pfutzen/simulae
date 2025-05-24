@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -143,51 +142,84 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
         </CardContent>
       </Card>
 
-      {/* Best Resale Recommendations */}
+      {/* Melhores Estratégias de Revenda */}
       <Card className="shadow">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Target className="h-5 w-5 text-orange-600" />
-            Melhores Meses para Revenda
+            💼 Melhores Estratégias de Revenda
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="bg-white p-4 rounded-lg border">
-              <p className="text-sm text-slate-600 mb-1">
-                Mês de maior lucro
-              </p>
-              <p className="text-2xl font-bold text-orange-600">
-                {bestResaleInfo.bestProfitMonth} meses
-              </p>
-              <p className="text-sm text-slate-500 mt-1">
-                Lucro: {formatCurrency(bestResaleInfo.maxProfit)}
-              </p>
+        <CardContent className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Maior Valor de Lucro Absoluto */}
+            <div className="bg-white p-5 rounded-lg border border-orange-200">
+              <div className="flex items-center gap-2 mb-3">
+                <span className="text-lg">🥇</span>
+                <h3 className="font-semibold text-slate-800">Maior Valor de Lucro Absoluto</h3>
+              </div>
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4 text-slate-600" />
+                  <span className="text-sm text-slate-600">Prazo estimado:</span>
+                  <span className="font-bold text-orange-600">{bestResaleInfo.bestProfitMonth} meses</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <DollarSign className="h-4 w-4 text-slate-600" />
+                  <span className="text-sm text-slate-600">Lucro estimado:</span>
+                  <span className="font-bold text-green-600">{formatCurrency(bestResaleInfo.maxProfit)}</span>
+                </div>
+                <p className="text-xs text-slate-500 mt-2">
+                  Representa o maior valor bruto de lucro alcançado ao longo da simulação. Ideal para quem busca lucro máximo, mesmo que leve mais tempo.
+                </p>
+              </div>
             </div>
 
-            <div className="bg-white p-4 rounded-lg border">
-              <p className="text-sm text-slate-600 mb-1">
-                Mês de maior lucratividade
-              </p>
-              <p className="text-2xl font-bold text-orange-600">
-                {bestResaleInfo.bestRoiMonth} meses
-              </p>
-              <p className="text-sm text-slate-500 mt-1">
-                Lucro: {formatCurrency(bestResaleInfo.maxRoiProfit)}
-              </p>
+            {/* Maior Percentual de Rentabilidade */}
+            <div className="bg-white p-5 rounded-lg border border-blue-200">
+              <div className="flex items-center gap-2 mb-3">
+                <span className="text-lg">📊</span>
+                <h3 className="font-semibold text-slate-800">Maior Percentual de Rentabilidade</h3>
+              </div>
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4 text-slate-600" />
+                  <span className="text-sm text-slate-600">Prazo estimado:</span>
+                  <span className="font-bold text-blue-600">{bestResaleInfo.bestRoiMonth} meses</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <DollarSign className="h-4 w-4 text-slate-600" />
+                  <span className="text-sm text-slate-600">Lucro estimado:</span>
+                  <span className="font-bold text-green-600">{formatCurrency(bestResaleInfo.maxRoiProfit)}</span>
+                </div>
+                <p className="text-xs text-slate-500 mt-2">
+                  Reflete o melhor retorno proporcional (lucro dividido pelo tempo e investimento). Indicado para quem quer otimizar o rendimento do capital investido.
+                </p>
+              </div>
             </div>
 
-            {bestResaleInfo.earlyMonth && bestResaleInfo.earlyProfit && bestResaleInfo.earlyProfitPercentage && (
-              <div className="bg-white p-4 rounded-lg border">
-                <p className="text-sm text-slate-600 mb-1">
-                  Revenda antecipada (menor prazo)
-                </p>
-                <p className="text-2xl font-bold text-orange-600">
-                  {bestResaleInfo.earlyMonth} meses
-                </p>
-                <p className="text-sm text-slate-500 mt-1">
-                  Lucro: {formatCurrency(bestResaleInfo.earlyProfit)}
-                </p>
+            {/* Maior Lucro no Menor Prazo */}
+            {bestResaleInfo.earlyMonth && bestResaleInfo.earlyProfit && (
+              <div className="bg-white p-5 rounded-lg border border-purple-200">
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="text-lg">⚡</span>
+                  <h3 className="font-semibold text-slate-800">Maior Lucro no Menor Prazo</h3>
+                </div>
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <Calendar className="h-4 w-4 text-slate-600" />
+                    <span className="text-sm text-slate-600">Prazo mínimo sugerido:</span>
+                    <span className="font-bold text-purple-600">{bestResaleInfo.earlyMonth} meses</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <DollarSign className="h-4 w-4 text-slate-600" />
+                    <span className="text-sm text-slate-600">Lucro estimado:</span>
+                    <span className="font-bold text-green-600">{formatCurrency(bestResaleInfo.earlyProfit)}</span>
+                  </div>
+                  <p className="text-xs text-slate-500 mt-2">
+                    Aponta o melhor lucro possível em prazo reduzido. Excelente para investidores com foco em retorno mais rápido.
+                  </p>
+                </div>
               </div>
             )}
           </div>
