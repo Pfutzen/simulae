@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -202,7 +203,7 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <FinancingSimulator keysValue={schedule.find(p => p.type === "chaves")?.value || 0} />
+          <FinancingSimulator keysValue={schedule.find(p => p.paymentType === "chaves")?.amount || 0} />
         </CardContent>
       </Card>
 
@@ -270,16 +271,16 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
                       {payment.month}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      {payment.type}
+                      {payment.paymentType}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      {formatCurrency(payment.value)}
+                      {formatCurrency(payment.amount)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      {formatPercentage(payment.correction)}
+                      {formatPercentage(payment.correctionRate)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      {formatCurrency(payment.correctedValue)}
+                      {formatCurrency(payment.correctedAmount)}
                     </td>
                   </tr>
                 ))}
@@ -298,7 +299,7 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <ResultsChart schedule={schedule} />
+          <ResultsChart schedule={schedule} resaleMonth={resaleMonth} />
         </CardContent>
       </Card>
     </div>

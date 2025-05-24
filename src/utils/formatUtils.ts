@@ -106,3 +106,17 @@ export const formatNumberWithCursor = (
     numericValue
   };
 };
+
+/**
+ * Formats a number as currency with R$ prefix
+ */
+export const formatCurrency = (value: number): string => {
+  return `R$ ${formatToBrazilianNumber(value)}`;
+};
+
+/**
+ * Formats a number as percentage
+ */
+export const formatPercentage = (value: number): string => {
+  return `${formatToBrazilianNumber(value)}%`;
+};

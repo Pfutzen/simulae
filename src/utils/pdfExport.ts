@@ -1,3 +1,4 @@
+
 import jsPDF from 'jspdf';
 import { SavedSimulation } from './simulationHistoryUtils';
 import { formatCurrency, formatPercentage } from './calculationUtils';
@@ -226,3 +227,6 @@ function getDeliveryPropertyValue(simulation: SavedSimulation): number {
   // Fallback to the property value in the results
   return simulation.results.propertyValue;
 }
+
+// Export the function with the expected name
+export const generatePDF = exportToPdf;
