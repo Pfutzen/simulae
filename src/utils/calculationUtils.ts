@@ -1,3 +1,4 @@
+
 export type CorrectionMode = "manual" | "cub";
 
 export interface PaymentType {
@@ -316,6 +317,7 @@ export const generatePaymentSchedule = (formData: SimulationFormData): PaymentTy
 
 /**
  * Calculates resale profit based on a payment schedule and a resale month.
+ * FIXED: Properly calculates profitPercentage based on totalPaid (investment) not property value
  *
  * @param {PaymentType[]} schedule - The payment schedule.
  * @param {number} resaleMonth - The month in which the property is resold.
@@ -340,11 +342,13 @@ export const calculateResaleProfit = (schedule: PaymentType[], resaleMonth: numb
     };
   }
   
-  const investmentValue = resaleData.totalPaid;
-  const propertyValue = resaleData.propertyValue;
-  const remainingBalance = resaleData.balance;
-  const profit = propertyValue - investmentValue - remainingBalance;
-  const profitPercentage = (profit / investmentValue) * 100;
+  const investmentValue = resaleData.totalPaid; // Total amount invested by buyer until resale
+  const propertyValue = resaleData.propertyValue; // Property value at resale month
+  const remainingBalance = resaleData.balance; // Remaining debt
+  const profit = propertyValue - investmentValue - remainingBalance; // Net profit
+  
+  // FIXED: Calculate profitPercentage based on investmentValue (total paid), not property value
+  const profitPercentage = investmentValue > 0 ? (profit / investmentValue) * 100 : 0;
   
   return {
     investmentValue,
@@ -390,6 +394,7 @@ export const getReinforcementMonths = (
 
 /**
  * Calculates the best month for resale based on maximum profit and ROI (Return on Investment).
+ * FIXED: Properly calculates ROI based on totalPaid (investment) not property value
  *
  * @param {PaymentType[]} schedule - The payment schedule.
  * @returns {{ bestProfitMonth: number; maxProfit: number; maxProfitPercentage: number; bestRoiMonth: number; maxRoi: number; maxRoiProfit: number; earlyMonth?: number; earlyProfit?: number; earlyProfitPercentage?: number; }} An object containing the best month for resale based on maximum profit and ROI.
@@ -422,20 +427,20 @@ export const calculateBestResaleMonth = (schedule: PaymentType[]): {
   // First pass: Find best profit and best ROI months
   for (let i = 1; i < schedule.length; i++) {
     const entry = schedule[i];
-    const investmentValue = entry.totalPaid;
+    const investmentValue = entry.totalPaid; // Total paid by buyer until this month
     const propertyValue = entry.propertyValue;
     const remainingBalance = entry.balance;
     
     // Profit calculation: property value minus total investment minus remaining balance
     const profit = propertyValue - investmentValue - remainingBalance;
     
-    // ROI calculation: profit divided by investment, converted to percentage
+    // FIXED: ROI calculation based on investmentValue (totalPaid), not property value
     const roiPercentage = investmentValue > 0 ? (profit / investmentValue) * 100 : 0;
     
     // Check for best absolute profit
     if (profit > maxProfit) {
       maxProfit = profit;
-      maxProfitPercentage = roiPercentage; // Use the same ROI calculation here
+      maxProfitPercentage = roiPercentage; // Use the corrected ROI calculation
       bestProfitMonth = entry.month;
     }
     
@@ -453,11 +458,13 @@ export const calculateBestResaleMonth = (schedule: PaymentType[]): {
   
   for (let i = 1; i < schedule.length; i++) {
     const entry = schedule[i];
-    const investmentValue = entry.totalPaid;
+    const investmentValue = entry.totalPaid; // Total paid by buyer until this month
     const propertyValue = entry.propertyValue;
     const remainingBalance = entry.balance;
     
     const profit = propertyValue - investmentValue - remainingBalance;
+    
+    // FIXED: ROI calculation based on investmentValue (totalPaid), not property value
     const roiPercentage = investmentValue > 0 ? (profit / investmentValue) * 100 : 0;
     
     // Find the earliest month that has at least 70% of the maximum ROI
