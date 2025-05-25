@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { FileText } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
-import { SavedSimulation, setActiveSimulation } from "@/utils/simulationHistoryUtils";
+import { SavedSimulation, setActiveSimulation, saveSimulation } from "@/utils/simulationHistoryUtils";
 import { PaymentType } from "@/utils/types";
 
 interface PropostaButtonProps {
@@ -59,17 +59,31 @@ const PropostaButton: React.FC<PropostaButtonProps> = ({
     }
 
     try {
-      // Criar ou atualizar a simulação ativa
-      const activeSimulationData: SavedSimulation = simulation || {
-        id: `temp_${Date.now()}`,
-        name: "Simulação Atual",
-        timestamp: Date.now(),
-        formData,
-        schedule,
-        results: resaleResults,
-        bestResaleInfo,
-        appreciationIndex
-      };
+      let activeSimulationData: SavedSimulation;
+
+      // Se já existe uma simulação salva, usar ela
+      if (simulation) {
+        activeSimulationData = simulation;
+      } else {
+        // Se não existe, criar e salvar uma nova simulação
+        const newSimulation = {
+          name: "Simulação para Proposta",
+          timestamp: Date.now(),
+          formData,
+          schedule,
+          results: resaleResults,
+          bestResaleInfo,
+          appreciationIndex
+        };
+
+        // Salvar no histórico
+        activeSimulationData = saveSimulation(newSimulation);
+        
+        toast({
+          title: "Simulação salva",
+          description: "A simulação foi salva automaticamente no histórico.",
+        });
+      }
 
       // Garantir que a simulação está definida como ativa
       setActiveSimulation(activeSimulationData);
