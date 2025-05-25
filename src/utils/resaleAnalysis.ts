@@ -50,22 +50,24 @@ export const calculateBestResaleMonth = (schedule: PaymentType[]) => {
   const maxProfitTotalPaid = keysData.totalPaid;
   const bestProfitMonth = keysData.month;
 
-  // Estratégia 2: Maior Percentual de Rentabilidade (penúltimo mês)
+  // Estratégia 2: Maior Percentual de Rentabilidade (última parcela antes das chaves)
   // Aplicando a fórmula correta: Lucro real = Valor de revenda - Valor pago - Saldo devedor
-  const penultimateMonth = Math.max(1, schedule.length - 1);
-  const penultimateMonthData = schedule[penultimateMonth - 1];
+  // Encontrar a última parcela (antes das chaves)
+  const lastInstallmentIndex = schedule.findIndex(payment => payment.description === "Chaves") - 1;
+  const lastInstallmentData = schedule[lastInstallmentIndex];
   
-  // Calcular o saldo devedor no penúltimo mês
+  // Calcular o saldo devedor na última parcela
   // O saldo devedor é quanto ainda falta pagar do valor original do imóvel
   const originalPropertyValue = schedule[0]?.propertyValue || 0;
-  const remainingBalance = originalPropertyValue - penultimateMonthData.totalPaid;
+  const remainingBalance = originalPropertyValue - lastInstallmentData.totalPaid;
   
   // Lucro real = Valor de revenda - Valor pago - Saldo devedor
-  const maxRoiProfit = penultimateMonthData.propertyValue - penultimateMonthData.totalPaid - Math.max(0, remainingBalance);
-  const maxRoi = penultimateMonthData.totalPaid > 0 
-    ? (maxRoiProfit / penultimateMonthData.totalPaid) * 100 
+  const maxRoiProfit = lastInstallmentData.propertyValue - lastInstallmentData.totalPaid - Math.max(0, remainingBalance);
+  const maxRoi = lastInstallmentData.totalPaid > 0 
+    ? (maxRoiProfit / lastInstallmentData.totalPaid) * 100 
     : 0;
-  const maxRoiTotalPaid = penultimateMonthData.totalPaid;
+  const maxRoiTotalPaid = lastInstallmentData.totalPaid;
+  const bestRoiMonth = lastInstallmentData.month;
 
   // Estratégia 3: Primeiro mês com bom percentual de lucro (≥ 60%)
   // Aplicando a mesma fórmula correta para todos os meses
@@ -101,7 +103,7 @@ export const calculateBestResaleMonth = (schedule: PaymentType[]) => {
     maxProfit,
     maxProfitPercentage,
     maxProfitTotalPaid,
-    bestRoiMonth: penultimateMonth,
+    bestRoiMonth,
     maxRoi,
     maxRoiProfit,
     maxRoiTotalPaid,
