@@ -38,18 +38,17 @@ export const calculateBestResaleMonth = (schedule: PaymentType[]) => {
     };
   }
 
-  // Encontrar o índice da última parcela mensal (antes das chaves)
+  // Encontrar o índice das chaves
   const keysIndex = schedule.findIndex(payment => payment.description === "Chaves");
-  const lastInstallmentIndex = keysIndex > 0 ? keysIndex - 1 : schedule.length - 1;
-
-  // Estratégia 1: Maior Valor de Lucro Absoluto (última parcela mensal, não incluindo chaves)
-  const lastInstallmentData = schedule[lastInstallmentIndex];
-  const maxProfit = lastInstallmentData.propertyValue - lastInstallmentData.totalPaid;
-  const maxProfitPercentage = lastInstallmentData.totalPaid > 0 
-    ? (maxProfit / lastInstallmentData.totalPaid) * 100 
+  
+  // Estratégia 1: Maior Valor de Lucro Absoluto (parcela chaves)
+  const keysData = schedule[keysIndex];
+  const maxProfit = keysData.propertyValue - keysData.totalPaid;
+  const maxProfitPercentage = keysData.totalPaid > 0 
+    ? (maxProfit / keysData.totalPaid) * 100 
     : 0;
-  const maxProfitTotalPaid = lastInstallmentData.totalPaid;
-  const bestProfitMonth = lastInstallmentData.month;
+  const maxProfitTotalPaid = keysData.totalPaid;
+  const bestProfitMonth = keysData.month;
 
   // Estratégia 2: Maior Percentual de Rentabilidade (penúltimo mês)
   // Não paga as chaves, então percentualmente o lucro será maior
