@@ -15,6 +15,7 @@ import { PropostaData } from "@/types/proposta";
 
 const PropostaComercial: React.FC = () => {
   const [activeSimulation, setActiveSimulation] = useState<SavedSimulation | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [propostagData, setPropostaData] = useState<PropostaData>({
     // Dados do comprador
     nomeCompleto: '',
@@ -38,18 +39,35 @@ const PropostaComercial: React.FC = () => {
   const { toast } = useToast();
 
   useEffect(() => {
-    const simulation = getActiveSimulation();
-    if (simulation) {
-      setActiveSimulation(simulation);
-      // Se a simulação tem datas customizadas, carregar no form
-      if (simulation.formData.customReinforcementDates) {
-        setPropostaData(prev => ({
-          ...prev,
-          customReinforcementDates: simulation.formData.customReinforcementDates
-        }));
+    const loadActiveSimulation = () => {
+      try {
+        const simulation = getActiveSimulation();
+        console.log('Loading active simulation in PropostaComercial:', simulation);
+        
+        if (simulation) {
+          setActiveSimulation(simulation);
+          // Se a simulação tem datas customizadas, carregar no form
+          if (simulation.formData.customReinforcementDates) {
+            setPropostaData(prev => ({
+              ...prev,
+              customReinforcementDates: simulation.formData.customReinforcementDates
+            }));
+          }
+        }
+      } catch (error) {
+        console.error('Error loading active simulation:', error);
+        toast({
+          title: "Erro ao carregar simulação",
+          description: "Ocorreu um erro ao carregar a simulação ativa.",
+          variant: "destructive"
+        });
+      } finally {
+        setIsLoading(false);
       }
-    }
-  }, []);
+    };
+
+    loadActiveSimulation();
+  }, [toast]);
 
   const handleUpdateSimulationDates = () => {
     if (!activeSimulation || !propostagData.customReinforcementDates) {
@@ -152,6 +170,17 @@ const PropostaComercial: React.FC = () => {
       });
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-slate-50 p-6 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-slate-600">Carregando simulação...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!activeSimulation) {
     return (

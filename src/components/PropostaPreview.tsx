@@ -29,9 +29,6 @@ const PropostaPreview: React.FC<PropostaPreviewProps> = ({ data, simulation }) =
     payment.description.includes("Reforço")
   ) || [];
 
-  console.log('PropostaPreview - simulation:', simulation);
-  console.log('PropostaPreview - appreciationIndex:', simulation.appreciationIndex || simulation.formData?.appreciationIndex);
-
   return (
     <Card className="h-fit">
       <CardHeader>
