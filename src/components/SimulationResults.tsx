@@ -82,6 +82,10 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
     return payment?.propertyValue || 0;
   };
 
+  // Calcular a valorização anual do imóvel (índice de valorização mensal x 12)
+  const annualPropertyAppreciation = simulationData?.appreciationIndex ? (simulationData.appreciationIndex * 12) : 0;
+  const totalAnnualReturn = annualRentalReturn + annualPropertyAppreciation;
+
   return (
     <div className="space-y-6">
       {/* Profit Card */}
@@ -330,9 +334,25 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
             </div>
             
             <div className="bg-white p-4 rounded-lg border">
-              <p className="text-sm text-slate-600 mb-1">Retorno anual estimado</p>
+              <p className="text-sm text-slate-600 mb-1">Retorno anual do aluguel</p>
               <p className="text-2xl font-bold text-purple-600">
                 {formatPercentage(annualRentalReturn)}
+              </p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="bg-white p-4 rounded-lg border">
+              <p className="text-sm text-slate-600 mb-1">Valorização anual do imóvel</p>
+              <p className="text-2xl font-bold text-green-600">
+                {formatPercentage(annualPropertyAppreciation)}
+              </p>
+            </div>
+            
+            <div className="bg-white p-4 rounded-lg border">
+              <p className="text-sm text-slate-600 mb-1">Retorno total anual (aluguel + valorização)</p>
+              <p className="text-2xl font-bold text-blue-600">
+                {formatPercentage(totalAnnualReturn)}
               </p>
             </div>
           </div>
