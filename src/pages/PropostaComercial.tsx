@@ -75,7 +75,8 @@ const PropostaComercial: React.FC = () => {
         formData: updatedFormData,
         schedule: activeSimulation.schedule,
         results: activeSimulation.results,
-        bestResaleInfo: activeSimulation.bestResaleInfo
+        bestResaleInfo: activeSimulation.bestResaleInfo,
+        appreciationIndex: activeSimulation.appreciationIndex
       });
 
       // Atualizar o estado local
