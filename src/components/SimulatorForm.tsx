@@ -22,7 +22,7 @@ import {
 } from "@/utils/calculationUtils";
 import { SimulationFormData, PaymentType, CorrectionMode } from "@/utils/types";
 import { saveSimulation, getSimulations, SavedSimulation, getActiveSimulation } from "@/utils/simulationHistoryUtils";
-import { wouldStartDateBeInPast, formatToMonthYear, calculateInstallmentsFromValuationAndDelivery } from "@/utils/dateUtils";
+import { wouldStartDateBeInPast, formatToMonthYear, calculateInstallmentsFromValuationAndDelivery, safeDateConversion } from "@/utils/dateUtils";
 import PropertyValueInput from "./PropertyValueInput";
 import PercentageValueInput from "./PercentageValueInput";
 import PercentageValidationIndicator from "./PercentageValidationIndicator";
@@ -116,7 +116,17 @@ const SimulatorForm: React.FC = () => {
     const activeSimulation = getActiveSimulation();
     if (activeSimulation) {
       console.log('Carregando simulação ativa automaticamente:', activeSimulation.name);
-      setFormData(activeSimulation.formData);
+      
+      // Converter strings de data de volta para objetos Date
+      const formDataWithDates = {
+        ...activeSimulation.formData,
+        startDate: safeDateConversion(activeSimulation.formData.startDate),
+        deliveryDate: safeDateConversion(activeSimulation.formData.deliveryDate),
+        valuationDate: safeDateConversion(activeSimulation.formData.valuationDate),
+        customReinforcementDates: activeSimulation.formData.customReinforcementDates?.map(date => safeDateConversion(date)).filter(Boolean) as Date[] | undefined
+      };
+      
+      setFormData(formDataWithDates);
       setSchedule(activeSimulation.schedule);
       setResaleResults(activeSimulation.results);
       setBestResaleInfo(activeSimulation.bestResaleInfo);

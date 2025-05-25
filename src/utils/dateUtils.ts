@@ -179,6 +179,12 @@ export function parseMonthYear(monthYear: string): Date | null {
  * @returns String in MM/AAAA format
  */
 export function formatToMonthYear(date: Date): string {
+  // Add validation to ensure date is a valid Date object
+  if (!date || !(date instanceof Date) || isNaN(date.getTime())) {
+    console.error('formatToMonthYear received invalid date:', date);
+    return '';
+  }
+  
   const month = (date.getMonth() + 1).toString().padStart(2, '0');
   const year = date.getFullYear();
   return `${month}/${year}`;
@@ -211,4 +217,22 @@ export function isValidValuationDate(valuationDate: Date): boolean {
 export function isValidDeliveryDate(valuationDate: Date, deliveryDate: Date): boolean {
   const minDeliveryDate = addMonths(valuationDate, 3); // Minimum 3 months gap
   return deliveryDate >= minDeliveryDate;
+}
+
+/**
+ * Safely convert date strings back to Date objects for saved simulations
+ * @param dateValue - Value that might be a date string or Date object
+ * @returns Date object or undefined
+ */
+export function safeDateConversion(dateValue: any): Date | undefined {
+  if (!dateValue) return undefined;
+  
+  if (dateValue instanceof Date) return dateValue;
+  
+  if (typeof dateValue === 'string') {
+    const parsed = new Date(dateValue);
+    return isNaN(parsed.getTime()) ? undefined : parsed;
+  }
+  
+  return undefined;
 }
