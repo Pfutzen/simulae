@@ -903,6 +903,7 @@ const SimulatorForm: React.FC = () => {
               rentalPercentage={formData.rentalPercentage}
               rentalEstimate={resaleResults.rentalEstimate}
               annualRentalReturn={resaleResults.annualRentalReturn}
+              appreciationIndex={formData.appreciationIndex}
               {...resaleResults}
             />
           )}
