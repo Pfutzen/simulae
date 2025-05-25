@@ -24,9 +24,13 @@ const PropostaPreview: React.FC<PropostaPreviewProps> = ({ data, simulation }) =
     return `${simulation.formData.installmentsCount + 1} meses após o início`;
   };
 
-  const reinforcements = simulation.schedule.filter(payment => 
+  // Get reinforcements, ensuring schedule exists
+  const reinforcements = simulation.schedule?.filter(payment => 
     payment.description.includes("Reforço")
-  );
+  ) || [];
+
+  console.log('PropostaPreview - simulation:', simulation);
+  console.log('PropostaPreview - appreciationIndex:', simulation.appreciationIndex || simulation.formData?.appreciationIndex);
 
   return (
     <Card className="h-fit">
