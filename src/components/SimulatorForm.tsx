@@ -38,6 +38,8 @@ import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import MonthYearInput from "./MonthYearInput";
 
+import PropostaButton from "./PropostaButton";
+
 const SimulatorForm: React.FC = () => {
   const { toast } = useToast();
   const [simulationName, setSimulationName] = useState<string>("");
@@ -880,13 +882,24 @@ const SimulatorForm: React.FC = () => {
                     </Button>
                     
                     {schedule.length > 0 && (
-                      <Button
-                        onClick={handleSaveSimulation}
-                        className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-6 text-lg w-full sm:w-auto"
-                        disabled={!simulationName.trim()}
-                      >
-                        Salvar Simulação
-                      </Button>
+                      <>
+                        <Button
+                          onClick={handleSaveSimulation}
+                          className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-6 text-lg w-full sm:w-auto"
+                          disabled={!simulationName.trim()}
+                        >
+                          Salvar Simulação
+                        </Button>
+                        
+                        <PropostaButton
+                          simulation={currentSimulation}
+                          schedule={schedule}
+                          resaleResults={resaleResults}
+                          bestResaleInfo={bestResaleInfo}
+                          formData={formData}
+                          appreciationIndex={formData.appreciationIndex}
+                        />
+                      </>
                     )}
                   </div>
                 </div>
