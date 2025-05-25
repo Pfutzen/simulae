@@ -108,7 +108,8 @@ export const generatePaymentSchedule = (data: SimulationFormData): PaymentType[]
   const keysCorrectionFactor = getCorrectionFactor(data.installmentsCount + 1);
   const correctedKeysValue = data.keysValue * keysCorrectionFactor;
   
-  const finalPropertyValue = data.propertyValue * Math.pow(1 + data.appreciationIndex / 100, data.installmentsCount);
+  // Calcular o valor do imóvel no mês das chaves (aplicar valorização do último mês também)
+  const finalPropertyValue = data.propertyValue * Math.pow(1 + data.appreciationIndex / 100, data.installmentsCount + 1);
   totalPaid += correctedKeysValue;
 
   schedule.push({
