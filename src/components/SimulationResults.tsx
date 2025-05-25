@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -83,9 +82,16 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
   };
 
   // Calcular a valorização anual do imóvel usando o índice de valorização mensal da simulação
+  console.log('SimulationData:', simulationData);
+  console.log('FormData:', simulationData?.formData);
+  console.log('AppreciationIndex:', simulationData?.formData?.appreciationIndex);
+  
   const monthlyAppreciationIndex = simulationData?.formData?.appreciationIndex || 0;
   const annualPropertyAppreciation = monthlyAppreciationIndex * 12;
   const totalAnnualReturn = annualRentalReturn + annualPropertyAppreciation;
+
+  console.log('Monthly Appreciation Index:', monthlyAppreciationIndex);
+  console.log('Annual Property Appreciation:', annualPropertyAppreciation);
 
   return (
     <div className="space-y-6">
@@ -348,6 +354,9 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
               <p className="text-2xl font-bold text-green-600">
                 {formatPercentage(annualPropertyAppreciation)}
               </p>
+              <p className="text-xs text-slate-500 mt-1">
+                Baseado em {formatPercentage(monthlyAppreciationIndex)} mensal
+              </p>
             </div>
             
             <div className="bg-white p-4 rounded-lg border">
@@ -360,6 +369,7 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
         </CardContent>
       </Card>
 
+      {/* Cronograma de Pagamentos */}
       <Card className="shadow">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -421,6 +431,7 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
         </CardContent>
       </Card>
 
+      {/* Gráfico de Valorização */}
       <Card className="shadow">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
