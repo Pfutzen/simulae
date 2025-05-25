@@ -45,34 +45,59 @@ export const calculateBestResaleMonth = (schedule: PaymentType[]) => {
   const maxProfitPercentage = (maxProfit / lastMonthData.totalPaid) * 100;
   const maxProfitTotalPaid = lastMonthData.totalPaid;
 
-  // Estratégia 2: Maior Percentual de Rentabilidade (penúltimo mês da simulação)
-  const penultimateMonth = Math.max(1, schedule.length - 1);
-  const penultimateMonthData = schedule[penultimateMonth - 1];
-  const maxRoiProfit = penultimateMonthData.propertyValue - penultimateMonthData.totalPaid;
-  const maxRoi = (maxRoiProfit / penultimateMonthData.totalPaid) * 100;
-  const maxRoiTotalPaid = penultimateMonthData.totalPaid;
+  // Estratégia 2: Maior Percentual de Rentabilidade
+  // Encontrar o mês com maior rentabilidade (lucro / valor pago)
+  let bestRoiMonth = 1;
+  let maxRoi = -Infinity;
+  let maxRoiProfit = 0;
+  let maxRoiTotalPaid = 0;
 
-  // Estratégia 3: Maior Lucro no Menor Prazo (lucro ≥ 60% do valor pago)
+  for (let i = 1; i <= schedule.length; i++) {
+    const monthData = schedule[i - 1];
+    if (monthData.totalPaid > 0 && monthData.propertyValue > 0) {
+      const profit = monthData.propertyValue - monthData.totalPaid;
+      const roi = (profit / monthData.totalPaid) * 100;
+      
+      if (roi > maxRoi && profit > 0) {
+        maxRoi = roi;
+        bestRoiMonth = i;
+        maxRoiProfit = profit;
+        maxRoiTotalPaid = monthData.totalPaid;
+      }
+    }
+  }
+
+  // Estratégia 3: Maior Lucro no Menor Prazo
+  // Critérios: valor de revenda > 1.2x valor investido, lucro ≥ 60%, prazo mínimo 6 meses
   let earlyMonth: number | undefined;
   let earlyProfit: number | undefined;
   let earlyProfitPercentage: number | undefined;
   let earlyTotalPaid: number | undefined;
 
-  for (let i = 1; i <= schedule.length; i++) {
+  for (let i = 6; i <= schedule.length; i++) { // Prazo mínimo de 6 meses
     const monthData = schedule[i - 1];
-    const profit = monthData.propertyValue - monthData.totalPaid;
-    const profitPercentage = (profit / monthData.totalPaid) * 100;
+    if (monthData.totalPaid > 0 && monthData.propertyValue > 0) {
+      const profit = monthData.propertyValue - monthData.totalPaid;
+      const profitPercentage = (profit / monthData.totalPaid) * 100;
+      const valuationRatio = monthData.propertyValue / monthData.totalPaid;
 
-    // Verificar se atende os critérios: valor de revenda > valor investido e lucro ≥ 60%
-    if (monthData.propertyValue > monthData.totalPaid && profitPercentage >= 60) {
-      // Se é o primeiro mês que atende os critérios ou se tem maior lucro no mesmo prazo
-      if (earlyMonth === undefined || 
-          i < earlyMonth || 
-          (i === earlyMonth && profit > (earlyProfit || 0))) {
-        earlyMonth = i;
-        earlyProfit = profit;
-        earlyProfitPercentage = profitPercentage;
-        earlyTotalPaid = monthData.totalPaid;
+      // Verificar se atende os critérios:
+      // 1. Valor de revenda > valor investido
+      // 2. Valor de revenda >= 1.2x valor investido (validação de realidade)
+      // 3. Lucro ≥ 60% do valor pago
+      if (monthData.propertyValue > monthData.totalPaid && 
+          valuationRatio >= 1.2 && 
+          profitPercentage >= 60) {
+        
+        // Se é o primeiro mês que atende os critérios ou se tem maior lucro no mesmo prazo
+        if (earlyMonth === undefined || 
+            i < earlyMonth || 
+            (i === earlyMonth && profit > (earlyProfit || 0))) {
+          earlyMonth = i;
+          earlyProfit = profit;
+          earlyProfitPercentage = profitPercentage;
+          earlyTotalPaid = monthData.totalPaid;
+        }
       }
     }
   }
@@ -82,7 +107,7 @@ export const calculateBestResaleMonth = (schedule: PaymentType[]) => {
     maxProfit,
     maxProfitPercentage,
     maxProfitTotalPaid,
-    bestRoiMonth: penultimateMonth,
+    bestRoiMonth,
     maxRoi,
     maxRoiProfit,
     maxRoiTotalPaid,
