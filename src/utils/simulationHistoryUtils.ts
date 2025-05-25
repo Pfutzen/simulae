@@ -1,12 +1,11 @@
-
-import { SimulationFormData, PaymentType } from "./calculationUtils";
+import { SimulationFormData, PaymentType } from './types';
 
 export interface SavedSimulation {
   id: string;
   name: string;
   timestamp: number;
   formData: SimulationFormData;
-  schedule?: PaymentType[]; // Added this optional schedule property
+  schedule: PaymentType[];
   results: {
     investmentValue: number;
     propertyValue: number;
@@ -20,94 +19,59 @@ export interface SavedSimulation {
     bestProfitMonth: number;
     maxProfit: number;
     maxProfitPercentage: number;
+    maxProfitTotalPaid: number;
     bestRoiMonth: number;
     maxRoi: number;
     maxRoiProfit: number;
+    maxRoiTotalPaid: number;
     earlyMonth?: number;
     earlyProfit?: number;
     earlyProfitPercentage?: number;
+    earlyTotalPaid?: number;
   };
+  appreciationIndex?: number; // Add this property
 }
 
-// Save simulation to local storage
-export const saveSimulation = (simulation: Omit<SavedSimulation, "id">): SavedSimulation => {
-  const id = `sim-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
-  const finalSimulation: SavedSimulation = { ...simulation, id };
+const STORAGE_KEY = 'simulation_history';
 
+export const saveSimulation = (simulation: SavedSimulation): void => {
   try {
-    const savedSimulations = getSimulations();
-    localStorage.setItem('simulations', JSON.stringify([finalSimulation, ...savedSimulations]));
-    // Set this as the active simulation
-    localStorage.setItem('activeSimulation', id);
+    const existingSimulations = getSimulations();
+    const updatedSimulations = [simulation, ...existingSimulations];
+    
+    // Keep only the last 50 simulations
+    const limitedSimulations = updatedSimulations.slice(0, 50);
+    
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(limitedSimulations));
   } catch (error) {
-    console.error('Error saving simulation to local storage:', error);
+    console.error('Error saving simulation:', error);
   }
-
-  return finalSimulation;
 };
 
-// Get all simulations from local storage
 export const getSimulations = (): SavedSimulation[] => {
   try {
-    const savedSimulations = localStorage.getItem('simulations');
-    return savedSimulations ? JSON.parse(savedSimulations) : [];
+    const stored = localStorage.getItem(STORAGE_KEY);
+    return stored ? JSON.parse(stored) : [];
   } catch (error) {
-    console.error('Error retrieving simulations from local storage:', error);
+    console.error('Error loading simulations:', error);
     return [];
   }
 };
 
-// Delete a simulation from local storage
 export const deleteSimulation = (id: string): void => {
   try {
-    const savedSimulations = getSimulations();
-    const updatedSimulations = savedSimulations.filter(sim => sim.id !== id);
-    localStorage.setItem('simulations', JSON.stringify(updatedSimulations));
-    
-    // If the deleted simulation was the active one, clear the active simulation
-    const activeSimulationId = localStorage.getItem('activeSimulation');
-    if (activeSimulationId === id) {
-      localStorage.removeItem('activeSimulation');
-    }
+    const simulations = getSimulations();
+    const filtered = simulations.filter(sim => sim.id !== id);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(filtered));
   } catch (error) {
-    console.error('Error deleting simulation from local storage:', error);
+    console.error('Error deleting simulation:', error);
   }
 };
 
-// Get a specific simulation by ID
-export const getSimulationById = (id: string): SavedSimulation | undefined => {
+export const clearSimulations = (): void => {
   try {
-    const savedSimulations = getSimulations();
-    return savedSimulations.find(sim => sim.id === id);
+    localStorage.removeItem(STORAGE_KEY);
   } catch (error) {
-    console.error('Error retrieving simulation from local storage:', error);
-    return undefined;
-  }
-};
-
-// Get the active simulation
-export const getActiveSimulation = (): SavedSimulation | null => {
-  try {
-    const activeSimulationId = localStorage.getItem('activeSimulation');
-    if (!activeSimulationId) {
-      // If no active simulation is set, return the most recent one
-      const simulations = getSimulations();
-      return simulations.length > 0 ? simulations[0] : null;
-    }
-    
-    const simulation = getSimulationById(activeSimulationId);
-    return simulation || null;
-  } catch (error) {
-    console.error('Error getting active simulation:', error);
-    return null;
-  }
-};
-
-// Set a simulation as active
-export const setActiveSimulation = (id: string): void => {
-  try {
-    localStorage.setItem('activeSimulation', id);
-  } catch (error) {
-    console.error('Error setting active simulation:', error);
+    console.error('Error clearing simulations:', error);
   }
 };

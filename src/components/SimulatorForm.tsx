@@ -500,7 +500,8 @@ const SimulatorForm: React.FC = () => {
       formData,
       schedule,
       results: resaleResults,
-      bestResaleInfo
+      bestResaleInfo,
+      appreciationIndex: formData.appreciationIndex
     };
 
     saveSimulation(simulation);
