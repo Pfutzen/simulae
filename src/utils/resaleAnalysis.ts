@@ -30,7 +30,11 @@ export const calculateBestResaleMonth = (schedule: PaymentType[]) => {
       bestRoiMonth: 0,
       maxRoi: 0,
       maxRoiProfit: 0,
-      maxRoiTotalPaid: 0
+      maxRoiTotalPaid: 0,
+      earlyMonth: undefined,
+      earlyProfit: undefined,
+      earlyProfitPercentage: undefined,
+      earlyTotalPaid: undefined
     };
   }
 
