@@ -74,3 +74,10 @@ export const calculateRentalEstimate = (propertyValue: number, rentalPercentage:
     annualRentalReturn
   };
 };
+
+export const calculateAnnualAppreciation = (monthlyAppreciationIndex: number): number => {
+  console.log('Calculating annual appreciation from monthly index:', monthlyAppreciationIndex);
+  const annualAppreciation = monthlyAppreciationIndex * 12;
+  console.log('Calculated annual appreciation:', annualAppreciation);
+  return annualAppreciation;
+};

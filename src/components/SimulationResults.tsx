@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -24,6 +25,7 @@ import { formatDateForDisplay } from "@/utils/dateUtils";
 import { PaymentType } from "@/utils/calculationUtils";
 import { SavedSimulation } from "@/utils/simulationHistoryUtils";
 import { generatePDF } from "@/utils/pdfExport";
+import { calculateAnnualAppreciation } from "@/utils/calculationHelpers";
 import ResultsChart from "./ResultsChart";
 import FinancingSimulator from "./FinancingSimulator";
 
@@ -53,6 +55,7 @@ interface SimulationResultsProps {
   rentalPercentage: number;
   rentalEstimate: number;
   annualRentalReturn: number;
+  appreciationIndex?: number; // Add this prop to directly receive the appreciation index
 }
 
 const SimulationResults: React.FC<SimulationResultsProps> = ({
@@ -67,7 +70,8 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
   simulationData,
   rentalPercentage,
   rentalEstimate,
-  annualRentalReturn
+  annualRentalReturn,
+  appreciationIndex
 }) => {
   const handleExportPDF = () => {
     if (simulationData) {
@@ -81,17 +85,18 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
     return payment?.propertyValue || 0;
   };
 
-  // Calcular a valorização anual do imóvel usando o índice de valorização mensal da simulação
+  // Get the appreciation index from multiple sources (prop, simulationData, or default)
   console.log('SimulationData:', simulationData);
   console.log('FormData:', simulationData?.formData);
-  console.log('AppreciationIndex:', simulationData?.formData?.appreciationIndex);
+  console.log('AppreciationIndex from simulationData:', simulationData?.formData?.appreciationIndex);
+  console.log('AppreciationIndex from prop:', appreciationIndex);
   
-  const monthlyAppreciationIndex = simulationData?.formData?.appreciationIndex || 0;
-  const annualPropertyAppreciation = monthlyAppreciationIndex * 12;
+  const monthlyAppreciationIndex = appreciationIndex || simulationData?.formData?.appreciationIndex || 0;
+  const annualPropertyAppreciation = calculateAnnualAppreciation(monthlyAppreciationIndex);
   const totalAnnualReturn = annualRentalReturn + annualPropertyAppreciation;
 
-  console.log('Monthly Appreciation Index:', monthlyAppreciationIndex);
-  console.log('Annual Property Appreciation:', annualPropertyAppreciation);
+  console.log('Final Monthly Appreciation Index:', monthlyAppreciationIndex);
+  console.log('Final Annual Property Appreciation:', annualPropertyAppreciation);
 
   return (
     <div className="space-y-6">
@@ -357,6 +362,11 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
               <p className="text-xs text-slate-500 mt-1">
                 Baseado em {formatPercentage(monthlyAppreciationIndex)} mensal
               </p>
+              {monthlyAppreciationIndex === 0 && (
+                <p className="text-xs text-orange-600 mt-1">
+                  ⚠️ Índice de valorização não informado
+                </p>
+              )}
             </div>
             
             <div className="bg-white p-4 rounded-lg border">
