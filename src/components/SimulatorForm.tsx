@@ -21,7 +21,7 @@ import {
   calculateStartDateFromValuation
 } from "@/utils/calculationUtils";
 import { SimulationFormData, PaymentType, CorrectionMode } from "@/utils/types";
-import { saveSimulation, getSimulations, SavedSimulation } from "@/utils/simulationHistoryUtils";
+import { saveSimulation, getSimulations, SavedSimulation, getActiveSimulation } from "@/utils/simulationHistoryUtils";
 import { wouldStartDateBeInPast, formatToMonthYear, calculateInstallmentsFromValuationAndDelivery } from "@/utils/dateUtils";
 import PropertyValueInput from "./PropertyValueInput";
 import PercentageValueInput from "./PercentageValueInput";
@@ -111,7 +111,23 @@ const SimulatorForm: React.FC = () => {
   useEffect(() => {
     const savedSimulations = getSimulations();
     setSimulations(savedSimulations);
-  }, []);
+
+    // Verificar se existe uma simulação ativa e carregar automaticamente
+    const activeSimulation = getActiveSimulation();
+    if (activeSimulation) {
+      console.log('Carregando simulação ativa automaticamente:', activeSimulation.name);
+      setFormData(activeSimulation.formData);
+      setSchedule(activeSimulation.schedule);
+      setResaleResults(activeSimulation.results);
+      setBestResaleInfo(activeSimulation.bestResaleInfo);
+      setCurrentSimulation(activeSimulation);
+      
+      toast({
+        title: "Simulação ativa carregada",
+        description: `"${activeSimulation.name}" foi carregada automaticamente`,
+      });
+    }
+  }, [toast]);
 
   useEffect(() => {
     const total = calculateTotalPercentage(formData);
