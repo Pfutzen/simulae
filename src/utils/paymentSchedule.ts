@@ -55,6 +55,18 @@ export const generatePaymentSchedule = (data: SimulationFormData): PaymentType[]
     );
   }
 
+  // Calcular fator de correção para cada mês
+  const getCorrectionFactor = (monthNumber: number) => {
+    if (data.correctionMode === "manual" && data.correctionIndex > 0) {
+      return Math.pow(1 + data.correctionIndex / 100, monthNumber - 1);
+    } else if (data.correctionMode === "cub") {
+      // Aplicar CUB/SC (usar média dos últimos 12 meses)
+      const avgCubCorrection = CUB_CORRECTION_DATA.reduce((sum, item) => sum + item.percentage, 0) / CUB_CORRECTION_DATA.length;
+      return Math.pow(1 + avgCubCorrection / 100, monthNumber - 1);
+    }
+    return 1; // Sem correção
+  };
+
   // Parcelas mensais
   for (let i = 1; i <= data.installmentsCount; i++) {
     const isReinforcementMonth = reinforcementMonths.includes(i);
@@ -63,14 +75,8 @@ export const generatePaymentSchedule = (data: SimulationFormData): PaymentType[]
       : data.installmentsValue;
 
     // Aplicar correção baseada no índice escolhido
-    let correctedAmount = installmentAmount;
-    if (data.correctionMode === "manual" && data.correctionIndex > 0) {
-      correctedAmount = installmentAmount * Math.pow(1 + data.correctionIndex / 100, i - 1);
-    } else if (data.correctionMode === "cub") {
-      // Aplicar CUB/SC (usar média dos últimos 12 meses)
-      const avgCubCorrection = CUB_CORRECTION_DATA.reduce((sum, item) => sum + item.percentage, 0) / CUB_CORRECTION_DATA.length;
-      correctedAmount = installmentAmount * Math.pow(1 + avgCubCorrection / 100, i - 1);
-    }
+    const correctionFactor = getCorrectionFactor(i);
+    const correctedAmount = installmentAmount * correctionFactor;
 
     totalPaid += correctedAmount;
     balance = Math.max(0, data.propertyValue - totalPaid);
@@ -78,11 +84,16 @@ export const generatePaymentSchedule = (data: SimulationFormData): PaymentType[]
     // Calcular valor do imóvel no mês atual
     const currentPropertyValue = data.propertyValue * Math.pow(1 + data.appreciationIndex / 100, i);
 
-    const paymentType = isReinforcementMonth ? `Parcela + Reforço` : "Parcela";
+    // Melhorar a descrição das parcelas
+    let description = `Parcela ${i}`;
+    if (isReinforcementMonth) {
+      const reinforcementNumber = reinforcementMonths.indexOf(i) + 1;
+      description = `Parcela ${i} + Reforço ${reinforcementNumber}`;
+    }
 
     schedule.push({
       date: new Date(currentDate),
-      description: paymentType,
+      description,
       amount: correctedAmount,
       balance,
       totalPaid,
@@ -93,14 +104,17 @@ export const generatePaymentSchedule = (data: SimulationFormData): PaymentType[]
     currentDate = addMonthsToDate(currentDate, 1);
   }
 
-  // Chaves
+  // Chaves - aplicar correção também aqui
+  const keysCorrectionFactor = getCorrectionFactor(data.installmentsCount + 1);
+  const correctedKeysValue = data.keysValue * keysCorrectionFactor;
+  
   const finalPropertyValue = data.propertyValue * Math.pow(1 + data.appreciationIndex / 100, data.installmentsCount);
-  totalPaid += data.keysValue;
+  totalPaid += correctedKeysValue;
 
   schedule.push({
     date: deliveryDate,
     description: "Chaves",
-    amount: data.keysValue,
+    amount: correctedKeysValue,
     balance: Math.max(0, data.propertyValue - totalPaid),
     totalPaid,
     propertyValue: finalPropertyValue,
