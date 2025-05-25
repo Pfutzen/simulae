@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -166,13 +165,7 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
             </Alert>
           )}
 
-          <div className="flex justify-between">
-            <Link to="/proposta-comercial">
-              <Button variant="default" className="gap-2">
-                <FileText className="h-4 w-4" />
-                Gerar Proposta Comercial
-              </Button>
-            </Link>
+          <div className="flex justify-end">
             
             <Button 
               onClick={handleExportPDF} 
