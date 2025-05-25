@@ -51,16 +51,24 @@ export const calculateBestResaleMonth = (schedule: PaymentType[]) => {
   const bestProfitMonth = keysData.month;
 
   // Estratégia 2: Maior Percentual de Rentabilidade (penúltimo mês)
-  // Não paga as chaves, então percentualmente o lucro será maior
+  // Aplicando a fórmula correta: Lucro real = Valor de revenda - Valor pago - Saldo devedor
   const penultimateMonth = Math.max(1, schedule.length - 1);
   const penultimateMonthData = schedule[penultimateMonth - 1];
-  const maxRoiProfit = penultimateMonthData.propertyValue - penultimateMonthData.totalPaid;
+  
+  // Calcular o saldo devedor no penúltimo mês
+  // O saldo devedor é quanto ainda falta pagar do valor original do imóvel
+  const originalPropertyValue = schedule[0]?.propertyValue || 0;
+  const remainingBalance = originalPropertyValue - penultimateMonthData.totalPaid;
+  
+  // Lucro real = Valor de revenda - Valor pago - Saldo devedor
+  const maxRoiProfit = penultimateMonthData.propertyValue - penultimateMonthData.totalPaid - Math.max(0, remainingBalance);
   const maxRoi = penultimateMonthData.totalPaid > 0 
     ? (maxRoiProfit / penultimateMonthData.totalPaid) * 100 
     : 0;
   const maxRoiTotalPaid = penultimateMonthData.totalPaid;
 
   // Estratégia 3: Primeiro mês com bom percentual de lucro (≥ 60%)
+  // Aplicando a mesma fórmula correta para todos os meses
   let earlyMonth: number | undefined;
   let earlyProfit: number | undefined;
   let earlyProfitPercentage: number | undefined;
@@ -70,7 +78,11 @@ export const calculateBestResaleMonth = (schedule: PaymentType[]) => {
     const monthData = schedule[i - 1];
     
     if (monthData.totalPaid > 0 && monthData.propertyValue > 0) {
-      const profit = monthData.propertyValue - monthData.totalPaid;
+      // Calcular saldo devedor para este mês
+      const monthRemainingBalance = originalPropertyValue - monthData.totalPaid;
+      
+      // Lucro real = Valor de revenda - Valor pago - Saldo devedor
+      const profit = monthData.propertyValue - monthData.totalPaid - Math.max(0, monthRemainingBalance);
       const profitPercentage = (profit / monthData.totalPaid) * 100;
 
       // Verificar se atende o critério: lucro ≥ 60% sobre valores investidos
