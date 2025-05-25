@@ -82,8 +82,9 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
     return payment?.propertyValue || 0;
   };
 
-  // Calcular a valorização anual do imóvel (índice de valorização mensal x 12)
-  const annualPropertyAppreciation = simulationData?.appreciationIndex ? (simulationData.appreciationIndex * 12) : 0;
+  // Calcular a valorização anual do imóvel usando o índice de valorização mensal da simulação
+  const monthlyAppreciationIndex = simulationData?.formData?.appreciationIndex || 0;
+  const annualPropertyAppreciation = monthlyAppreciationIndex * 12;
   const totalAnnualReturn = annualRentalReturn + annualPropertyAppreciation;
 
   return (
