@@ -1,8 +1,7 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { ArrowLeft, FileText, Download, Copy, FileDown, RefreshCw } from "lucide-react";
+import { ArrowLeft, FileText, Download, Copy, FileDown, RefreshCw, AlertTriangle } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { SavedSimulation, getActiveSimulation, saveSimulation } from "@/utils/simulationHistoryUtils";
@@ -16,6 +15,7 @@ import { PropostaData } from "@/types/proposta";
 const PropostaComercial: React.FC = () => {
   const [activeSimulation, setActiveSimulation] = useState<SavedSimulation | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [propostagData, setPropostaData] = useState<PropostaData>({
     // Dados do comprador
     nomeCompleto: '',
@@ -41,11 +41,20 @@ const PropostaComercial: React.FC = () => {
   useEffect(() => {
     const loadActiveSimulation = () => {
       try {
+        console.log('PropostaComercial: Attempting to load active simulation...');
         const simulation = getActiveSimulation();
-        console.log('Loading active simulation in PropostaComercial:', simulation);
         
         if (simulation) {
+          console.log('PropostaComercial: Active simulation loaded successfully:', {
+            id: simulation.id,
+            name: simulation.name,
+            hasResults: !!simulation.results,
+            hasSchedule: !!simulation.schedule && simulation.schedule.length > 0,
+            appreciationIndex: simulation.appreciationIndex
+          });
+          
           setActiveSimulation(simulation);
+          
           // Se a simulação tem datas customizadas, carregar no form
           if (simulation.formData.customReinforcementDates) {
             setPropostaData(prev => ({
@@ -53,9 +62,15 @@ const PropostaComercial: React.FC = () => {
               customReinforcementDates: simulation.formData.customReinforcementDates
             }));
           }
+          
+          setLoadError(null);
+        } else {
+          console.log('PropostaComercial: No active simulation found');
+          setLoadError('Nenhuma simulação ativa encontrada');
         }
       } catch (error) {
-        console.error('Error loading active simulation:', error);
+        console.error('PropostaComercial: Error loading active simulation:', error);
+        setLoadError('Erro ao carregar simulação ativa');
         toast({
           title: "Erro ao carregar simulação",
           description: "Ocorreu um erro ao carregar a simulação ativa.",
@@ -182,7 +197,7 @@ const PropostaComercial: React.FC = () => {
     );
   }
 
-  if (!activeSimulation) {
+  if (!activeSimulation || loadError) {
     return (
       <div className="min-h-screen bg-slate-50 p-6">
         <div className="max-w-4xl mx-auto">
@@ -196,6 +211,7 @@ const PropostaComercial: React.FC = () => {
           </div>
 
           <Alert className="bg-yellow-50 border-yellow-200">
+            <AlertTriangle className="h-4 w-4" />
             <AlertDescription className="text-yellow-800">
               <strong>Nenhuma simulação ativa encontrada.</strong> Para criar uma proposta comercial, 
               você precisa ter uma simulação ativa. Volte para a página inicial e execute uma simulação primeiro.

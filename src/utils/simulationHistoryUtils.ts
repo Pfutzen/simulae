@@ -1,4 +1,3 @@
-
 import { SimulationFormData, PaymentType } from './types';
 
 export interface SavedSimulation {
@@ -38,12 +37,19 @@ const ACTIVE_SIMULATION_KEY = 'active_simulation';
 
 export const saveSimulation = (simulation: Omit<SavedSimulation, 'id'>): SavedSimulation => {
   try {
+    console.log('Saving simulation with data:', {
+      appreciationIndex: simulation.appreciationIndex,
+      formDataAppreciationIndex: simulation.formData.appreciationIndex,
+      hasResults: !!simulation.results,
+      hasSchedule: !!simulation.schedule
+    });
+    
     // Generate a unique ID for the simulation
     const id = `sim_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     
     // Ensure appreciationIndex is properly extracted and saved
-    const appreciationIndex = simulation.formData.appreciationIndex || 
-                             simulation.appreciationIndex || 
+    const appreciationIndex = simulation.appreciationIndex || 
+                             simulation.formData.appreciationIndex || 
                              0;
     
     const fullSimulation: SavedSimulation = { 
@@ -52,10 +58,12 @@ export const saveSimulation = (simulation: Omit<SavedSimulation, 'id'>): SavedSi
       appreciationIndex
     };
     
-    console.log('Saving simulation:', {
+    console.log('Full simulation being saved:', {
       id: fullSimulation.id,
+      name: fullSimulation.name,
       appreciationIndex: fullSimulation.appreciationIndex,
-      formDataAppreciationIndex: simulation.formData.appreciationIndex
+      resultsExists: !!fullSimulation.results,
+      scheduleExists: !!fullSimulation.schedule && fullSimulation.schedule.length > 0
     });
     
     const existingSimulations = getSimulations();
@@ -66,8 +74,10 @@ export const saveSimulation = (simulation: Omit<SavedSimulation, 'id'>): SavedSi
     
     localStorage.setItem(STORAGE_KEY, JSON.stringify(limitedSimulations));
     
-    // Set as active simulation
+    // Set as active simulation immediately
     setActiveSimulation(fullSimulation);
+    
+    console.log('Simulation saved successfully as active');
     
     return fullSimulation;
   } catch (error) {
@@ -79,7 +89,9 @@ export const saveSimulation = (simulation: Omit<SavedSimulation, 'id'>): SavedSi
 export const getSimulations = (): SavedSimulation[] => {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
-    return stored ? JSON.parse(stored) : [];
+    const simulations = stored ? JSON.parse(stored) : [];
+    console.log('Retrieved simulations count:', simulations.length);
+    return simulations;
   } catch (error) {
     console.error('Error loading simulations:', error);
     return [];
@@ -104,7 +116,9 @@ export const getActiveSimulation = (): SavedSimulation | null => {
     console.log('Retrieved active simulation:', {
       id: activeSimulation.id,
       name: activeSimulation.name,
-      appreciationIndex: activeSimulation.appreciationIndex
+      appreciationIndex: activeSimulation.appreciationIndex,
+      hasResults: !!activeSimulation.results,
+      hasSchedule: !!activeSimulation.schedule && activeSimulation.schedule.length > 0
     });
     
     return activeSimulation;
@@ -122,11 +136,16 @@ export const setActiveSimulation = (simulation: SavedSimulation): void => {
       appreciationIndex: simulation.appreciationIndex || simulation.formData?.appreciationIndex || 0
     };
     
-    localStorage.setItem(ACTIVE_SIMULATION_KEY, JSON.stringify(simulationToSave));
-    console.log('Active simulation saved:', {
+    console.log('Setting active simulation:', {
       id: simulationToSave.id,
-      appreciationIndex: simulationToSave.appreciationIndex
+      name: simulationToSave.name,
+      appreciationIndex: simulationToSave.appreciationIndex,
+      hasResults: !!simulationToSave.results,
+      hasSchedule: !!simulationToSave.schedule && simulationToSave.schedule.length > 0
     });
+    
+    localStorage.setItem(ACTIVE_SIMULATION_KEY, JSON.stringify(simulationToSave));
+    console.log('Active simulation saved successfully to localStorage');
   } catch (error) {
     console.error('Error setting active simulation:', error);
   }
