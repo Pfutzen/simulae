@@ -89,20 +89,27 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <TrendingUp className="h-5 w-5 text-green-600" />
-            Resultado da Revenda
+            Resultado da Revenda - Mês {resaleMonth}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
+          <div className="bg-blue-50 p-3 rounded-lg border border-blue-200 mb-4">
+            <p className="text-sm text-blue-800">
+              <strong>Mês de referência:</strong> {resaleMonth} | 
+              <strong> Fórmula aplicada:</strong> Lucro = Valor de venda - Valores pagos - Saldo devedor
+            </p>
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="bg-white p-4 rounded-lg border">
-              <p className="text-sm text-slate-600 mb-1">Valor investido</p>
+              <p className="text-sm text-slate-600 mb-1">Valor investido (pago até o mês {resaleMonth})</p>
               <p className="text-2xl font-bold text-slate-800">
                 {formatCurrency(investmentValue)}
               </p>
             </div>
             
             <div className="bg-white p-4 rounded-lg border">
-              <p className="text-sm text-slate-600 mb-1">Valor do imóvel (revenda)</p>
+              <p className="text-sm text-slate-600 mb-1">Valor do imóvel (revenda mês {resaleMonth})</p>
               <p className="text-2xl font-bold text-green-600">
                 {formatCurrency(propertyValue)}
               </p>
@@ -111,18 +118,25 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="bg-white p-4 rounded-lg border">
-              <p className="text-sm text-slate-600 mb-1">Lucro obtido</p>
-              <p className="text-2xl font-bold text-green-600">
-                {formatCurrency(profit)}
+              <p className="text-sm text-slate-600 mb-1">Saldo devedor (mês {resaleMonth})</p>
+              <p className="text-2xl font-bold text-orange-600">
+                {formatCurrency(remainingBalance)}
               </p>
             </div>
             
             <div className="bg-white p-4 rounded-lg border">
-              <p className="text-sm text-slate-600 mb-1">Lucratividade</p>
-              <p className="text-2xl font-bold text-green-600">
-                {formatPercentage(profitPercentage)}
+              <p className="text-sm text-slate-600 mb-1">Lucro líquido obtido</p>
+              <p className={`text-2xl font-bold ${profit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                {formatCurrency(profit)}
               </p>
             </div>
+          </div>
+
+          <div className="bg-white p-4 rounded-lg border">
+            <p className="text-sm text-slate-600 mb-1">Lucratividade sobre valor investido</p>
+            <p className={`text-2xl font-bold ${profitPercentage >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+              {formatPercentage(profitPercentage)}
+            </p>
           </div>
 
           {remainingBalance > 0 && (
@@ -130,7 +144,8 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
               <AlertCircle className="h-4 w-4 text-red-600" />
               <AlertDescription className="text-red-800">
                 <strong>Atenção:</strong> ainda há um saldo devedor de{" "}
-                {formatCurrency(remainingBalance)} após {resaleMonth} meses.
+                {formatCurrency(remainingBalance)} no mês {resaleMonth}.
+                Este valor foi descontado do cálculo de lucro.
               </AlertDescription>
             </Alert>
           )}

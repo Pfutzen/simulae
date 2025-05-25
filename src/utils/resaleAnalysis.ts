@@ -5,11 +5,43 @@ export const calculateResaleProfit = (
   schedule: PaymentType[],
   resaleMonth: number
 ) => {
-  const investmentValue = schedule.reduce((acc, payment) => acc + payment.amount, 0);
-  const propertyValue = schedule[resaleMonth - 1]?.propertyValue || 0;
-  const remainingBalance = schedule[schedule.length - 1]?.balance || 0;
+  if (schedule.length === 0 || resaleMonth <= 0) {
+    return {
+      investmentValue: 0,
+      propertyValue: 0,
+      profit: 0,
+      profitPercentage: 0,
+      remainingBalance: 0
+    };
+  }
+
+  // Encontrar o pagamento do mês de referência
+  const resalePayment = schedule.find(payment => payment.month === resaleMonth);
+  
+  if (!resalePayment) {
+    return {
+      investmentValue: 0,
+      propertyValue: 0,
+      profit: 0,
+      profitPercentage: 0,
+      remainingBalance: 0
+    };
+  }
+
+  // Valor investido = total pago até o mês de referência
+  const investmentValue = resalePayment.totalPaid;
+  
+  // Valor do imóvel no mês de referência
+  const propertyValue = resalePayment.propertyValue;
+  
+  // Saldo devedor no mês de referência
+  const remainingBalance = resalePayment.balance;
+  
+  // Lucro = Valor de venda - Valores pagos - Saldo devedor
   const profit = propertyValue - investmentValue - remainingBalance;
-  const profitPercentage = (profit / investmentValue) * 100;
+  
+  // Percentual de lucro sobre o valor investido
+  const profitPercentage = investmentValue > 0 ? (profit / investmentValue) * 100 : 0;
 
   return {
     investmentValue,
