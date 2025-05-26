@@ -1,8 +1,8 @@
 
 import jsPDF from 'jspdf';
 import { SavedSimulation } from './simulationHistoryUtils';
-import { formatCurrency, formatPercentage } from './formatUtils';
-import { calculateRentalEstimate } from './calculationHelpers';
+import { formatCurrency, formatPercentage } from './calculationUtils';
+import { calculateRentalEstimate } from './calculationUtils';
 import { formatDateBR } from './dateUtils';
 
 // Function to export the simulation to a PDF
@@ -30,16 +30,12 @@ export function exportToPdf(simulation: SavedSimulation): void {
   doc.text(`Nome: ${simulation.name}`, 20, headerY + 10);
   doc.text(`Data: ${new Intl.DateTimeFormat('pt-BR').format(simulation.timestamp)}`, 20, headerY + 15);
   
-  // Add start date and delivery date if available - FIX: ensure dates are Date objects
+  // Add start date and delivery date if available
   if (simulation.formData.startDate) {
-    const startDate = typeof simulation.formData.startDate === 'string' 
-      ? new Date(simulation.formData.startDate) 
-      : simulation.formData.startDate;
-    
-    doc.text(`Data inicial: ${formatDateBR(startDate)}`, 20, headerY + 20);
+    doc.text(`Data inicial: ${formatDateBR(simulation.formData.startDate)}`, 20, headerY + 20);
     
     // Calculate delivery date
-    const deliveryDate = new Date(startDate);
+    const deliveryDate = new Date(simulation.formData.startDate);
     deliveryDate.setMonth(deliveryDate.getMonth() + simulation.formData.installmentsCount + 1);
     doc.text(`Data de entrega: ${formatDateBR(deliveryDate)}`, 20, headerY + 25);
   }

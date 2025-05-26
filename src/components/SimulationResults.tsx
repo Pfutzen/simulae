@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -174,6 +175,18 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
               </AlertDescription>
             </Alert>
           )}
+
+          <div className="flex justify-end">
+            <Button 
+              onClick={handleExportPDF} 
+              variant="secondary"
+              className="gap-2"
+              disabled={!simulationData}
+            >
+              <Download className="h-4 w-4" />
+              Exportar PDF
+            </Button>
+          </div>
         </CardContent>
       </Card>
 
