@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -586,6 +587,31 @@ const SimulatorForm: React.FC = () => {
         </TabsList>
         
         <TabsContent value="simulator" className="space-y-8">
+          {/* Campo de nome da simulação no topo */}
+          <Card className="shadow">
+            <CardContent className="pt-6">
+              <div className="space-y-4">
+                <div className="text-center">
+                  <Label htmlFor="simulation-name-top" className="text-lg font-semibold text-slate-800">
+                    Nome da Simulação
+                  </Label>
+                  <Input
+                    id="simulation-name-top"
+                    placeholder="Digite o nome da sua simulação"
+                    value={simulationName}
+                    onChange={handleSimulationNameChange}
+                    className="mt-2 text-center text-lg font-medium"
+                  />
+                  {!simulationName.trim() && schedule.length > 0 && (
+                    <p className="text-sm text-amber-600 mt-2">
+                      ⚠️ Nome obrigatório para exportar PDF
+                    </p>
+                  )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
           <Card className="shadow">
             <CardContent className="pt-6">
               <div className="space-y-8">
@@ -882,17 +908,6 @@ const SimulatorForm: React.FC = () => {
                 </div>
                 
                 <div className="pt-4">
-                  <div className="mb-4">
-                    <Label htmlFor="simulation-name">Nome da Simulação</Label>
-                    <Input
-                      id="simulation-name"
-                      placeholder="Ex: Cliente João - Apto 802"
-                      value={simulationName}
-                      onChange={handleSimulationNameChange}
-                      className="mt-1"
-                    />
-                  </div>
-                  
                   <div className="flex flex-col sm:flex-row gap-3 justify-center">
                     <Button 
                       onClick={handleSimulate} 
@@ -943,7 +958,8 @@ const SimulatorForm: React.FC = () => {
               rentalEstimate={resaleResults.rentalEstimate}
               annualRentalReturn={resaleResults.annualRentalReturn}
               appreciationIndex={formData.appreciationIndex}
-              formData={formData} // Pass formData to SimulationResults
+              formData={formData}
+              simulationName={simulationName} // Pass simulation name to results
               {...resaleResults}
             />
           )}
