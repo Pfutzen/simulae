@@ -102,10 +102,28 @@ export const getCubCorrectionForDate = (date: Date): number => {
 };
 
 // Função para verificar se uma data é retroativa (anterior ao mês atual)
-export const isRetroactiveDate = (startDate: Date): boolean => {
+export const isRetroactiveDate = (startDate: Date | string): boolean => {
+  // Garantir que temos um objeto Date válido
+  let dateObj: Date;
+  
+  if (typeof startDate === 'string') {
+    dateObj = new Date(startDate);
+  } else if (startDate instanceof Date) {
+    dateObj = startDate;
+  } else {
+    console.error('isRetroactiveDate: Invalid date provided', startDate);
+    return false;
+  }
+  
+  // Verificar se a data é válida
+  if (isNaN(dateObj.getTime())) {
+    console.error('isRetroactiveDate: Invalid date object', startDate);
+    return false;
+  }
+  
   const now = new Date();
   const currentYearMonth = now.getFullYear() * 100 + (now.getMonth() + 1);
-  const startYearMonth = startDate.getFullYear() * 100 + (startDate.getMonth() + 1);
+  const startYearMonth = dateObj.getFullYear() * 100 + (dateObj.getMonth() + 1);
   
   return startYearMonth < currentYearMonth;
 };

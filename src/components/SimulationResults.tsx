@@ -209,7 +209,6 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
       <ResultsChart 
         schedule={schedule}
         resaleMonth={resaleMonth}
-        appreciationIndex={appreciationIndex}
       />
 
       {/* Botão de Exportar PDF */}
