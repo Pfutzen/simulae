@@ -4,6 +4,7 @@ import { SavedSimulation } from './simulationHistoryUtils';
 import { formatCurrency, formatPercentage } from './calculationUtils';
 import { calculateRentalEstimate } from './calculationUtils';
 import { formatDateBR } from './dateUtils';
+import { CUB_CORRECTION_DATA } from './correctionData';
 
 // Function to export the simulation to a PDF
 export function exportToPdf(simulation: SavedSimulation): void {
@@ -83,7 +84,14 @@ export function exportToPdf(simulation: SavedSimulation): void {
   
   yPos += 5;
   
-  doc.text(`Correção: ${formatPercentage(simulation.formData.correctionIndex/100)} ao mês`, 20, yPos);
+  // Display correction based on mode
+  if (simulation.formData.correctionMode === "cub") {
+    // Calculate average CUB/SC correction
+    const avgCubCorrection = CUB_CORRECTION_DATA.reduce((sum, item) => sum + item.percentage, 0) / CUB_CORRECTION_DATA.length;
+    doc.text(`Correção: CUB/SC (média ${formatPercentage(avgCubCorrection/100)} ao mês)`, 20, yPos);
+  } else {
+    doc.text(`Correção: ${formatPercentage(simulation.formData.correctionIndex/100)} ao mês`, 20, yPos);
+  }
   
   yPos += 5;
   
