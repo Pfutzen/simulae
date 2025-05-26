@@ -29,6 +29,7 @@ import { calculateAnnualAppreciation, calculateRentalEstimate } from "@/utils/ca
 import ResultsChart from "./ResultsChart";
 import FinancingSimulator from "./FinancingSimulator";
 import { exportScheduleToCSV, exportScheduleToExcel, exportScheduleToPDF } from "@/utils/scheduleExport";
+import { SimulationFormData } from "@/utils/types";
 
 interface SimulationResultsProps {
   schedule: PaymentType[];
@@ -56,7 +57,8 @@ interface SimulationResultsProps {
   rentalPercentage: number;
   rentalEstimate: number;
   annualRentalReturn: number;
-  appreciationIndex?: number; // Add this prop to directly receive the appreciation index
+  appreciationIndex?: number;
+  formData?: SimulationFormData; // Add formData as a prop
 }
 
 const SimulationResults: React.FC<SimulationResultsProps> = ({
@@ -72,12 +74,31 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
   rentalPercentage,
   rentalEstimate,
   annualRentalReturn,
-  appreciationIndex
+  appreciationIndex,
+  formData
 }) => {
   const handleExportPDF = () => {
-    if (simulationData) {
-      generatePDF(simulationData);
-    }
+    // Create a temporary simulation object if no saved simulation exists
+    const simulationToExport = simulationData || {
+      id: 'temp',
+      name: 'Simulação Atual',
+      timestamp: Date.now(),
+      formData: formData!,
+      schedule: schedule,
+      results: {
+        investmentValue,
+        propertyValue,
+        profit,
+        profitPercentage,
+        remainingBalance,
+        rentalEstimate,
+        annualRentalReturn
+      },
+      bestResaleInfo,
+      appreciationIndex: appreciationIndex || formData?.appreciationIndex || 0
+    };
+    
+    generatePDF(simulationToExport);
   };
 
   const handleExportScheduleCSV = () => {
@@ -203,7 +224,7 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
               onClick={handleExportPDF} 
               variant="secondary"
               className="gap-2"
-              disabled={!simulationData}
+              disabled={!formData && !simulationData} // Only disable if both are missing
             >
               <Download className="h-4 w-4" />
               Exportar PDF
