@@ -30,12 +30,16 @@ export function exportToPdf(simulation: SavedSimulation): void {
   doc.text(`Nome: ${simulation.name}`, 20, headerY + 10);
   doc.text(`Data: ${new Intl.DateTimeFormat('pt-BR').format(simulation.timestamp)}`, 20, headerY + 15);
   
-  // Add start date and delivery date if available
+  // Add start date and delivery date if available - FIX: ensure dates are Date objects
   if (simulation.formData.startDate) {
-    doc.text(`Data inicial: ${formatDateBR(simulation.formData.startDate)}`, 20, headerY + 20);
+    const startDate = typeof simulation.formData.startDate === 'string' 
+      ? new Date(simulation.formData.startDate) 
+      : simulation.formData.startDate;
+    
+    doc.text(`Data inicial: ${formatDateBR(startDate)}`, 20, headerY + 20);
     
     // Calculate delivery date
-    const deliveryDate = new Date(simulation.formData.startDate);
+    const deliveryDate = new Date(startDate);
     deliveryDate.setMonth(deliveryDate.getMonth() + simulation.formData.installmentsCount + 1);
     doc.text(`Data de entrega: ${formatDateBR(deliveryDate)}`, 20, headerY + 25);
   }
