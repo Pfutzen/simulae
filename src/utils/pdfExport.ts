@@ -1,4 +1,3 @@
-
 import jsPDF from 'jspdf';
 import { SavedSimulation } from './simulationHistoryUtils';
 import { formatCurrency, formatPercentage } from './calculationUtils';
@@ -7,7 +6,7 @@ import { formatDateBR } from './dateUtils';
 import { CUB_CORRECTION_DATA } from './correctionData';
 
 // Function to export the simulation to a PDF
-export function exportToPdf(simulation: SavedSimulation): void {
+export function exportToPdf(simulation: SavedSimulation, simulationName?: string): void {
   const doc = new jsPDF({
     orientation: 'portrait',
     unit: 'mm',
@@ -21,7 +20,16 @@ export function exportToPdf(simulation: SavedSimulation): void {
   
   doc.addImage("/lovable-uploads/c2a68237-fb14-4957-891c-3d3581836ace.png", "PNG", logoX, 10, logoWidth, logoHeight);
   
-  const headerY = logoHeight + 15;
+  let headerY = logoHeight + 15;
+  
+  // Add simulation name if provided
+  if (simulationName) {
+    doc.setFontSize(18);
+    doc.setFont("helvetica", "bold");
+    doc.text(simulationName, pageWidth / 2, headerY, { align: "center" });
+    headerY += 10;
+  }
+  
   doc.setFontSize(16);
   doc.setFont("helvetica", "bold");
   doc.text("Relatório de Simulação", pageWidth / 2, headerY, { align: "center" });
