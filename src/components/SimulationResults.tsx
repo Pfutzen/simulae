@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -24,7 +25,7 @@ import { formatDateForDisplay } from "@/utils/dateUtils";
 import { PaymentType } from "@/utils/calculationUtils";
 import { SavedSimulation } from "@/utils/simulationHistoryUtils";
 import { generatePDF } from "@/utils/pdfExport";
-import { calculateAnnualAppreciation } from "@/utils/calculationHelpers";
+import { calculateAnnualAppreciation, calculateRentalEstimate } from "@/utils/calculationHelpers";
 import ResultsChart from "./ResultsChart";
 import FinancingSimulator from "./FinancingSimulator";
 
@@ -84,6 +85,14 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
     return payment?.propertyValue || 0;
   };
 
+  // Get the property value at delivery (last month in the schedule)
+  const deliveryPropertyValue = schedule.length > 0 ? schedule[schedule.length - 1].propertyValue : propertyValue;
+  
+  // Calculate the correct rental estimate based on delivery property value
+  const correctRentalCalculation = calculateRentalEstimate(deliveryPropertyValue, rentalPercentage);
+  const correctedRentalEstimate = correctRentalCalculation.rentalEstimate;
+  const correctedAnnualRentalReturn = correctRentalCalculation.annualRentalReturn;
+
   // Get the appreciation index from multiple sources (prop, simulationData, or default)
   console.log('SimulationData:', simulationData);
   console.log('FormData:', simulationData?.formData);
@@ -92,10 +101,12 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
   
   const monthlyAppreciationIndex = appreciationIndex || simulationData?.formData?.appreciationIndex || 0;
   const annualPropertyAppreciation = calculateAnnualAppreciation(monthlyAppreciationIndex);
-  const totalAnnualReturn = annualRentalReturn + annualPropertyAppreciation;
+  const totalAnnualReturn = correctedAnnualRentalReturn + annualPropertyAppreciation;
 
   console.log('Final Monthly Appreciation Index:', monthlyAppreciationIndex);
   console.log('Final Annual Property Appreciation:', annualPropertyAppreciation);
+  console.log('Delivery Property Value:', deliveryPropertyValue);
+  console.log('Corrected Rental Estimate:', correctedRentalEstimate);
 
   return (
     <div className="space-y-6">
@@ -166,7 +177,6 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
           )}
 
           <div className="flex justify-end">
-            
             <Button 
               onClick={handleExportPDF} 
               variant="secondary"
@@ -330,18 +340,27 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
+          <div className="bg-blue-50 p-3 rounded-lg border border-blue-200 mb-4">
+            <p className="text-sm text-blue-800">
+              <strong>Base de cálculo:</strong> Valor do imóvel na entrega (mês {schedule.length > 0 ? schedule[schedule.length - 1].month : 'N/A'}) - {formatCurrency(deliveryPropertyValue)}
+            </p>
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="bg-white p-4 rounded-lg border">
               <p className="text-sm text-slate-600 mb-1">Aluguel mensal estimado</p>
               <p className="text-2xl font-bold text-purple-600">
-                {formatCurrency(rentalEstimate)}
+                {formatCurrency(correctedRentalEstimate)}
+              </p>
+              <p className="text-xs text-slate-500 mt-1">
+                {formatPercentage(rentalPercentage)} do valor na entrega
               </p>
             </div>
             
             <div className="bg-white p-4 rounded-lg border">
               <p className="text-sm text-slate-600 mb-1">Retorno anual do aluguel</p>
               <p className="text-2xl font-bold text-purple-600">
-                {formatPercentage(annualRentalReturn)}
+                {formatPercentage(correctedAnnualRentalReturn)}
               </p>
             </div>
           </div>
