@@ -28,7 +28,7 @@ import { generatePDF } from "@/utils/pdfExport";
 import { calculateAnnualAppreciation, calculateRentalEstimate } from "@/utils/calculationHelpers";
 import ResultsChart from "./ResultsChart";
 import FinancingSimulator from "./FinancingSimulator";
-import { exportScheduleToCSV, exportScheduleToExcel } from "@/utils/scheduleExport";
+import { exportScheduleToCSV, exportScheduleToExcel, exportScheduleToPDF } from "@/utils/scheduleExport";
 
 interface SimulationResultsProps {
   schedule: PaymentType[];
@@ -92,6 +92,13 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
       ? `cronograma-${simulationData.name.toLowerCase().replace(/\s+/g, '-')}`
       : 'cronograma-pagamentos';
     exportScheduleToExcel(schedule, fileName);
+  };
+
+  const handleExportSchedulePDF = () => {
+    const fileName = simulationData?.name 
+      ? `cronograma-${simulationData.name.toLowerCase().replace(/\s+/g, '-')}`
+      : 'cronograma-pagamentos';
+    exportScheduleToPDF(schedule, fileName);
   };
 
   // Helper function to get property value at specific month
@@ -422,7 +429,7 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
                 className="gap-2"
               >
                 <FileText className="h-4 w-4" />
-                Exportar CSV
+                CSV
               </Button>
               <Button
                 onClick={handleExportScheduleExcel}
@@ -431,7 +438,16 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
                 className="gap-2"
               >
                 <FileSpreadsheet className="h-4 w-4" />
-                Exportar Excel
+                Excel
+              </Button>
+              <Button
+                onClick={handleExportSchedulePDF}
+                variant="outline"
+                size="sm"
+                className="gap-2"
+              >
+                <FileText className="h-4 w-4" />
+                PDF
               </Button>
             </div>
           </div>
