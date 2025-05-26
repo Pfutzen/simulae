@@ -1,8 +1,8 @@
 
 import jsPDF from 'jspdf';
 import { SavedSimulation } from './simulationHistoryUtils';
-import { formatCurrency, formatPercentage } from './calculationUtils';
-import { calculateRentalEstimate } from './calculationUtils';
+import { formatCurrency, formatPercentage } from './formatUtils';
+import { calculateRentalEstimate } from './calculationHelpers';
 import { formatDateBR } from './dateUtils';
 
 // Function to export the simulation to a PDF
