@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -17,7 +16,8 @@ import {
   FileText,
   Percent,
   CreditCard,
-  Building
+  Building,
+  FileSpreadsheet
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { formatCurrency, formatPercentage } from "@/utils/formatUtils";
@@ -28,6 +28,7 @@ import { generatePDF } from "@/utils/pdfExport";
 import { calculateAnnualAppreciation, calculateRentalEstimate } from "@/utils/calculationHelpers";
 import ResultsChart from "./ResultsChart";
 import FinancingSimulator from "./FinancingSimulator";
+import { exportScheduleToCSV, exportScheduleToExcel } from "@/utils/scheduleExport";
 
 interface SimulationResultsProps {
   schedule: PaymentType[];
@@ -77,6 +78,20 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
     if (simulationData) {
       generatePDF(simulationData);
     }
+  };
+
+  const handleExportScheduleCSV = () => {
+    const fileName = simulationData?.name 
+      ? `cronograma-${simulationData.name.toLowerCase().replace(/\s+/g, '-')}`
+      : 'cronograma-pagamentos';
+    exportScheduleToCSV(schedule, fileName);
+  };
+
+  const handleExportScheduleExcel = () => {
+    const fileName = simulationData?.name 
+      ? `cronograma-${simulationData.name.toLowerCase().replace(/\s+/g, '-')}`
+      : 'cronograma-pagamentos';
+    exportScheduleToExcel(schedule, fileName);
   };
 
   // Helper function to get property value at specific month
@@ -394,10 +409,32 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
       {/* Cronograma de Pagamentos */}
       <Card className="shadow">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Calendar className="h-5 w-5 text-blue-600" />
-            Cronograma de Pagamentos
-          </CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center gap-2">
+              <Calendar className="h-5 w-5 text-blue-600" />
+              Cronograma de Pagamentos
+            </CardTitle>
+            <div className="flex gap-2">
+              <Button
+                onClick={handleExportScheduleCSV}
+                variant="outline"
+                size="sm"
+                className="gap-2"
+              >
+                <FileText className="h-4 w-4" />
+                Exportar CSV
+              </Button>
+              <Button
+                onClick={handleExportScheduleExcel}
+                variant="outline"
+                size="sm"
+                className="gap-2"
+              >
+                <FileSpreadsheet className="h-4 w-4" />
+                Exportar Excel
+              </Button>
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
