@@ -1,3 +1,4 @@
+
 import jsPDF from 'jspdf';
 import { SavedSimulation } from './simulationHistoryUtils';
 import { formatCurrency, formatPercentage } from './calculationUtils';
@@ -25,26 +26,22 @@ export function exportToPdf(simulation: SavedSimulation): void {
   doc.setFont("helvetica", "bold");
   doc.text("Relatório de Simulação", pageWidth / 2, headerY, { align: "center" });
   
-  // Add simulation name as a prominent title
-  doc.setFontSize(14);
-  doc.setFont("helvetica", "bold");
-  doc.text(simulation.name, pageWidth / 2, headerY + 8, { align: "center" });
-  
   doc.setFontSize(12);
   doc.setFont("helvetica", "normal");
-  doc.text(`Data: ${new Intl.DateTimeFormat('pt-BR').format(simulation.timestamp)}`, 20, headerY + 18);
+  doc.text(`Nome: ${simulation.name}`, 20, headerY + 10);
+  doc.text(`Data: ${new Intl.DateTimeFormat('pt-BR').format(simulation.timestamp)}`, 20, headerY + 15);
   
   // Add start date and delivery date if available
   if (simulation.formData.startDate) {
-    doc.text(`Data inicial: ${formatDateBR(simulation.formData.startDate)}`, 20, headerY + 23);
+    doc.text(`Data inicial: ${formatDateBR(simulation.formData.startDate)}`, 20, headerY + 20);
     
     // Calculate delivery date
     const deliveryDate = new Date(simulation.formData.startDate);
     deliveryDate.setMonth(deliveryDate.getMonth() + simulation.formData.installmentsCount + 1);
-    doc.text(`Data de entrega: ${formatDateBR(deliveryDate)}`, 20, headerY + 28);
+    doc.text(`Data de entrega: ${formatDateBR(deliveryDate)}`, 20, headerY + 25);
   }
   
-  const lineY = simulation.formData.startDate ? headerY + 33 : headerY + 23;
+  const lineY = simulation.formData.startDate ? headerY + 30 : headerY + 20;
   doc.setDrawColor(200, 200, 200);
   doc.line(20, lineY, pageWidth - 20, lineY);
   
@@ -223,16 +220,8 @@ export function exportToPdf(simulation: SavedSimulation): void {
     }
   }
   
-  // Generate filename based on simulation name
-  const sanitizedName = simulation.name
-    .replace(/[^a-zA-Z0-9\s]/g, '') // Remove special characters
-    .replace(/\s+/g, '-') // Replace spaces with hyphens
-    .toLowerCase();
-  
-  const fileName = sanitizedName ? `simulacao-${sanitizedName}.pdf` : `simulae_${simulation.id}.pdf`;
-  
   // Save the PDF
-  doc.save(fileName);
+  doc.save(`simulae_${simulation.id}.pdf`);
 }
 
 // Helper function to get the delivery property value
