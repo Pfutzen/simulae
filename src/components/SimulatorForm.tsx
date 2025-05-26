@@ -2,9 +2,8 @@ import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Download, RefreshCw, AlertTriangle } from "lucide-react";
+import { RefreshCw, AlertTriangle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { generatePDF } from "@/utils/pdfExport";
 import {
   Form,
   FormControl,
@@ -176,13 +175,20 @@ const SimulatorForm: React.FC = () => {
       setResults(resaleResults);
       setBestResaleInfo(calculatedBestResaleInfo);
 
+      // Add rental estimates to the results
+      const resultsWithRental = {
+        ...resaleResults,
+        rentalEstimate: 0,
+        annualRentalReturn: 0,
+      };
+
       // Save simulation data with proper typing
       const simulationData = {
         name: "Simulação",
         timestamp: Date.now(),
         formData: simulationFormData,
         schedule: calculatedSchedule,
-        results: resaleResults,
+        results: resultsWithRental,
         bestResaleInfo: calculatedBestResaleInfo,
         appreciationIndex: values.appreciationIndex
       };
@@ -317,7 +323,7 @@ const SimulatorForm: React.FC = () => {
                         <Input type="number" placeholder="10%" {...field} onChange={(e) => field.onChange(Number(e.target.value))} />
                       </FormControl>
                       <FormMessage />
-                    </FormItem>
+                    FormItem>
                   )}
                 />
 
@@ -454,8 +460,8 @@ const SimulatorForm: React.FC = () => {
 
       {results && (
         <div className="mt-8 space-y-6">
-          {/* Botões de ação organizados */}
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          {/* Botão de ação */}
+          <div className="flex justify-center">
             <PropostaButton
               simulation={currentSimulation}
               schedule={schedule}
@@ -464,26 +470,6 @@ const SimulatorForm: React.FC = () => {
               formData={form.getValues()}
               appreciationIndex={form.getValues().appreciationIndex}
             />
-            
-            <Button
-              onClick={() => {
-                if (currentSimulation) {
-                  console.log('Exportando PDF para simulação:', currentSimulation.id);
-                  generatePDF(currentSimulation);
-                } else {
-                  toast({
-                    title: "Simulação necessária",
-                    description: "Execute uma simulação antes de exportar o PDF.",
-                    variant: "destructive"
-                  });
-                }
-              }}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-6 text-lg w-full sm:w-auto gap-2"
-              disabled={!currentSimulation}
-            >
-              <Download className="h-5 w-5" />
-              Exportar PDF
-            </Button>
           </div>
 
           <SimulationResults
