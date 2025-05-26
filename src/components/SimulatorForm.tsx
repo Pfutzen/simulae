@@ -34,12 +34,13 @@ import * as z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { formatCurrency, formatPercentage } from "@/utils/formatUtils";
-import { calculateSchedule } from "@/utils/calculationUtils";
-import { SimulationResults } from ".";
-import { PropostaButton } from ".";
+import { generatePaymentSchedule } from "@/utils/paymentSchedule";
+import { calculateResaleAnalysis } from "@/utils/resaleAnalysis";
+import { SimulationResults } from "@/components/SimulationResults";
+import { PropostaButton } from "@/components/PropostaButton";
 import {
   saveSimulation,
-  getSimulation,
+  getSimulations,
   SavedSimulation,
 } from "@/utils/simulationHistoryUtils";
 import { useSearchParams } from "react-router-dom";
@@ -74,7 +75,8 @@ const SimulatorForm: React.FC = () => {
   useEffect(() => {
     const simulationId = searchParams.get('simulationId');
     if (simulationId) {
-      const loadedSimulation = getSimulation(simulationId);
+      const simulations = getSimulations();
+      const loadedSimulation = simulations.find(sim => sim.id === simulationId);
       if (loadedSimulation) {
         setCurrentSimulation(loadedSimulation);
         form.reset(loadedSimulation.formData);
@@ -131,16 +133,42 @@ const SimulatorForm: React.FC = () => {
     setBestResaleInfo(null);
 
     try {
-      const { schedule: calculatedSchedule, resaleResults, bestResaleInfo: calculatedBestResaleInfo } = calculateSchedule(values);
+      // Convert form data to simulation format
+      const simulationFormData = {
+        ...values,
+        downPaymentValue: values.propertyValue * (values.downPaymentPercentage / 100),
+        installmentsPercentage: 0,
+        reinforcementsPercentage: 0,
+        finalMonthsWithoutReinforcement: 0,
+        correctionMode: "manual" as const,
+        deliveryDate: new Date(values.startDate.getTime() + values.installmentsCount * 30 * 24 * 60 * 60 * 1000),
+        valuationDate: values.startDate,
+      };
+
+      const calculatedSchedule = generatePaymentSchedule(simulationFormData);
+      const resaleResults = calculateResaleAnalysis(calculatedSchedule, values.resaleMonth, values.appreciationIndex);
+      
+      // Calculate best resale info
+      const calculatedBestResaleInfo = {
+        bestProfitMonth: values.resaleMonth,
+        maxProfit: resaleResults.profit,
+        maxProfitPercentage: resaleResults.profitPercentage,
+        maxProfitTotalPaid: resaleResults.investmentValue,
+        bestRoiMonth: values.resaleMonth,
+        maxRoi: resaleResults.profitPercentage,
+        maxRoiProfit: resaleResults.profit,
+        maxRoiTotalPaid: resaleResults.investmentValue,
+      };
+
       setSchedule(calculatedSchedule);
       setResults(resaleResults);
       setBestResaleInfo(calculatedBestResaleInfo);
 
-      // Save simulation data
+      // Save simulation data with proper typing
       const simulationData = {
         name: "Simulação",
         timestamp: Date.now(),
-        formData: values,
+        formData: simulationFormData,
         schedule: calculatedSchedule,
         results: resaleResults,
         bestResaleInfo: calculatedBestResaleInfo,
@@ -175,6 +203,7 @@ const SimulatorForm: React.FC = () => {
         <CardContent className="grid gap-6">
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+              
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
