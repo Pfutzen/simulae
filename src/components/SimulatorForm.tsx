@@ -35,9 +35,9 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { formatCurrency, formatPercentage } from "@/utils/formatUtils";
 import { generatePaymentSchedule } from "@/utils/paymentSchedule";
-import { calculateResaleAnalysis } from "@/utils/resaleAnalysis";
-import { SimulationResults } from "@/components/SimulationResults";
-import { PropostaButton } from "@/components/PropostaButton";
+import { calculateResaleProfit } from "@/utils/resaleAnalysis";
+import SimulationResults from "@/components/SimulationResults";
+import PropostaButton from "@/components/PropostaButton";
 import {
   saveSimulation,
   getSimulations,
@@ -135,18 +135,30 @@ const SimulatorForm: React.FC = () => {
     try {
       // Convert form data to simulation format
       const simulationFormData = {
-        ...values,
+        propertyValue: values.propertyValue,
         downPaymentValue: values.propertyValue * (values.downPaymentPercentage / 100),
+        downPaymentPercentage: values.downPaymentPercentage,
+        installmentsValue: values.installmentsValue,
         installmentsPercentage: 0,
+        installmentsCount: values.installmentsCount,
+        reinforcementsValue: values.reinforcementsValue,
         reinforcementsPercentage: 0,
+        reinforcementFrequency: values.reinforcementFrequency,
         finalMonthsWithoutReinforcement: 0,
+        keysValue: values.keysValue,
+        keysPercentage: values.keysPercentage,
         correctionMode: "manual" as const,
+        correctionIndex: values.correctionIndex,
+        appreciationIndex: values.appreciationIndex,
+        resaleMonth: values.resaleMonth,
+        rentalPercentage: values.rentalPercentage,
+        startDate: values.startDate,
         deliveryDate: new Date(values.startDate.getTime() + values.installmentsCount * 30 * 24 * 60 * 60 * 1000),
         valuationDate: values.startDate,
       };
 
       const calculatedSchedule = generatePaymentSchedule(simulationFormData);
-      const resaleResults = calculateResaleAnalysis(calculatedSchedule, values.resaleMonth, values.appreciationIndex);
+      const resaleResults = calculateResaleProfit(calculatedSchedule, values.resaleMonth);
       
       // Calculate best resale info
       const calculatedBestResaleInfo = {
