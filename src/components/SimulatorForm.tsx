@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -119,11 +120,6 @@ const SimulatorForm: React.FC = () => {
 
   // Calculate down payment value based on property value and percentage
   const downPaymentValue = propertyValue && downPaymentPercentage ? (propertyValue * (downPaymentPercentage / 100)) : 0;
-
-  // Update form values when downPaymentValue changes
-  useEffect(() => {
-    form.setValue("downPaymentValue", downPaymentValue);
-  }, [downPaymentValue, form]);
 
   function onSubmit(values: z.infer<typeof formSchema>) {
     setIsCalculating(true);
@@ -323,7 +319,7 @@ const SimulatorForm: React.FC = () => {
                         <Input type="number" placeholder="10%" {...field} onChange={(e) => field.onChange(Number(e.target.value))} />
                       </FormControl>
                       <FormMessage />
-                    FormItem>
+                    </FormItem>
                   )}
                 />
 
