@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
@@ -143,7 +144,7 @@ const PropostaPreview: React.FC<PropostaPreviewProps> = ({ data, simulation }) =
           </h3>
           <p className="text-xs text-amber-700 leading-relaxed">
             Os valores apresentados acima são nominais. Toda a composição será corrigida 
-            mensalmente pelo índice CUB acumulado (média dos últimos 12 meses) até a 
+            mensalmente pelo índice CUB/SC acumulado (média dos últimos 12 meses) até a 
             data de vencimento de cada parcela, conforme política vigente da construtora.
           </p>
         </div>

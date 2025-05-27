@@ -168,7 +168,7 @@ export const generatePropostaPDF = (data: PropostaData, simulation: SavedSimulat
 
   doc.setFontSize(10);
   doc.setFont("helvetica", "normal");
-  const correcaoText = "Os valores apresentados acima são nominais. Toda a composição será corrigida mensalmente pelo índice CUB acumulado (média dos últimos 12 meses) até a data de vencimento de cada parcela, conforme política vigente da construtora.";
+  const correcaoText = "Os valores apresentados acima são nominais. Toda a composição será corrigida mensalmente pelo índice CUB/SC acumulado (média dos últimos 12 meses) até a data de vencimento de cada parcela, conforme política vigente da construtora.";
   
   const splitText = doc.splitTextToSize(correcaoText, pageWidth - (margin * 2));
   doc.text(splitText, margin, yPos);
