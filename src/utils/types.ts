@@ -1,4 +1,5 @@
 
+
 export type CorrectionMode = "manual" | "cub";
 
 export interface SimulationFormData {
@@ -23,6 +24,13 @@ export interface SimulationFormData {
   deliveryDate?: Date;
   valuationDate?: Date;
   customReinforcementDates?: Date[];
+  
+  // New sales cost fields
+  incluirComissao?: boolean;
+  percentualComissao?: number;
+  incluirIRPF?: boolean;
+  percentualIRPF?: number;
+  valorVendaPrevisto?: number;
 }
 
 export interface PaymentType {
@@ -34,3 +42,4 @@ export interface PaymentType {
   propertyValue: number;
   month?: number;
 }
+
