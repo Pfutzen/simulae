@@ -1,116 +1,153 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { Badge } from "@/components/ui/badge";
+import { FileText, Calendar, DollarSign } from "lucide-react";
+import { formatCurrency, formatDateBR } from "@/utils/formatUtils";
 import { PropostaData } from "@/types/proposta";
 import { SavedSimulation } from "@/utils/simulationHistoryUtils";
-import { formatCurrency, formatPercentage } from "@/utils/formatUtils";
 
 interface PropostaPreviewProps {
   data: PropostaData;
-  simulation: SavedSimulation | null;
+  simulation: SavedSimulation;
 }
 
 const PropostaPreview: React.FC<PropostaPreviewProps> = ({ data, simulation }) => {
-  if (!simulation) {
-    return (
-      <Card className="h-[600px] overflow-y-auto">
-        <CardHeader>
-          <CardTitle className="text-lg">Preview da Proposta</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4 text-sm">
-          <p>Nenhuma simulação ativa encontrada.</p>
-        </CardContent>
-      </Card>
-    );
-  }
+  // Calcular data de entrega das chaves
+  const getKeysDeliveryDate = () => {
+    if (simulation.formData.startDate) {
+      const keysDate = new Date(simulation.formData.startDate);
+      keysDate.setMonth(keysDate.getMonth() + simulation.formData.installmentsCount + 1);
+      return formatDateBR(keysDate);
+    }
+    return `${simulation.formData.installmentsCount + 1} meses após o início`;
+  };
 
-  const propertyInfo = [
-    { label: 'Empreendimento', value: data.nomeEmpreendimento },
-    { label: 'Endereço', value: data.enderecoCompleto },
-    { label: 'Unidade', value: data.numeroUnidade },
-    { label: 'Andar/Pavimento', value: data.andarPavimento },
-    { label: 'Área Privativa', value: data.areaPrivativa },
-    { label: 'Vagas de Garagem', value: data.numeroVagas },
-    { label: 'Possui Box?', value: data.possuiBox ? 'Sim' : 'Não' },
-  ];
-
-  // Calculate sales costs
-  const valorVenda = data.valorVendaPrevisto || simulation.results.propertyValue;
-  const totalInvestido = simulation.results.investmentValue;
-  const lucroBruto = valorVenda - totalInvestido;
-  const comissao = data.incluirComissao ? (valorVenda * data.percentualComissao / 100) : 0;
-  const irpf = data.incluirIRPF ? (lucroBruto * data.percentualIRPF / 100) : 0;
-  const lucroLiquido = lucroBruto - comissao - irpf;
+  // Get reinforcements, ensuring schedule exists
+  const reinforcements = simulation.schedule?.filter(payment => 
+    payment.description.includes("Reforço")
+  ) || [];
 
   return (
-    <Card className="h-[600px] overflow-y-auto">
+    <Card className="h-fit">
       <CardHeader>
-        <CardTitle className="text-lg">Preview da Proposta</CardTitle>
+        <CardTitle className="flex items-center gap-2">
+          <FileText className="h-5 w-5 text-purple-600" />
+          Preview da Proposta
+        </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4 text-sm">
+      <CardContent className="space-y-6">
+        {/* Cabeçalho */}
+        <div className="text-center space-y-2">
+          <h2 className="text-xl font-bold text-slate-800">PROPOSTA COMERCIAL</h2>
+          <Badge variant="outline" className="bg-blue-50">
+            Simulação: {simulation.name}
+          </Badge>
+        </div>
+
+        <Separator />
+
+        {/* Dados do Comprador */}
         <div>
-          <h3 className="font-semibold text-slate-700 mb-2">Informações do Cliente</h3>
-          <div className="space-y-1 pl-4">
-            <p><strong>Nome:</strong> {data.nomeCompleto}</p>
-            <p><strong>CPF:</strong> {data.cpf}</p>
-            <p><strong>Telefone:</strong> {data.telefone}</p>
-            <p><strong>Email:</strong> {data.email}</p>
+          <h3 className="font-semibold text-slate-700 mb-3">DADOS DO COMPRADOR</h3>
+          <div className="space-y-2 text-sm">
+            <p><strong>Nome:</strong> {data.nomeCompleto || "___________________"}</p>
+            <p><strong>CPF:</strong> {data.cpf || "___.___.___-__"}</p>
+            <p><strong>Telefone:</strong> {data.telefone || "(__) _____-____"}</p>
+            <p><strong>E-mail:</strong> {data.email || "_________________"}</p>
           </div>
         </div>
 
+        <Separator />
+
+        {/* Dados da Unidade */}
         <div>
-          <h3 className="font-semibold text-slate-700 mb-2">Informações do Imóvel</h3>
-          <div className="space-y-1 pl-4">
-            {propertyInfo.map((item, index) => (
-              <p key={index}>
-                <strong>{item.label}:</strong> {item.value}
-              </p>
-            ))}
+          <h3 className="font-semibold text-slate-700 mb-3">DADOS DA UNIDADE</h3>
+          <div className="space-y-2 text-sm">
+            <p><strong>Empreendimento:</strong> {data.nomeEmpreendimento || "___________________"}</p>
+            <p><strong>Endereço:</strong> {data.enderecoCompleto || "___________________"}</p>
+            <p><strong>Unidade:</strong> {data.numeroUnidade || "___"} - {data.andarPavimento || "___º andar"}</p>
+            <p><strong>Área privativa:</strong> {data.areaPrivativa || "___"} m²</p>
+            <p><strong>Vagas:</strong> {data.numeroVagas || "___"} {data.possuiBox ? "com box" : "sem box"}</p>
           </div>
         </div>
 
+        <Separator />
+
+        {/* Dados Financeiros */}
         <div>
-          <h3 className="font-semibold text-slate-700 mb-2">Cronograma de Pagamentos</h3>
-          <div className="space-y-1 pl-4">
-            <p><strong>Valor do Imóvel:</strong> {formatCurrency(simulation.results.propertyValue)}</p>
-            <p><strong>Total Investido:</strong> {formatCurrency(simulation.results.investmentValue)}</p>
-            {simulation.schedule && simulation.schedule.map((payment, index) => (
-              <p key={index}>
-                <strong>{payment.description} ({payment.month} meses):</strong> {formatCurrency(payment.amount)}
+          <h3 className="font-semibold text-slate-700 mb-3 flex items-center gap-2">
+            <DollarSign className="h-4 w-4" />
+            PROPOSTA FINANCEIRA
+          </h3>
+          <div className="space-y-3 text-sm">
+            <div className="bg-blue-50 p-3 rounded-lg">
+              <p className="font-semibold text-blue-800">Valor total do imóvel:</p>
+              <p className="text-lg font-bold text-blue-600">
+                {formatCurrency(simulation.formData.propertyValue)}
               </p>
-            ))}
-          </div>
-        </div>
-        
-        {(data.incluirComissao || data.incluirIRPF) && (
-          <div>
-            <h3 className="font-semibold text-green-700 mb-2">💰 Resumo da Venda com Custos</h3>
-            <div className="space-y-1 pl-4">
-              <p><strong>Valor de Venda Previsto:</strong> {formatCurrency(valorVenda)}</p>
-              <p><strong>Total Investido até a Revenda:</strong> {formatCurrency(totalInvestido)}</p>
-              <p><strong>Lucro Bruto:</strong> {formatCurrency(lucroBruto)}</p>
-              
-              {data.incluirComissao && (
-                <p className="text-red-600">
-                  <strong>− Comissão de Corretagem ({data.percentualComissao}%):</strong> {formatCurrency(comissao)}
+            </div>
+
+            <div className="space-y-2">
+              <p><strong>Entrada:</strong> {formatCurrency(simulation.formData.downPaymentValue)}</p>
+              {simulation.formData.startDate && (
+                <p className="text-xs text-slate-600">
+                  Data: {formatDateBR(new Date(simulation.formData.startDate))}
                 </p>
               )}
-              
-              {data.incluirIRPF && (
-                <p className="text-red-600">
-                  <strong>− IRPF sobre Ganho de Capital ({data.percentualIRPF}%):</strong> {formatCurrency(irpf)}
+            </div>
+
+            <div className="space-y-2">
+              <p><strong>Parcelas mensais:</strong></p>
+              <p className="ml-4">
+                {simulation.formData.installmentsCount}x de {formatCurrency(simulation.formData.installmentsValue)}
+              </p>
+              {simulation.formData.startDate && (
+                <p className="text-xs text-slate-600 ml-4">
+                  Período: {formatDateBR(new Date(new Date(simulation.formData.startDate).setMonth(new Date(simulation.formData.startDate).getMonth() + 1)))} até{' '}
+                  {formatDateBR(new Date(new Date(simulation.formData.startDate).setMonth(new Date(simulation.formData.startDate).getMonth() + simulation.formData.installmentsCount)))}
                 </p>
               )}
-              
-              <hr className="my-2" />
-              <p className="text-green-700 font-bold">
-                <strong>= Lucro Líquido após Custos:</strong> {formatCurrency(lucroLiquido)}
+            </div>
+
+            {reinforcements.length > 0 && (
+              <div className="space-y-2">
+                <p><strong>Reforços:</strong></p>
+                {reinforcements.map((reinforcement, index) => (
+                  <p key={index} className="ml-4 text-xs">
+                    Mês {reinforcement.month}: {formatCurrency(reinforcement.amount)}
+                  </p>
+                ))}
+              </div>
+            )}
+
+            <div className="space-y-2">
+              <p><strong>Saldo na entrega das chaves:</strong></p>
+              <p className="ml-4">
+                {formatCurrency(simulation.formData.keysValue)}
               </p>
-              <p className="text-sm text-slate-600">
-                Rentabilidade líquida: {formatPercentage((lucroLiquido / totalInvestido) * 100 / 100)}
+              <p className="text-xs text-slate-600 ml-4">
+                Data prevista: {getKeysDeliveryDate()}
               </p>
             </div>
           </div>
-        )}
+        </div>
+
+        <Separator />
+
+        {/* Texto sobre correção monetária */}
+        <div className="bg-amber-50 p-4 rounded-lg border border-amber-200">
+          <h3 className="font-semibold text-amber-800 mb-2 flex items-center gap-2">
+            <Calendar className="h-4 w-4" />
+            CORREÇÃO MONETÁRIA
+          </h3>
+          <p className="text-xs text-amber-700 leading-relaxed">
+            Os valores apresentados acima são nominais. Toda a composição será corrigida 
+            mensalmente pelo índice CUB/SC acumulado (média dos últimos 12 meses) até a 
+            data de vencimento de cada parcela, conforme política vigente da construtora.
+          </p>
+        </div>
       </CardContent>
     </Card>
   );

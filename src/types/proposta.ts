@@ -17,11 +17,4 @@ export interface PropostaData {
   
   // Datas personalizadas dos reforços
   customReinforcementDates?: Date[];
-  
-  // Novos campos para custos da venda
-  incluirComissao: boolean;
-  percentualComissao: number;
-  incluirIRPF: boolean;
-  percentualIRPF: number;
-  valorVendaPrevisto?: number; // Opcional - se não informado, usa o valor da simulação
 }
