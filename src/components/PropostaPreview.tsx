@@ -24,6 +24,16 @@ const PropostaPreview: React.FC<PropostaPreviewProps> = ({ data, simulation }) =
     return `${simulation.formData.installmentsCount + 1} meses após o início`;
   };
 
+  // Gerar descrição da correção monetária baseada no modo
+  const getCorrectionDescription = () => {
+    if (simulation.formData.correctionMode === "cub") {
+      return "Os valores apresentados acima são nominais. Toda a composição será corrigida mensalmente pelo índice CUB/SC acumulado (média dos últimos 12 meses) até a data de vencimento de cada parcela, conforme política vigente da construtora.";
+    } else {
+      const percentage = (simulation.formData.correctionIndex * 100).toFixed(2);
+      return `Os valores apresentados acima são nominais. Toda a composição será corrigida mensalmente pelo índice de ${percentage}% ao mês até a data de vencimento de cada parcela, conforme política vigente da construtora.`;
+    }
+  };
+
   // Get reinforcements, ensuring schedule exists
   const reinforcements = simulation.schedule?.filter(payment => 
     payment.description.includes("Reforço")
@@ -143,9 +153,7 @@ const PropostaPreview: React.FC<PropostaPreviewProps> = ({ data, simulation }) =
             CORREÇÃO MONETÁRIA
           </h3>
           <p className="text-xs text-amber-700 leading-relaxed">
-            Os valores apresentados acima são nominais. Toda a composição será corrigida 
-            mensalmente pelo índice CUB/SC acumulado (média dos últimos 12 meses) até a 
-            data de vencimento de cada parcela, conforme política vigente da construtora.
+            {getCorrectionDescription()}
           </p>
         </div>
       </CardContent>

@@ -11,6 +11,16 @@ export const generatePropostaPDF = (data: PropostaData, simulation: SavedSimulat
     format: 'a4'
   });
 
+  // Gerar descrição da correção monetária baseada no modo
+  const getCorrectionDescription = () => {
+    if (simulation.formData.correctionMode === "cub") {
+      return "Os valores apresentados acima são nominais. Toda a composição será corrigida mensalmente pelo índice CUB/SC acumulado (média dos últimos 12 meses) até a data de vencimento de cada parcela, conforme política vigente da construtora.";
+    } else {
+      const percentage = (simulation.formData.correctionIndex * 100).toFixed(2);
+      return `Os valores apresentados acima são nominais. Toda a composição será corrigida mensalmente pelo índice de ${percentage}% ao mês até a data de vencimento de cada parcela, conforme política vigente da construtora.`;
+    }
+  };
+
   // Configuração inicial
   const pageWidth = doc.internal.pageSize.getWidth();
   const margin = 20;
@@ -168,7 +178,7 @@ export const generatePropostaPDF = (data: PropostaData, simulation: SavedSimulat
 
   doc.setFontSize(10);
   doc.setFont("helvetica", "normal");
-  const correcaoText = "Os valores apresentados acima são nominais. Toda a composição será corrigida mensalmente pelo índice CUB/SC acumulado (média dos últimos 12 meses) até a data de vencimento de cada parcela, conforme política vigente da construtora.";
+  const correcaoText = getCorrectionDescription();
   
   const splitText = doc.splitTextToSize(correcaoText, pageWidth - (margin * 2));
   doc.text(splitText, margin, yPos);

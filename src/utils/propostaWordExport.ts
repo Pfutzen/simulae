@@ -16,6 +16,16 @@ export const generatePropostaWord = async (data: PropostaData, simulation: Saved
     return `${simulation.formData.installmentsCount + 1} meses após o início`;
   };
 
+  // Gerar descrição da correção monetária baseada no modo
+  const getCorrectionDescription = () => {
+    if (simulation.formData.correctionMode === "cub") {
+      return "Os valores apresentados acima são nominais. Toda a composição será corrigida mensalmente pelo índice CUB/SC acumulado (média dos últimos 12 meses) até a data de vencimento de cada parcela, conforme política vigente da construtora.";
+    } else {
+      const percentage = (simulation.formData.correctionIndex * 100).toFixed(2);
+      return `Os valores apresentados acima são nominais. Toda a composição será corrigida mensalmente pelo índice de ${percentage}% ao mês até a data de vencimento de cada parcela, conforme política vigente da construtora.`;
+    }
+  };
+
   const reinforcements = simulation.schedule?.filter(payment => 
     payment.description.includes("Reforço")
   ) || [];
@@ -224,7 +234,7 @@ export const generatePropostaWord = async (data: PropostaData, simulation: Saved
         new Paragraph({
           children: [
             new TextRun({
-              text: "Os valores apresentados acima são nominais. Toda a composição será corrigida mensalmente pelo índice CUB/SC acumulado (média dos últimos 12 meses) até a data de vencimento de cada parcela, conforme política vigente da construtora.",
+              text: getCorrectionDescription(),
               size: 20
             })
           ],
