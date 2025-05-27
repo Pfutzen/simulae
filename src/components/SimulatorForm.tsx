@@ -33,7 +33,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { ToastAction } from "@/components/ui/toast"
 import { useToast } from "@/components/ui/use-toast"
 import { Badge } from "@/components/ui/badge"
-import { PercentageSlider } from "@/components/PercentageSlider";
+import PercentageSlider from "@/components/PercentageSlider";
 import { formatToBrazilianNumber } from "@/utils/formatUtils";
 import { TrendingUp, Home, KeyRound, Coins, PiggyBank, Percent, Users, Building2, Ruler2, Calendar as CalendarIconLucide } from "lucide-react";
 
@@ -279,13 +279,24 @@ export default function SimulatorForm() {
                   max={5}
                   step={0.05}
                   suffix="%"
-                  showIncrementButtons={true}
-                  incrementStep={0.05}
-                  showInfoLink={true}
-                  infoLinkUrl="https://www.datazap.com.br/conteudos-fipezap/"
-                  infoLinkTooltip="Consultar os índices de valorização FipeZap por região"
-                  useFipeLogo={true}
+                  showIncrementButtons={false}
+                  showInfoLink={false}
                 />
+                
+                {/* Ícone da Fipe centralizado abaixo do campo */}
+                <div className="flex justify-center mt-3">
+                  <button
+                    type="button"
+                    onClick={() => window.open('https://www.datazap.com.br/conteudos-fipezap/', '_blank', 'noopener,noreferrer')}
+                    className="hover:opacity-80 transition-opacity"
+                  >
+                    <img 
+                      src="/lovable-uploads/9d6e78ff-3f78-49b4-8ef9-9a8b4bd3eef7.png" 
+                      alt="Fipe Logo" 
+                      className="h-8 w-auto object-contain"
+                    />
+                  </button>
+                </div>
               </div>
               
               <div>
