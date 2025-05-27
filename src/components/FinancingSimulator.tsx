@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -33,7 +32,7 @@ const FinancingSimulator: React.FC<FinancingSimulatorProps> = ({
         className="w-full sm:w-auto flex items-center gap-2 border-blue-600 text-blue-600 hover:bg-blue-50"
       >
         <CreditCard className="h-4 w-4" />
-        Simular financiamento bancário do saldo das chaves
+        Financiamento bancário das chaves
       </Button>
 
       {showSimulation && (
