@@ -88,9 +88,9 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
   // Handler functions for exports
   const handleExportPDF = () => {
     if (formData) {
-      generatePDF(schedule, formData, resaleMonth);
+      generatePDF(schedule, formData);
     } else if (simulationData?.formData) {
-      generatePDF(schedule, simulationData.formData, resaleMonth);
+      generatePDF(schedule, simulationData.formData);
     }
   };
 
