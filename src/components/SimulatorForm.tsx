@@ -279,24 +279,13 @@ export default function SimulatorForm() {
                   max={5}
                   step={0.05}
                   suffix="%"
-                  showIncrementButtons={false}
-                  showInfoLink={false}
+                  showIncrementButtons={true}
+                  incrementStep={0.05}
+                  showInfoLink={true}
+                  infoLinkUrl="https://www.datazap.com.br/conteudos-fipezap/"
+                  infoLinkTooltip="Consultar os índices de valorização FipeZap por região"
+                  useFipeLogo={true}
                 />
-                
-                {/* Ícone da Fipe centralizado abaixo do campo */}
-                <div className="flex justify-center mt-3">
-                  <button
-                    type="button"
-                    onClick={() => window.open('https://www.datazap.com.br/conteudos-fipezap/', '_blank', 'noopener,noreferrer')}
-                    className="hover:opacity-80 transition-opacity"
-                  >
-                    <img 
-                      src="/lovable-uploads/9d6e78ff-3f78-49b4-8ef9-9a8b4bd3eef7.png" 
-                      alt="Fipe Logo" 
-                      className="h-8 w-auto object-contain"
-                    />
-                  </button>
-                </div>
               </div>
               
               <div>
