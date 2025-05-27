@@ -117,82 +117,55 @@ const PercentageSlider: React.FC<PercentageSliderProps> = ({
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-2">
-        <Label htmlFor={id} className="text-base font-medium">
-          {label}
-        </Label>
-        {showInfoLink && infoLinkUrl && (
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleInfoLinkClick}
-                  className="h-6 w-6 p-0 text-slate-500 hover:text-blue-600"
-                >
-                  {useFipeLogo ? (
-                    <img 
-                      src="/lovable-uploads/d4c08568-a5a1-4241-aa13-1502fe7b51df.png" 
-                      alt="Fipe Logo" 
-                      className="h-4 w-auto object-contain"
-                    />
-                  ) : (
-                    <Info className="h-4 w-4" />
-                  )}
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>{infoLinkTooltip}</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        )}
-      </div>
-
-      {showIncrementButtons && (
-        <div className="flex items-center justify-center gap-2">
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={handleDecrement}
-            disabled={value <= min}
-            className="h-8 w-8 p-0"
-          >
-            <Minus className="h-3 w-3" />
-          </Button>
-          <Input
-            id={id}
-            ref={inputRef}
-            type="text"
-            value={internalValue}
-            onChange={handleInputChange}
-            onFocus={handleFocus}
-            className="w-24 text-center font-medium"
-            suffix={suffix}
-          />
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={handleIncrement}
-            disabled={value >= max}
-            className="h-8 w-8 p-0"
-          >
-            <Plus className="h-3 w-3" />
-          </Button>
-          <div className="flex items-center">
-            <SlidersHorizontal className="h-4 w-4 text-slate-400" />
-          </div>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Label htmlFor={id} className="text-base font-medium">
+            {label}
+          </Label>
+          {showInfoLink && infoLinkUrl && (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleInfoLinkClick}
+                    className="h-6 w-6 p-0 text-slate-500 hover:text-blue-600"
+                  >
+                    {useFipeLogo ? (
+                      <img 
+                        src="/lovable-uploads/d4c08568-a5a1-4241-aa13-1502fe7b51df.png" 
+                        alt="Fipe Logo" 
+                        className="h-4 w-auto object-contain"
+                      />
+                    ) : (
+                      <Info className="h-4 w-4" />
+                    )}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>{infoLinkTooltip}</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
         </div>
-      )}
-
-      {!showIncrementButtons && (
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <SlidersHorizontal className="h-4 w-4 text-slate-400" />
+        <div className="flex items-center gap-2">
+          <SlidersHorizontal className="h-4 w-4 text-slate-400" />
+          <div className="flex items-center gap-1">
+            {showIncrementButtons && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleDecrement}
+                disabled={value <= min}
+                className="h-8 w-8 p-0"
+              >
+                <Minus className="h-3 w-3" />
+              </Button>
+            )}
             <Input
               id={id}
               ref={inputRef}
@@ -203,9 +176,21 @@ const PercentageSlider: React.FC<PercentageSliderProps> = ({
               className="w-24 text-right font-medium"
               suffix={suffix}
             />
+            {showIncrementButtons && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleIncrement}
+                disabled={value >= max}
+                className="h-8 w-8 p-0"
+              >
+                <Plus className="h-3 w-3" />
+              </Button>
+            )}
           </div>
         </div>
-      )}
+      </div>
       
       <Slider
         defaultValue={[value]}
