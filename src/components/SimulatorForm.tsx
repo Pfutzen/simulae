@@ -832,6 +832,9 @@ const SimulatorForm: React.FC = () => {
                         suffix="%"
                         showIncrementButtons={true}
                         incrementStep={0.05}
+                        showInfoLink={true}
+                        infoLinkUrl="https://www.datazap.com.br/conteudos-fipezap/"
+                        infoLinkTooltip="Consultar dados oficiais da FipeZap"
                       />
                     </div>
                   </div>

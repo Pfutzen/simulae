@@ -4,8 +4,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { formatToBrazilianNumber, parseBrazilianNumber, formatNumberWithCursor } from "@/utils/formatUtils";
-import { SlidersHorizontal, Plus, Minus } from "lucide-react";
+import { SlidersHorizontal, Plus, Minus, ExternalLink, Info } from "lucide-react";
 
 interface PercentageSliderProps {
   id: string;
@@ -18,6 +19,9 @@ interface PercentageSliderProps {
   suffix?: string;
   showIncrementButtons?: boolean;
   incrementStep?: number;
+  showInfoLink?: boolean;
+  infoLinkUrl?: string;
+  infoLinkTooltip?: string;
 }
 
 const PercentageSlider: React.FC<PercentageSliderProps> = ({
@@ -30,7 +34,10 @@ const PercentageSlider: React.FC<PercentageSliderProps> = ({
   step = 0.01,
   suffix = "%",
   showIncrementButtons = false,
-  incrementStep = 0.05
+  incrementStep = 0.05,
+  showInfoLink = false,
+  infoLinkUrl,
+  infoLinkTooltip = "Consultar referência externa"
 }) => {
   const [internalValue, setInternalValue] = useState<string>("");
   const [cursorPosition, setCursorPosition] = useState<number>(0);
@@ -100,12 +107,40 @@ const PercentageSlider: React.FC<PercentageSliderProps> = ({
     }
   };
 
+  const handleInfoLinkClick = () => {
+    if (infoLinkUrl) {
+      window.open(infoLinkUrl, '_blank', 'noopener,noreferrer');
+    }
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <Label htmlFor={id} className="text-base font-medium">
-          {label}
-        </Label>
+        <div className="flex items-center gap-2">
+          <Label htmlFor={id} className="text-base font-medium">
+            {label}
+          </Label>
+          {showInfoLink && infoLinkUrl && (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleInfoLinkClick}
+                    className="h-6 w-6 p-0 text-slate-500 hover:text-blue-600"
+                  >
+                    <Info className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>{infoLinkTooltip}</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
+        </div>
         <div className="flex items-center gap-2">
           <SlidersHorizontal className="h-4 w-4 text-slate-400" />
           <div className="flex items-center gap-1">
