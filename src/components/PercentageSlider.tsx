@@ -22,6 +22,7 @@ interface PercentageSliderProps {
   showInfoLink?: boolean;
   infoLinkUrl?: string;
   infoLinkTooltip?: string;
+  useFipeLogo?: boolean;
 }
 
 const PercentageSlider: React.FC<PercentageSliderProps> = ({
@@ -37,7 +38,8 @@ const PercentageSlider: React.FC<PercentageSliderProps> = ({
   incrementStep = 0.05,
   showInfoLink = false,
   infoLinkUrl,
-  infoLinkTooltip = "Consultar referência externa"
+  infoLinkTooltip = "Consultar referência externa",
+  useFipeLogo = false
 }) => {
   const [internalValue, setInternalValue] = useState<string>("");
   const [cursorPosition, setCursorPosition] = useState<number>(0);
@@ -131,7 +133,15 @@ const PercentageSlider: React.FC<PercentageSliderProps> = ({
                     onClick={handleInfoLinkClick}
                     className="h-6 w-6 p-0 text-slate-500 hover:text-blue-600"
                   >
-                    <Info className="h-4 w-4" />
+                    {useFipeLogo ? (
+                      <img 
+                        src="/lovable-uploads/d4c08568-a5a1-4241-aa13-1502fe7b51df.png" 
+                        alt="Fipe Logo" 
+                        className="h-4 w-auto object-contain"
+                      />
+                    ) : (
+                      <Info className="h-4 w-4" />
+                    )}
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>
