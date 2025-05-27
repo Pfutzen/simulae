@@ -1,9 +1,11 @@
+
 import React, { useState, useEffect, useRef } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
+import { Button } from "@/components/ui/button";
 import { formatToBrazilianNumber, parseBrazilianNumber, formatNumberWithCursor } from "@/utils/formatUtils";
-import { SlidersHorizontal } from "lucide-react";
+import { SlidersHorizontal, Plus, Minus } from "lucide-react";
 
 interface PercentageSliderProps {
   id: string;
@@ -14,6 +16,8 @@ interface PercentageSliderProps {
   max?: number;
   step?: number;
   suffix?: string;
+  showIncrementButtons?: boolean;
+  incrementStep?: number;
 }
 
 const PercentageSlider: React.FC<PercentageSliderProps> = ({
@@ -24,7 +28,9 @@ const PercentageSlider: React.FC<PercentageSliderProps> = ({
   min = 0,
   max = 5,
   step = 0.01,
-  suffix = "%"
+  suffix = "%",
+  showIncrementButtons = false,
+  incrementStep = 0.05
 }) => {
   const [internalValue, setInternalValue] = useState<string>("");
   const [cursorPosition, setCursorPosition] = useState<number>(0);
@@ -70,6 +76,18 @@ const PercentageSlider: React.FC<PercentageSliderProps> = ({
     onChange(value);
   };
   
+  const handleIncrement = () => {
+    const newValue = Math.min(max, value + incrementStep);
+    setInternalValue(formatToBrazilianNumber(newValue));
+    onChange(newValue);
+  };
+  
+  const handleDecrement = () => {
+    const newValue = Math.max(min, value - incrementStep);
+    setInternalValue(formatToBrazilianNumber(newValue));
+    onChange(newValue);
+  };
+  
   const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
     // Position cursor at beginning of number rather than after decimal
     if (e.target.value.includes(',')) {
@@ -90,16 +108,42 @@ const PercentageSlider: React.FC<PercentageSliderProps> = ({
         </Label>
         <div className="flex items-center gap-2">
           <SlidersHorizontal className="h-4 w-4 text-slate-400" />
-          <Input
-            id={id}
-            ref={inputRef}
-            type="text"
-            value={internalValue}
-            onChange={handleInputChange}
-            onFocus={handleFocus}
-            className="w-24 text-right font-medium"
-            suffix={suffix}
-          />
+          <div className="flex items-center gap-1">
+            {showIncrementButtons && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleDecrement}
+                disabled={value <= min}
+                className="h-8 w-8 p-0"
+              >
+                <Minus className="h-3 w-3" />
+              </Button>
+            )}
+            <Input
+              id={id}
+              ref={inputRef}
+              type="text"
+              value={internalValue}
+              onChange={handleInputChange}
+              onFocus={handleFocus}
+              className="w-24 text-right font-medium"
+              suffix={suffix}
+            />
+            {showIncrementButtons && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleIncrement}
+                disabled={value >= max}
+                className="h-8 w-8 p-0"
+              >
+                <Plus className="h-3 w-3" />
+              </Button>
+            )}
+          </div>
         </div>
       </div>
       

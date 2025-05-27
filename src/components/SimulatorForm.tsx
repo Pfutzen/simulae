@@ -828,8 +828,10 @@ const SimulatorForm: React.FC = () => {
                         onChange={handleAppreciationIndexChange}
                         min={0}
                         max={5}
-                        step={0.01}
+                        step={0.05}
                         suffix="%"
+                        showIncrementButtons={true}
+                        incrementStep={0.05}
                       />
                     </div>
                   </div>
@@ -877,6 +879,8 @@ const SimulatorForm: React.FC = () => {
                       max={1}
                       step={0.05}
                       suffix="%"
+                      showIncrementButtons={true}
+                      incrementStep={0.05}
                     />
                   </div>
                 </div>
