@@ -1,4 +1,3 @@
-
 import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, BorderStyle } from 'docx';
 import { saveAs } from 'file-saver';
 import { PropostaData } from '@/types/proposta';
@@ -224,7 +223,7 @@ export const generatePropostaWord = async (data: PropostaData, simulation: Saved
         new Paragraph({
           children: [
             new TextRun({
-              text: "Os valores apresentados acima são nominais. Toda a composição será corrigida mensalmente pelo índice CUB/SC acumulado (média dos últimos 12 meses) até a data de vencimento de cada parcela, conforme política vigente da construtora.",
+              text: "Os valores apresentados acima são nominais. Toda a composição será corrigida mensalmente pelo índice CUB acumulado (média dos últimos 12 meses) até a data de vencimento de cada parcela, conforme política vigente da construtora.",
               size: 20
             })
           ],

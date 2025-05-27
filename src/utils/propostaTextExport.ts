@@ -79,7 +79,7 @@ export const generatePropostaText = (data: PropostaData, simulation: SavedSimula
   // Correção Monetária
   text += "CORREÇÃO MONETÁRIA\n";
   text += "------------------\n";
-  text += "Os valores apresentados acima são nominais. Toda a composição será corrigida mensalmente pelo índice CUB/SC acumulado (média dos últimos 12 meses) até a data de vencimento de cada parcela, conforme política vigente da construtora.\n";
+  text += "Os valores apresentados acima são nominais. Toda a composição será corrigida mensalmente pelo índice CUB acumulado (média dos últimos 12 meses) até a data de vencimento de cada parcela, conforme política vigente da construtora.\n";
 
   return text;
 };
