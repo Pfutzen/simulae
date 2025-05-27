@@ -60,9 +60,15 @@ export const generatePaymentSchedule = (data: SimulationFormData): PaymentType[]
     if (data.correctionMode === "manual" && data.correctionIndex > 0) {
       return Math.pow(1 + data.correctionIndex / 100, monthNumber - 1);
     } else if (data.correctionMode === "cub") {
-      // Aplicar CUB/SC (usar média dos últimos 12 meses)
-      const avgCubCorrection = CUB_CORRECTION_DATA.reduce((sum, item) => sum + item.percentage, 0) / CUB_CORRECTION_DATA.length;
-      return Math.pow(1 + avgCubCorrection / 100, monthNumber - 1);
+      // Aplicar CUB sequencialmente mês a mês
+      let accumulatedFactor = 1;
+      for (let i = 1; i < monthNumber; i++) {
+        // Usar o índice CUB do mês correspondente (ciclo de 12 meses)
+        const cubIndex = (i - 1) % 12;
+        const monthlyPercentage = CUB_CORRECTION_DATA[cubIndex].percentage;
+        accumulatedFactor *= (1 + monthlyPercentage / 100);
+      }
+      return accumulatedFactor;
     }
     return 1; // Sem correção
   };

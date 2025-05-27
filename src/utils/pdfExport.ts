@@ -94,9 +94,9 @@ export function exportToPdf(simulation: SavedSimulation, simulationName?: string
   
   // Display correction based on mode
   if (simulation.formData.correctionMode === "cub") {
-    // Calculate average CUB/SC correction
+    // Calculate average CUB correction
     const avgCubCorrection = CUB_CORRECTION_DATA.reduce((sum, item) => sum + item.percentage, 0) / CUB_CORRECTION_DATA.length;
-    doc.text(`Correção: CUB/SC (média ${formatPercentage(avgCubCorrection/100)} ao mês)`, 20, yPos);
+    doc.text(`Correção: CUB (média ${formatPercentage(avgCubCorrection/100)} ao mês)`, 20, yPos);
   } else {
     doc.text(`Correção: ${formatPercentage(simulation.formData.correctionIndex/100)} ao mês`, 20, yPos);
   }

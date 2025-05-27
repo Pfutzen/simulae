@@ -38,7 +38,7 @@ const CorrectionSelector: React.FC<CorrectionSelectorProps> = ({ value, onChange
           <TooltipContent className="max-w-[350px]">
             <div className="space-y-2">
               <p><strong>Manual:</strong> Use um índice fixo mensal para correção.</p>
-              <p><strong>CUB/SC:</strong> Use os índices reais do CUB/SC dos últimos 12 meses.</p>
+              <p><strong>CUB:</strong> Use os índices reais do CUB nacional dos últimos 12 meses.</p>
               <div className="max-h-[300px] overflow-auto mt-2">
                 <Table className="w-full">
                   <TableHeader>
@@ -68,7 +68,7 @@ const CorrectionSelector: React.FC<CorrectionSelectorProps> = ({ value, onChange
         <SelectContent>
           <SelectGroup>
             <SelectItem value="manual">Manual</SelectItem>
-            <SelectItem value="cub">CUB/SC</SelectItem>
+            <SelectItem value="cub">CUB</SelectItem>
           </SelectGroup>
         </SelectContent>
       </Select>
