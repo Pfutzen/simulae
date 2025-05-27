@@ -153,16 +153,42 @@ const PercentageSlider: React.FC<PercentageSliderProps> = ({
         </div>
         <div className="flex items-center gap-2">
           <SlidersHorizontal className="h-4 w-4 text-slate-400" />
-          <Input
-            id={id}
-            ref={inputRef}
-            type="text"
-            value={internalValue}
-            onChange={handleInputChange}
-            onFocus={handleFocus}
-            className="w-24 text-right font-medium"
-            suffix={suffix}
-          />
+          <div className="flex items-center gap-1">
+            {showIncrementButtons && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleDecrement}
+                disabled={value <= min}
+                className="h-8 w-8 p-0"
+              >
+                <Minus className="h-3 w-3" />
+              </Button>
+            )}
+            <Input
+              id={id}
+              ref={inputRef}
+              type="text"
+              value={internalValue}
+              onChange={handleInputChange}
+              onFocus={handleFocus}
+              className="w-24 text-right font-medium"
+              suffix={suffix}
+            />
+            {showIncrementButtons && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleIncrement}
+                disabled={value >= max}
+                className="h-8 w-8 p-0"
+              >
+                <Plus className="h-3 w-3" />
+              </Button>
+            )}
+          </div>
         </div>
       </div>
       
