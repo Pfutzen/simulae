@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -87,10 +88,29 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
 
   // Handler functions for exports
   const handleExportPDF = () => {
-    if (formData) {
-      generatePDF(schedule, formData);
-    } else if (simulationData?.formData) {
-      generatePDF(schedule, simulationData.formData);
+    if (simulationData) {
+      generatePDF(simulationData);
+    } else if (formData) {
+      // Create a temporary SavedSimulation object for PDF generation
+      const tempSimulation: SavedSimulation = {
+        id: 'temp',
+        name: 'Simulação Atual',
+        timestamp: Date.now(),
+        formData,
+        schedule,
+        results: {
+          investmentValue,
+          propertyValue,
+          profit,
+          profitPercentage,
+          remainingBalance,
+          rentalEstimate,
+          annualRentalReturn
+        },
+        bestResaleInfo,
+        appreciationIndex
+      };
+      generatePDF(tempSimulation);
     }
   };
 
