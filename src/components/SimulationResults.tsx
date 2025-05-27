@@ -1,9 +1,11 @@
-import React from "react";
+import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { 
   TrendingUp, 
   DollarSign, 
@@ -17,7 +19,9 @@ import {
   Percent,
   CreditCard,
   Building,
-  FileSpreadsheet
+  FileSpreadsheet,
+  Calculator,
+  Info
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { formatCurrency, formatPercentage } from "@/utils/formatUtils";
@@ -58,7 +62,7 @@ interface SimulationResultsProps {
   rentalEstimate: number;
   annualRentalReturn: number;
   appreciationIndex?: number;
-  formData?: SimulationFormData; // Add formData as a prop
+  formData?: SimulationFormData;
 }
 
 const SimulationResults: React.FC<SimulationResultsProps> = ({
@@ -77,50 +81,20 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
   appreciationIndex,
   formData
 }) => {
-  const handleExportPDF = () => {
-    // Create a temporary simulation object if no saved simulation exists
-    const simulationToExport = simulationData || {
-      id: 'temp',
-      name: 'Simulação Atual',
-      timestamp: Date.now(),
-      formData: formData!,
-      schedule: schedule,
-      results: {
-        investmentValue,
-        propertyValue,
-        profit,
-        profitPercentage,
-        remainingBalance,
-        rentalEstimate,
-        annualRentalReturn
-      },
-      bestResaleInfo,
-      appreciationIndex: appreciationIndex || formData?.appreciationIndex || 0
-    };
-    
-    generatePDF(simulationToExport);
-  };
+  // Estados para os checkboxes dos custos
+  const [includeCommission, setIncludeCommission] = useState(true);
+  const [includeIRPF, setIncludeIRPF] = useState(true);
 
-  const handleExportScheduleCSV = () => {
-    const fileName = simulationData?.name 
-      ? `cronograma-${simulationData.name.toLowerCase().replace(/\s+/g, '-')}`
-      : 'cronograma-pagamentos';
-    exportScheduleToCSV(schedule, fileName);
-  };
-
-  const handleExportScheduleExcel = () => {
-    const fileName = simulationData?.name 
-      ? `cronograma-${simulationData.name.toLowerCase().replace(/\s+/g, '-')}`
-      : 'cronograma-pagamentos';
-    exportScheduleToExcel(schedule, fileName);
-  };
-
-  const handleExportSchedulePDF = () => {
-    const fileName = simulationData?.name 
-      ? `cronograma-${simulationData.name.toLowerCase().replace(/\s+/g, '-')}`
-      : 'cronograma-pagamentos';
-    exportScheduleToPDF(schedule, fileName);
-  };
+  // Cálculos dos custos
+  const saleValue = propertyValue;
+  const totalInvested = investmentValue;
+  const grossProfit = profit;
+  const commissionRate = 0.05; // 5%
+  const irpfRate = 0.15; // 15%
+  
+  const commissionValue = includeCommission ? saleValue * commissionRate : 0;
+  const irpfValue = includeIRPF ? Math.max(0, grossProfit * irpfRate) : 0;
+  const netProfitAfterCosts = grossProfit - commissionValue - irpfValue;
 
   // Helper function to get property value at specific month
   const getPropertyValueAtMonth = (month: number) => {
@@ -224,7 +198,7 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
               onClick={handleExportPDF} 
               variant="secondary"
               className="gap-2"
-              disabled={!formData && !simulationData} // Only disable if both are missing
+              disabled={!formData && !simulationData}
             >
               <Download className="h-4 w-4" />
               Exportar PDF
@@ -232,6 +206,179 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
           </div>
         </CardContent>
       </Card>
+
+      {/* Resumo da Venda com Custos */}
+      <TooltipProvider>
+        <Card className="shadow">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Calculator className="h-5 w-5 text-blue-600" />
+              Resumo da Venda com Custos
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {/* Opções de custos */}
+            <div className="bg-slate-50 p-4 rounded-lg border">
+              <h4 className="text-sm font-medium text-slate-800 mb-3">Custos a considerar:</h4>
+              <div className="flex flex-col sm:flex-row gap-4">
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="includeCommission"
+                    checked={includeCommission}
+                    onCheckedChange={(checked) => setIncludeCommission(checked as boolean)}
+                  />
+                  <label htmlFor="includeCommission" className="text-sm text-slate-700">
+                    Comissão de corretagem (5%)
+                  </label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="includeIRPF"
+                    checked={includeIRPF}
+                    onCheckedChange={(checked) => setIncludeIRPF(checked as boolean)}
+                  />
+                  <label htmlFor="includeIRPF" className="text-sm text-slate-700">
+                    IRPF sobre lucro (15%)
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            {/* Cálculos detalhados */}
+            <div className="space-y-4">
+              {/* Valor de Venda Previsto */}
+              <div className="flex items-center justify-between p-4 bg-white rounded-lg border">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-slate-600">1. Valor de Venda Previsto</span>
+                  <Tooltip>
+                    <TooltipTrigger>
+                      <Info className="h-4 w-4 text-slate-400" />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Valor que o investidor definiu como preço de revenda do imóvel</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
+                <span className="text-lg font-bold text-slate-800">
+                  {formatCurrency(saleValue)}
+                </span>
+              </div>
+
+              {/* Total Investido */}
+              <div className="flex items-center justify-between p-4 bg-white rounded-lg border">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-slate-600">2. Total Investido até a Revenda</span>
+                  <Tooltip>
+                    <TooltipTrigger>
+                      <Info className="h-4 w-4 text-slate-400" />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Soma de todas as parcelas pagas até a data da revenda</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
+                <span className="text-lg font-bold text-red-600">
+                  {formatCurrency(totalInvested)}
+                </span>
+              </div>
+
+              {/* Lucro Bruto */}
+              <div className="flex items-center justify-between p-4 bg-green-50 rounded-lg border border-green-200">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-green-800 font-medium">3. Lucro Bruto</span>
+                  <Tooltip>
+                    <TooltipTrigger>
+                      <Info className="h-4 w-4 text-green-600" />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>(Valor de Venda) - (Total Investido até a revenda)</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
+                <span className="text-lg font-bold text-green-600">
+                  {formatCurrency(grossProfit)}
+                </span>
+              </div>
+
+              {/* Custos deduzidos */}
+              <div className="bg-slate-50 p-4 rounded-lg border space-y-3">
+                <h4 className="text-sm font-medium text-slate-800">Custos deduzidos:</h4>
+                
+                {/* Comissão */}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-slate-600">
+                      {includeCommission ? '– ' : ''}Comissão de Corretagem (5%)
+                    </span>
+                    <Tooltip>
+                      <TooltipTrigger>
+                        <Info className="h-4 w-4 text-slate-400" />
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>5% sobre o valor de venda (R$ {formatCurrency(saleValue * commissionRate).replace('R$ ', '')})</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </div>
+                  <span className={`text-sm font-medium ${includeCommission ? 'text-red-600' : 'text-slate-400'}`}>
+                    {includeCommission ? formatCurrency(commissionValue) : 'Não aplicado'}
+                  </span>
+                </div>
+
+                {/* IRPF */}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-slate-600">
+                      {includeIRPF ? '– ' : ''}IRPF (15% sobre Lucro)
+                    </span>
+                    <Tooltip>
+                      <TooltipTrigger>
+                        <Info className="h-4 w-4 text-slate-400" />
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>15% sobre o lucro bruto (R$ {formatCurrency(Math.max(0, grossProfit * irpfRate)).replace('R$ ', '')})</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </div>
+                  <span className={`text-sm font-medium ${includeIRPF && grossProfit > 0 ? 'text-red-600' : 'text-slate-400'}`}>
+                    {includeIRPF && grossProfit > 0 ? formatCurrency(irpfValue) : 'Não aplicado'}
+                  </span>
+                </div>
+              </div>
+
+              {/* Lucro Líquido Final */}
+              <div className="flex items-center justify-between p-4 bg-blue-50 rounded-lg border border-blue-200">
+                <div className="flex items-center gap-2">
+                  <span className="text-lg font-bold text-blue-800">= Lucro Líquido após Custos</span>
+                  <Tooltip>
+                    <TooltipTrigger>
+                      <Info className="h-4 w-4 text-blue-600" />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>(Lucro Bruto) - (Comissão) - (IRPF)</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
+                <span className={`text-2xl font-bold ${netProfitAfterCosts >= 0 ? 'text-blue-600' : 'text-red-600'}`}>
+                  {formatCurrency(netProfitAfterCosts)}
+                </span>
+              </div>
+
+              {/* Comparação com lucro bruto */}
+              {(includeCommission || includeIRPF) && (
+                <div className="bg-amber-50 p-3 rounded-lg border border-amber-200">
+                  <div className="flex items-center gap-2">
+                    <AlertCircle className="h-4 w-4 text-amber-600" />
+                    <span className="text-sm text-amber-800">
+                      <strong>Impacto dos custos:</strong> Redução de {formatCurrency(grossProfit - netProfitAfterCosts)} no lucro 
+                      ({formatPercentage(grossProfit > 0 ? ((grossProfit - netProfitAfterCosts) / grossProfit) * 100 : 0)} do lucro bruto)
+                    </span>
+                  </div>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      </TooltipProvider>
 
       {/* Melhores Estratégias de Revenda */}
       <Card className="shadow">
