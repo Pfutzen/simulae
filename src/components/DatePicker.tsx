@@ -27,7 +27,7 @@ const DatePicker: React.FC<DatePickerProps> = ({
   onChange,
   placeholder = "Selecione uma data",
   disabled = false,
-  disablePastDates = false,
+  disablePastDates = false, // Changed default to false
   className,
   required = false
 }) => {

@@ -1,4 +1,3 @@
-
 /**
  * Utility functions for date manipulation in the simulation
  */
@@ -165,9 +164,8 @@ export function parseMonthYear(monthYear: string): Date | null {
   const month = parseInt(parts[0], 10);
   const year = parseInt(parts[1], 10);
   
-  // Validate month (1-12) and year (current year or later)
-  const currentYear = new Date().getFullYear();
-  if (month < 1 || month > 12 || year < currentYear) return null;
+  // Validate month (1-12) and year (reasonable year range)
+  if (month < 1 || month > 12 || year < 1900 || year > 2100) return null;
   
   // Create date object (day 1 of the month)
   return new Date(year, month - 1, 1);
@@ -191,21 +189,13 @@ export function formatToMonthYear(date: Date): string {
 }
 
 /**
- * Check if valuation date is valid (not in future beyond current month)
+ * Check if valuation date is valid (allow any past or current date)
  * @param valuationDate - The valuation date to check
- * @returns True if valid
+ * @returns True if valid (always true now, allowing retroactive dates)
  */
 export function isValidValuationDate(valuationDate: Date): boolean {
-  const today = new Date();
-  const currentYear = today.getFullYear();
-  const currentMonth = today.getMonth();
-  
-  const valuationYear = valuationDate.getFullYear();
-  const valuationMonth = valuationDate.getMonth();
-  
-  // Valuation date cannot be in future beyond current month
-  return (valuationYear < currentYear) || 
-         (valuationYear === currentYear && valuationMonth <= currentMonth);
+  // Allow any valid date - no restrictions on past dates
+  return valuationDate instanceof Date && !isNaN(valuationDate.getTime());
 }
 
 /**

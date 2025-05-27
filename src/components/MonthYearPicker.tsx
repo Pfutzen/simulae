@@ -23,7 +23,7 @@ const MonthYearPicker: React.FC<MonthYearPickerProps> = ({
   onChange,
   placeholder = "MM/AAAA",
   disabled = false,
-  disablePastDates = false,
+  disablePastDates = false, // Changed default to false
   className
 }) => {
   const [inputValue, setInputValue] = useState<string>("");
