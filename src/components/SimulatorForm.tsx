@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -33,7 +34,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { ToastAction } from "@/components/ui/toast"
 import { useToast } from "@/components/ui/use-toast"
 import { Badge } from "@/components/ui/badge"
-import { PercentageSlider } from "@/components/PercentageSlider";
+import PercentageSlider from "@/components/PercentageSlider";
 import { formatToBrazilianNumber } from "@/utils/formatUtils";
 import { TrendingUp, Home, KeyRound, Coins, PiggyBank, Percent, Users, Building2, Ruler2, Calendar as CalendarIconLucide } from "lucide-react";
 
