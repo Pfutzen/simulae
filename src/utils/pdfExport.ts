@@ -181,7 +181,72 @@ export function exportToPdf(simulation: SavedSimulation, simulationName?: string
     
     doc.text(`Rentabilidade anual: ${formatPercentage(annualRentalReturn/100)}`, 20, yPos);
   }
-  
+
+  // Add sales costs section if any costs are enabled
+  if (simulation.formData.incluirComissao || simulation.formData.incluirIRPF) {
+    yPos += 15;
+    
+    // Sales costs section header
+    doc.setFontSize(14);
+    doc.setFont("helvetica", "bold");
+    doc.text("💰 Resumo da Venda com Custos", 20, yPos);
+    
+    yPos += 10;
+    
+    // Get values for calculations
+    const valorVenda = simulation.formData.valorVendaPrevisto || simulation.results.propertyValue;
+    const totalInvestido = simulation.results.investmentValue;
+    const lucroBruto = valorVenda - totalInvestido;
+    
+    // Calculate costs
+    const comissao = simulation.formData.incluirComissao ? (valorVenda * simulation.formData.percentualComissao / 100) : 0;
+    const irpf = simulation.formData.incluirIRPF ? (lucroBruto * simulation.formData.percentualIRPF / 100) : 0;
+    const lucroLiquido = lucroBruto - comissao - irpf;
+    
+    doc.setFontSize(12);
+    doc.setFont("helvetica", "normal");
+    
+    // Valor de venda previsto
+    doc.text(`Valor de Venda Previsto: ${formatCurrency(valorVenda)}`, 20, yPos);
+    yPos += 5;
+    
+    // Total investido
+    doc.text(`Total Investido até a Revenda: ${formatCurrency(totalInvestido)}`, 20, yPos);
+    yPos += 5;
+    
+    // Lucro bruto
+    doc.text(`Lucro Bruto: ${formatCurrency(lucroBruto)}`, 20, yPos);
+    yPos += 8;
+    
+    // Costs breakdown
+    if (simulation.formData.incluirComissao) {
+      doc.text(`− Comissão de Corretagem (${simulation.formData.percentualComissao}%): ${formatCurrency(comissao)}`, 25, yPos);
+      yPos += 5;
+    }
+    
+    if (simulation.formData.incluirIRPF) {
+      doc.text(`− IRPF sobre Ganho de Capital (${simulation.formData.percentualIRPF}%): ${formatCurrency(irpf)}`, 25, yPos);
+      yPos += 5;
+    }
+    
+    yPos += 3;
+    
+    // Draw line for final result
+    doc.setDrawColor(100, 100, 100);
+    doc.line(20, yPos, 120, yPos);
+    yPos += 8;
+    
+    // Final net profit
+    doc.setFont("helvetica", "bold");
+    doc.text(`= Lucro Líquido após Custos: ${formatCurrency(lucroLiquido)}`, 20, yPos);
+    
+    // Calculate net profit percentage
+    const lucroLiquidoPercentual = totalInvestido > 0 ? (lucroLiquido / totalInvestido) * 100 : 0;
+    yPos += 5;
+    doc.setFont("helvetica", "normal");
+    doc.text(`Rentabilidade líquida: ${formatPercentage(lucroLiquidoPercentual/100)}`, 20, yPos);
+  }
+
   // Add horizontal line
   yPos += 10;
   doc.line(20, yPos, pageWidth - 20, yPos);

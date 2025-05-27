@@ -34,6 +34,12 @@ const PropostaComercial: React.FC = () => {
     
     // Novas datas de reforço personalizadas
     customReinforcementDates: undefined,
+    
+    // Inicializar campos de custos da venda
+    incluirComissao: true,
+    percentualComissao: 5,
+    incluirIRPF: true,
+    percentualIRPF: 15,
   });
   
   const { toast } = useToast();
