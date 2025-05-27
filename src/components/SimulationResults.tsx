@@ -437,17 +437,17 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
       {/* Cronograma de Pagamentos */}
       <Card className="shadow">
         <CardHeader>
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <CardTitle className="flex items-center gap-2">
               <Calendar className="h-5 w-5 text-blue-600" />
               Cronograma de Pagamentos
             </CardTitle>
-            <div className="flex gap-2">
+            <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
               <Button
                 onClick={handleExportScheduleCSV}
                 variant="outline"
                 size="sm"
-                className="gap-2"
+                className="gap-2 w-full sm:w-auto"
               >
                 <FileText className="h-4 w-4" />
                 CSV
@@ -456,7 +456,7 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
                 onClick={handleExportScheduleExcel}
                 variant="outline"
                 size="sm"
-                className="gap-2"
+                className="gap-2 w-full sm:w-auto"
               >
                 <FileSpreadsheet className="h-4 w-4" />
                 Excel
@@ -465,7 +465,7 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
                 onClick={handleExportSchedulePDF}
                 variant="outline"
                 size="sm"
-                className="gap-2"
+                className="gap-2 w-full sm:w-auto"
               >
                 <FileText className="h-4 w-4" />
                 PDF
