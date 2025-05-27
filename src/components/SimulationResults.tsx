@@ -85,6 +85,27 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
   const [includeCommission, setIncludeCommission] = useState(true);
   const [includeIRPF, setIncludeIRPF] = useState(true);
 
+  // Handler functions for exports
+  const handleExportPDF = () => {
+    if (formData) {
+      generatePDF(schedule, formData, resaleMonth);
+    } else if (simulationData?.formData) {
+      generatePDF(schedule, simulationData.formData, resaleMonth);
+    }
+  };
+
+  const handleExportScheduleCSV = () => {
+    exportScheduleToCSV(schedule, `cronograma-pagamentos-mes-${resaleMonth}`);
+  };
+
+  const handleExportScheduleExcel = () => {
+    exportScheduleToExcel(schedule, `cronograma-pagamentos-mes-${resaleMonth}`);
+  };
+
+  const handleExportSchedulePDF = () => {
+    exportScheduleToPDF(schedule, `cronograma-pagamentos-mes-${resaleMonth}`);
+  };
+
   // Cálculos dos custos
   const saleValue = propertyValue;
   const totalInvested = investmentValue;
