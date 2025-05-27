@@ -33,10 +33,11 @@ import SimulationResults from "./SimulationResults";
 import SimulationHistory from "./SimulationHistory";
 import DatePicker from "./DatePicker";
 import ReinforcementDatesControl from "./ReinforcementDatesControl";
-import { CheckCircle, AlertCircle, DollarSign, Calendar, TrendingUp, Home } from "lucide-react";
+import { CheckCircle, AlertCircle, DollarSign, Calendar, TrendingUp, Home, ExternalLink } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import MonthYearInput from "./MonthYearInput";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 import PropostaButton from "./PropostaButton";
 
@@ -821,18 +822,42 @@ const SimulatorForm: React.FC = () => {
                     </div>
                     
                     <div className="space-y-4">
-                      <PercentageSlider
-                        id="appreciation-index"
-                        label="Índice de valorização mensal"
-                        value={formData.appreciationIndex}
-                        onChange={handleAppreciationIndexChange}
-                        min={0}
-                        max={5}
-                        step={0.05}
-                        suffix="%"
-                        showIncrementButtons={true}
-                        incrementStep={0.05}
-                      />
+                      <div className="space-y-4">
+                        <div className="flex items-center gap-2">
+                          <div className="flex-1">
+                            <PercentageSlider
+                              id="appreciation-index"
+                              label="Índice de valorização mensal"
+                              value={formData.appreciationIndex}
+                              onChange={handleAppreciationIndexChange}
+                              min={0}
+                              max={5}
+                              step={0.05}
+                              suffix="%"
+                              showIncrementButtons={true}
+                              incrementStep={0.05}
+                            />
+                          </div>
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-8 w-8 p-0 text-blue-600 hover:text-blue-800 hover:bg-blue-50"
+                                  onClick={() => window.open('https://www.datazap.com.br/conteudos-fipezap/', '_blank')}
+                                >
+                                  <ExternalLink className="h-4 w-4" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>Consultar índices oficiais da FipeZap</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
