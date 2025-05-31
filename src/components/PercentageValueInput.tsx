@@ -18,7 +18,8 @@ interface PercentageValueInputProps {
   valueInputClassName?: string;
   percentageInputClassName?: string;
   installmentsCount?: number;
-  hasError?: boolean; // New prop for validation error
+  hasError?: boolean;
+  isKeysInput?: boolean; // Nova prop para identificar se é o input das chaves
 }
 
 const PercentageValueInput: React.FC<PercentageValueInputProps> = ({
@@ -33,47 +34,47 @@ const PercentageValueInput: React.FC<PercentageValueInputProps> = ({
   valueInputClassName = "",
   percentageInputClassName = "",
   installmentsCount = 1,
-  hasError = false
+  hasError = false,
+  isKeysInput = false
 }) => {
   const handleValueChange = (newValue: number) => {
     onValueChange(newValue);
     
-    // Calculate percentage based on the new value
+    // Calculate percentage based on the new value with rounding
     let newPercentage = 0;
     if (totalValue > 0) {
       if (label === "Parcelas" && installmentsCount > 0) {
-        // For installments, calculate percentage based on total installment value
         const totalInstallmentValue = newValue * installmentsCount;
         newPercentage = (totalInstallmentValue / totalValue) * 100;
       } else if (label === "Reforços" && installmentsCount > 0) {
-        // For reinforcements, calculate percentage based on total reinforcement value
         const totalReinforcementValue = newValue * installmentsCount;
         newPercentage = (totalReinforcementValue / totalValue) * 100;
       } else {
-        // For other cases (entrada, chaves)
         newPercentage = (newValue / totalValue) * 100;
       }
+      
+      // Round percentage to 1 decimal place for display
+      newPercentage = Math.round(newPercentage * 10) / 10;
     }
     
     onPercentageChange(newPercentage);
   };
 
   const handlePercentageChange = (newPercentage: number) => {
-    onPercentageChange(newPercentage);
+    // Round percentage to 1 decimal place
+    const roundedPercentage = Math.round(newPercentage * 10) / 10;
+    onPercentageChange(roundedPercentage);
     
-    // Calculate value based on the new percentage
+    // Calculate value based on the rounded percentage
     let newValue = 0;
     if (label === "Parcelas" && installmentsCount > 0) {
-      // For installments: value = (percentage * totalValue / 100) / installmentsCount
-      const totalInstallmentValue = (newPercentage / 100) * totalValue;
+      const totalInstallmentValue = (roundedPercentage / 100) * totalValue;
       newValue = totalInstallmentValue / installmentsCount;
     } else if (label === "Reforços" && installmentsCount > 0) {
-      // For reinforcements: value = (percentage * totalValue / 100) / reinforcementsCount
-      const totalReinforcementValue = (newPercentage / 100) * totalValue;
+      const totalReinforcementValue = (roundedPercentage / 100) * totalValue;
       newValue = totalReinforcementValue / installmentsCount;
     } else {
-      // For other cases: value = (percentage * totalValue) / 100
-      newValue = (newPercentage / 100) * totalValue;
+      newValue = (roundedPercentage / 100) * totalValue;
     }
     
     onValueChange(newValue);

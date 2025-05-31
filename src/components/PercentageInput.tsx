@@ -28,9 +28,11 @@ const PercentageInput: React.FC<PercentageInputProps> = ({
       if (noDecimals) {
         setInternalValue(Math.round(value).toString());
       } else {
-        const formatted = value.toLocaleString('pt-BR', {
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 2
+        // Always format to 1 decimal place maximum
+        const roundedValue = Math.round(value * 10) / 10;
+        const formatted = roundedValue.toLocaleString('pt-BR', {
+          minimumFractionDigits: 1,
+          maximumFractionDigits: 1
         });
         setInternalValue(formatted);
       }
@@ -61,6 +63,8 @@ const PercentageInput: React.FC<PercentageInputProps> = ({
         // Replace comma with dot for parsing
         const normalizedValue = cleanValue.replace(',', '.');
         numericValue = parseFloat(normalizedValue) || 0;
+        // Round to 1 decimal place
+        numericValue = Math.round(numericValue * 10) / 10;
       }
       
       onChange(numericValue);
@@ -69,7 +73,8 @@ const PercentageInput: React.FC<PercentageInputProps> = ({
 
   const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
     // On focus, show raw numeric value without formatting
-    setInternalValue(value.toString());
+    const displayValue = noDecimals ? value.toString() : (Math.round(value * 10) / 10).toString();
+    setInternalValue(displayValue);
     setIsFormatted(false);
     
     // Select all text for easier editing
@@ -83,9 +88,11 @@ const PercentageInput: React.FC<PercentageInputProps> = ({
     if (noDecimals) {
       setInternalValue(Math.round(value).toString());
     } else {
-      const formatted = value.toLocaleString('pt-BR', {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2
+      // Always format to 1 decimal place
+      const roundedValue = Math.round(value * 10) / 10;
+      const formatted = roundedValue.toLocaleString('pt-BR', {
+        minimumFractionDigits: 1,
+        maximumFractionDigits: 1
       });
       setInternalValue(formatted);
     }

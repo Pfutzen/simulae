@@ -109,6 +109,9 @@ const SimulatorForm: React.FC = () => {
   const [currentSimulation, setCurrentSimulation] = useState<SavedSimulation | undefined>(undefined);
   const [customResaleEnabled, setCustomResaleEnabled] = useState<boolean>(true);
 
+  // Add new state for tracking adjustment message
+  const [adjustmentMessage, setAdjustmentMessage] = useState<string>("");
+
   useEffect(() => {
     const savedSimulations = getSimulations();
     setSimulations(savedSimulations);
@@ -143,11 +146,36 @@ const SimulatorForm: React.FC = () => {
   useEffect(() => {
     const total = calculateTotalPercentage(formData);
     setTotalPercentage(total);
+    
+    // Auto-adjust keys value if percentage total is not 100%
+    if (total !== 100 && total > 0) {
+      const difference = 100 - total;
+      const adjustmentValue = (difference / 100) * formData.propertyValue;
+      const newKeysValue = formData.keysValue + adjustmentValue;
+      const newKeysPercentage = (newKeysValue / formData.propertyValue) * 100;
+      
+      // Only auto-adjust if the difference is significant (more than 0.1%)
+      if (Math.abs(difference) > 0.1) {
+        setFormData(prev => ({
+          ...prev,
+          keysValue: newKeysValue,
+          keysPercentage: Math.round(newKeysPercentage * 10) / 10
+        }));
+        
+        setAdjustmentMessage("A diferença gerada pelos arredondamentos foi ajustada no saldo das chaves.");
+        
+        // Clear message after 5 seconds
+        setTimeout(() => {
+          setAdjustmentMessage("");
+        }, 5000);
+      }
+    }
   }, [
     formData.downPaymentPercentage,
     formData.installmentsPercentage,
     formData.reinforcementsPercentage,
-    formData.keysPercentage
+    formData.keysPercentage,
+    formData.propertyValue
   ]);
 
   useEffect(() => {
@@ -230,7 +258,7 @@ const SimulatorForm: React.FC = () => {
     setFormData({
       ...formData,
       downPaymentValue: value,
-      downPaymentPercentage: percentage
+      downPaymentPercentage: Math.round(percentage * 10) / 10
     });
   };
 
@@ -239,7 +267,7 @@ const SimulatorForm: React.FC = () => {
     setFormData({
       ...formData,
       downPaymentValue: value,
-      downPaymentPercentage: percentage
+      downPaymentPercentage: Math.round(percentage * 10) / 10
     });
   };
 
@@ -249,7 +277,7 @@ const SimulatorForm: React.FC = () => {
     setFormData({
       ...formData,
       installmentsValue: value,
-      installmentsPercentage: percentage
+      installmentsPercentage: Math.round(percentage * 10) / 10
     });
   };
 
@@ -259,7 +287,7 @@ const SimulatorForm: React.FC = () => {
     setFormData({
       ...formData,
       installmentsValue: value,
-      installmentsPercentage: percentage
+      installmentsPercentage: Math.round(percentage * 10) / 10
     });
   };
 
@@ -276,7 +304,7 @@ const SimulatorForm: React.FC = () => {
     setFormData({
       ...formData,
       reinforcementsValue: value,
-      reinforcementsPercentage: percentage
+      reinforcementsPercentage: Math.round(percentage * 10) / 10
     });
   };
 
@@ -293,7 +321,7 @@ const SimulatorForm: React.FC = () => {
     setFormData({
       ...formData,
       reinforcementsValue: value,
-      reinforcementsPercentage: percentage
+      reinforcementsPercentage: Math.round(percentage * 10) / 10
     });
   };
 
@@ -345,20 +373,28 @@ const SimulatorForm: React.FC = () => {
 
   const handleKeysValueChange = (value: number) => {
     const percentage = calculatePercentage(value, formData.propertyValue);
+    const roundedPercentage = Math.round(percentage * 10) / 10;
     setFormData({
       ...formData,
       keysValue: value,
-      keysPercentage: percentage
+      keysPercentage: roundedPercentage
     });
+    
+    // Clear adjustment message when user manually changes keys
+    setAdjustmentMessage("");
   };
 
   const handleKeysPercentageChange = (percentage: number) => {
-    const value = calculateValue(percentage, formData.propertyValue);
+    const roundedPercentage = Math.round(percentage * 10) / 10;
+    const value = calculateValue(roundedPercentage, formData.propertyValue);
     setFormData({
       ...formData,
       keysValue: value,
-      keysPercentage: percentage
+      keysPercentage: roundedPercentage
     });
+    
+    // Clear adjustment message when user manually changes keys
+    setAdjustmentMessage("");
   };
 
   const handleCorrectionModeChange = (mode: CorrectionMode) => {
@@ -600,6 +636,15 @@ const SimulatorForm: React.FC = () => {
                   className="mb-6"
                 />
 
+                {adjustmentMessage && (
+                  <Alert className="bg-blue-50 border-blue-200">
+                    <CheckCircle className="h-4 w-4 text-blue-600" />
+                    <AlertDescription className="text-blue-800">
+                      {adjustmentMessage}
+                    </AlertDescription>
+                  </Alert>
+                )}
+
                 <div className="rounded-lg border border-slate-200 p-5">
                   <div className="flex items-center mb-4 gap-2">
                     <Calendar className="h-5 w-5 text-green-600" />
@@ -778,6 +823,7 @@ const SimulatorForm: React.FC = () => {
                         valueInputClassName="w-full md:w-[240px]"
                         percentageInputClassName="w-full md:w-[120px]"
                         hasError={!isPercentageValid}
+                        isKeysInput={true}
                       />
                     </div>
 
