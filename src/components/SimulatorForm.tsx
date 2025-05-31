@@ -257,8 +257,9 @@ const SimulatorForm: React.FC = () => {
   const handlePropertyValueChange = (value: number) => {
     const newData = { ...formData, propertyValue: value };
     
-    // Calculate percentages for ALL manually set values (but don't change the values themselves)
+    // NEVER recalculate manually set values - only update their percentages for display
     if (userSetValues.downPaymentValue) {
+      // Keep the exact manual value, only recalculate percentage for display
       newData.downPaymentPercentage = Math.round(
         (newData.downPaymentValue / value) * 100 * 10
       ) / 10;
@@ -271,6 +272,7 @@ const SimulatorForm: React.FC = () => {
     }
     
     if (userSetValues.installmentsValue) {
+      // Keep the exact manual value, only recalculate percentage for display
       const totalInstallmentValue = newData.installmentsValue * newData.installmentsCount;
       newData.installmentsPercentage = Math.round(
         (totalInstallmentValue / value) * 100 * 10
@@ -291,6 +293,7 @@ const SimulatorForm: React.FC = () => {
     const reinforcementCount = months.length;
     
     if (userSetValues.reinforcementsValue) {
+      // Keep the exact manual value, only recalculate percentage for display
       const totalReinforcementValue = newData.reinforcementsValue * reinforcementCount;
       newData.reinforcementsPercentage = Math.round(
         (totalReinforcementValue / value) * 100 * 10
@@ -303,6 +306,7 @@ const SimulatorForm: React.FC = () => {
     }
     
     if (userSetValues.keysValue) {
+      // Keep the exact manual value, only recalculate percentage for display
       newData.keysPercentage = Math.round(
         (newData.keysValue / value) * 100 * 10
       ) / 10;
@@ -316,12 +320,12 @@ const SimulatorForm: React.FC = () => {
   };
 
   const handleDownPaymentValueChange = (value: number) => {
-    // Respect the user's input value as COMPLETELY FIXED
+    // NEVER change the user's input value - keep it exactly as entered
     const percentage = calculatePercentage(value, formData.propertyValue);
     setFormData({
       ...formData,
-      downPaymentValue: value, // Keep user's exact value - NEVER CHANGE THIS
-      downPaymentPercentage: Math.round(percentage * 10) / 10 // Calculate percentage for display only
+      downPaymentValue: value, // FIXED - never changes
+      downPaymentPercentage: Math.round(percentage * 10) / 10
     });
     
     // Mark this value as manually set and should NEVER be changed
@@ -341,13 +345,13 @@ const SimulatorForm: React.FC = () => {
   };
 
   const handleInstallmentsValueChange = (value: number) => {
-    // Respect the user's input value as COMPLETELY FIXED
+    // NEVER change the user's input value - keep it exactly as entered
     const totalValue = value * formData.installmentsCount;
     const percentage = calculatePercentage(totalValue, formData.propertyValue);
     setFormData({
       ...formData,
-      installmentsValue: value, // Keep user's exact value - NEVER CHANGE THIS
-      installmentsPercentage: Math.round(percentage * 10) / 10 // Calculate percentage for display only
+      installmentsValue: value, // FIXED - never changes
+      installmentsPercentage: Math.round(percentage * 10) / 10
     });
     
     // Mark this value as manually set and should NEVER be changed
@@ -368,7 +372,7 @@ const SimulatorForm: React.FC = () => {
   };
 
   const handleReinforcementsValueChange = (value: number) => {
-    // Respect the user's input value as COMPLETELY FIXED
+    // NEVER change the user's input value - keep it exactly as entered
     const months = getReinforcementMonths(
       formData.installmentsCount,
       formData.reinforcementFrequency,
@@ -380,8 +384,8 @@ const SimulatorForm: React.FC = () => {
     
     setFormData({
       ...formData,
-      reinforcementsValue: value, // Keep user's exact value - NEVER CHANGE THIS
-      reinforcementsPercentage: Math.round(percentage * 10) / 10 // Calculate percentage for display only
+      reinforcementsValue: value, // FIXED - never changes
+      reinforcementsPercentage: Math.round(percentage * 10) / 10
     });
     
     // Mark this value as manually set and should NEVER be changed
@@ -416,34 +420,30 @@ const SimulatorForm: React.FC = () => {
     );
     const count = months.length;
     
-    // Only recalculate value if it wasn't manually set
+    // NEVER recalculate manually set values
     let newValue = formData.reinforcementsValue;
-    if (!userSetValues.reinforcementsValue) {
+    let newPercentage = formData.reinforcementsPercentage;
+    
+    if (userSetValues.reinforcementsValue) {
+      // Keep the exact manual value, only recalculate percentage for display
+      const totalReinforcementValue = newValue * count;
+      newPercentage = Math.round(
+        (totalReinforcementValue / formData.propertyValue) * 100 * 10
+      ) / 10;
+    } else {
+      // Only recalculate value if not manually set
       const totalValue = calculateValue(
         formData.reinforcementsPercentage,
         formData.propertyValue
       );
       newValue = count > 0 ? totalValue / count : 0;
-    } else {
-      // Recalculate percentage for display only
-      const totalReinforcementValue = newValue * count;
-      const newPercentage = Math.round(
-        (totalReinforcementValue / formData.propertyValue) * 100 * 10
-      ) / 10;
-      setFormData(prev => ({
-        ...prev,
-        reinforcementFrequency: frequency,
-        reinforcementsValue: newValue,
-        reinforcementsPercentage: newPercentage
-      }));
-      setReinforcementMonths(months);
-      return;
     }
     
     setFormData({
       ...formData,
       reinforcementFrequency: frequency,
-      reinforcementsValue: newValue
+      reinforcementsValue: newValue,
+      reinforcementsPercentage: newPercentage
     });
     
     setReinforcementMonths(months);
@@ -457,47 +457,43 @@ const SimulatorForm: React.FC = () => {
     );
     const count = newMonths.length;
     
-    // Only recalculate value if it wasn't manually set
+    // NEVER recalculate manually set values
     let newValue = formData.reinforcementsValue;
-    if (!userSetValues.reinforcementsValue) {
+    let newPercentage = formData.reinforcementsPercentage;
+    
+    if (userSetValues.reinforcementsValue) {
+      // Keep the exact manual value, only recalculate percentage for display
+      const totalReinforcementValue = newValue * count;
+      newPercentage = Math.round(
+        (totalReinforcementValue / formData.propertyValue) * 100 * 10
+      ) / 10;
+    } else {
+      // Only recalculate value if not manually set
       const totalValue = calculateValue(
         formData.reinforcementsPercentage,
         formData.propertyValue
       );
       newValue = count > 0 ? totalValue / count : 0;
-    } else {
-      // Recalculate percentage for display only
-      const totalReinforcementValue = newValue * count;
-      const newPercentage = Math.round(
-        (totalReinforcementValue / formData.propertyValue) * 100 * 10
-      ) / 10;
-      setFormData(prev => ({
-        ...prev,
-        finalMonthsWithoutReinforcement: months,
-        reinforcementsValue: newValue,
-        reinforcementsPercentage: newPercentage
-      }));
-      setReinforcementMonths(newMonths);
-      return;
     }
     
     setFormData({
       ...formData,
       finalMonthsWithoutReinforcement: months,
-      reinforcementsValue: newValue
+      reinforcementsValue: newValue,
+      reinforcementsPercentage: newPercentage
     });
     
     setReinforcementMonths(newMonths);
   };
 
   const handleKeysValueChange = (value: number) => {
-    // Respect the user's input value as COMPLETELY FIXED
+    // NEVER change the user's input value - keep it exactly as entered
     const percentage = calculatePercentage(value, formData.propertyValue);
     const roundedPercentage = Math.round(percentage * 10) / 10;
     setFormData({
       ...formData,
-      keysValue: value, // Keep user's exact value - NEVER CHANGE THIS
-      keysPercentage: roundedPercentage // Calculate percentage for display only
+      keysValue: value, // FIXED - never changes
+      keysPercentage: roundedPercentage
     });
     
     // Mark this value as manually set and clear adjustment message
