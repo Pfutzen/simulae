@@ -46,6 +46,15 @@ const SimulatorForm: React.FC = () => {
   const [simulationName, setSimulationName] = useState<string>("");
   const [simulations, setSimulations] = useState<SavedSimulation[]>([]);
   const [activeTab, setActiveTab] = useState<string>("simulator");
+  
+  // Add tracking for which fields were manually set by user
+  const [userSetValues, setUserSetValues] = useState<{
+    downPaymentValue?: boolean;
+    installmentsValue?: boolean;
+    reinforcementsValue?: boolean;
+    keysValue?: boolean;
+  }>({});
+  
   const [formData, setFormData] = useState<SimulationFormData>({
     propertyValue: 500000,
     downPaymentValue: 50000,
@@ -228,14 +237,31 @@ const SimulatorForm: React.FC = () => {
   const handlePropertyValueChange = (value: number) => {
     const newData = { ...formData, propertyValue: value };
     
-    newData.downPaymentValue = calculateValue(
-      newData.downPaymentPercentage,
-      value
-    );
-    newData.installmentsValue = calculateValue(
-      newData.installmentsPercentage,
-      value
-    ) / newData.installmentsCount;
+    // Only recalculate values that weren't manually set by the user
+    if (!userSetValues.downPaymentValue) {
+      newData.downPaymentValue = calculateValue(
+        newData.downPaymentPercentage,
+        value
+      );
+    } else {
+      // Recalculate percentage for display
+      newData.downPaymentPercentage = Math.round(
+        (newData.downPaymentValue / value) * 100 * 10
+      ) / 10;
+    }
+    
+    if (!userSetValues.installmentsValue) {
+      newData.installmentsValue = calculateValue(
+        newData.installmentsPercentage,
+        value
+      ) / newData.installmentsCount;
+    } else {
+      // Recalculate percentage for display
+      const totalInstallmentValue = newData.installmentsValue * newData.installmentsCount;
+      newData.installmentsPercentage = Math.round(
+        (totalInstallmentValue / value) * 100 * 10
+      ) / 10;
+    }
     
     const months = getReinforcementMonths(
       newData.installmentsCount, 
@@ -243,11 +269,27 @@ const SimulatorForm: React.FC = () => {
       newData.finalMonthsWithoutReinforcement
     );
     const reinforcementCount = months.length;
-    newData.reinforcementsValue = reinforcementCount > 0
-      ? calculateValue(newData.reinforcementsPercentage, value) / reinforcementCount
-      : 0;
     
-    newData.keysValue = calculateValue(newData.keysPercentage, value);
+    if (!userSetValues.reinforcementsValue) {
+      newData.reinforcementsValue = reinforcementCount > 0
+        ? calculateValue(newData.reinforcementsPercentage, value) / reinforcementCount
+        : 0;
+    } else {
+      // Recalculate percentage for display
+      const totalReinforcementValue = newData.reinforcementsValue * reinforcementCount;
+      newData.reinforcementsPercentage = Math.round(
+        (totalReinforcementValue / value) * 100 * 10
+      ) / 10;
+    }
+    
+    if (!userSetValues.keysValue) {
+      newData.keysValue = calculateValue(newData.keysPercentage, value);
+    } else {
+      // Recalculate percentage for display
+      newData.keysPercentage = Math.round(
+        (newData.keysValue / value) * 100 * 10
+      ) / 10;
+    }
     
     setFormData(newData);
     setReinforcementMonths(months);
@@ -260,6 +302,9 @@ const SimulatorForm: React.FC = () => {
       downPaymentValue: value,
       downPaymentPercentage: Math.round(percentage * 10) / 10
     });
+    
+    // Mark this value as manually set
+    setUserSetValues(prev => ({ ...prev, downPaymentValue: true }));
   };
 
   const handleDownPaymentPercentageChange = (percentage: number) => {
@@ -269,6 +314,9 @@ const SimulatorForm: React.FC = () => {
       downPaymentValue: value,
       downPaymentPercentage: Math.round(percentage * 10) / 10
     });
+    
+    // Clear manual flag when percentage is changed
+    setUserSetValues(prev => ({ ...prev, downPaymentValue: false }));
   };
 
   const handleInstallmentsValueChange = (value: number) => {
@@ -279,6 +327,9 @@ const SimulatorForm: React.FC = () => {
       installmentsValue: value,
       installmentsPercentage: Math.round(percentage * 10) / 10
     });
+    
+    // Mark this value as manually set
+    setUserSetValues(prev => ({ ...prev, installmentsValue: true }));
   };
 
   const handleInstallmentsPercentageChange = (percentage: number) => {
@@ -289,6 +340,9 @@ const SimulatorForm: React.FC = () => {
       installmentsValue: value,
       installmentsPercentage: Math.round(percentage * 10) / 10
     });
+    
+    // Clear manual flag when percentage is changed
+    setUserSetValues(prev => ({ ...prev, installmentsValue: false }));
   };
 
   const handleReinforcementsValueChange = (value: number) => {
@@ -306,6 +360,9 @@ const SimulatorForm: React.FC = () => {
       reinforcementsValue: value,
       reinforcementsPercentage: Math.round(percentage * 10) / 10
     });
+    
+    // Mark this value as manually set
+    setUserSetValues(prev => ({ ...prev, reinforcementsValue: true }));
   };
 
   const handleReinforcementsPercentageChange = (percentage: number) => {
@@ -323,6 +380,9 @@ const SimulatorForm: React.FC = () => {
       reinforcementsValue: value,
       reinforcementsPercentage: Math.round(percentage * 10) / 10
     });
+    
+    // Clear manual flag when percentage is changed
+    setUserSetValues(prev => ({ ...prev, reinforcementsValue: false }));
   };
 
   const handleReinforcementFrequencyChange = (frequency: number) => {
@@ -380,7 +440,8 @@ const SimulatorForm: React.FC = () => {
       keysPercentage: roundedPercentage
     });
     
-    // Clear adjustment message when user manually changes keys
+    // Mark this value as manually set and clear adjustment message
+    setUserSetValues(prev => ({ ...prev, keysValue: true }));
     setAdjustmentMessage("");
   };
 
@@ -393,7 +454,8 @@ const SimulatorForm: React.FC = () => {
       keysPercentage: roundedPercentage
     });
     
-    // Clear adjustment message when user manually changes keys
+    // Clear manual flag when percentage is changed and clear adjustment message
+    setUserSetValues(prev => ({ ...prev, keysValue: false }));
     setAdjustmentMessage("");
   };
 

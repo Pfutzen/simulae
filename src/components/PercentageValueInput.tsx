@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useRef } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import CurrencyInput from "./CurrencyInput";
@@ -19,7 +19,7 @@ interface PercentageValueInputProps {
   percentageInputClassName?: string;
   installmentsCount?: number;
   hasError?: boolean;
-  isKeysInput?: boolean; // Nova prop para identificar se é o input das chaves
+  isKeysInput?: boolean;
 }
 
 const PercentageValueInput: React.FC<PercentageValueInputProps> = ({
@@ -37,7 +37,13 @@ const PercentageValueInput: React.FC<PercentageValueInputProps> = ({
   hasError = false,
   isKeysInput = false
 }) => {
+  // Track which field was last changed to prevent circular updates
+  const lastChangedField = useRef<'value' | 'percentage' | null>(null);
+
   const handleValueChange = (newValue: number) => {
+    lastChangedField.current = 'value';
+    
+    // Always respect the user's input value - never change it
     onValueChange(newValue);
     
     // Calculate percentage based on the new value with rounding
@@ -61,6 +67,8 @@ const PercentageValueInput: React.FC<PercentageValueInputProps> = ({
   };
 
   const handlePercentageChange = (newPercentage: number) => {
+    lastChangedField.current = 'percentage';
+    
     // Round percentage to 1 decimal place
     const roundedPercentage = Math.round(newPercentage * 10) / 10;
     onPercentageChange(roundedPercentage);
