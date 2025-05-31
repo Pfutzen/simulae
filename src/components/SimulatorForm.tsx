@@ -47,7 +47,7 @@ const SimulatorForm: React.FC = () => {
   const [simulations, setSimulations] = useState<SavedSimulation[]>([]);
   const [activeTab, setActiveTab] = useState<string>("simulator");
   
-  // Add tracking for which fields were manually set by user
+  // Track which values were manually set by user input (R$ values)
   const [userSetValues, setUserSetValues] = useState<{
     downPaymentValue?: boolean;
     installmentsValue?: boolean;
@@ -156,8 +156,8 @@ const SimulatorForm: React.FC = () => {
     const total = calculateTotalPercentage(formData);
     setTotalPercentage(total);
     
-    // Auto-adjust keys value if percentage total is not 100%
-    if (total !== 100 && total > 0) {
+    // Auto-adjust keys value ONLY if percentage total is not 100% and no keys value was manually set
+    if (total !== 100 && total > 0 && !userSetValues.keysValue) {
       const difference = 100 - total;
       const adjustmentValue = (difference / 100) * formData.propertyValue;
       const newKeysValue = formData.keysValue + adjustmentValue;
@@ -171,7 +171,7 @@ const SimulatorForm: React.FC = () => {
           keysPercentage: Math.round(newKeysPercentage * 10) / 10
         }));
         
-        setAdjustmentMessage("A diferença gerada pelos arredondamentos foi ajustada no saldo das chaves.");
+        setAdjustmentMessage("A diferença foi ajustada no valor das chaves para manter o equilíbrio financeiro conforme os valores inseridos.");
         
         // Clear message after 5 seconds
         setTimeout(() => {
@@ -184,7 +184,8 @@ const SimulatorForm: React.FC = () => {
     formData.installmentsPercentage,
     formData.reinforcementsPercentage,
     formData.keysPercentage,
-    formData.propertyValue
+    formData.propertyValue,
+    userSetValues.keysValue
   ]);
 
   useEffect(() => {
@@ -244,7 +245,7 @@ const SimulatorForm: React.FC = () => {
         value
       );
     } else {
-      // Recalculate percentage for display
+      // Recalculate percentage for display only
       newData.downPaymentPercentage = Math.round(
         (newData.downPaymentValue / value) * 100 * 10
       ) / 10;
@@ -256,7 +257,7 @@ const SimulatorForm: React.FC = () => {
         value
       ) / newData.installmentsCount;
     } else {
-      // Recalculate percentage for display
+      // Recalculate percentage for display only
       const totalInstallmentValue = newData.installmentsValue * newData.installmentsCount;
       newData.installmentsPercentage = Math.round(
         (totalInstallmentValue / value) * 100 * 10
@@ -275,7 +276,7 @@ const SimulatorForm: React.FC = () => {
         ? calculateValue(newData.reinforcementsPercentage, value) / reinforcementCount
         : 0;
     } else {
-      // Recalculate percentage for display
+      // Recalculate percentage for display only
       const totalReinforcementValue = newData.reinforcementsValue * reinforcementCount;
       newData.reinforcementsPercentage = Math.round(
         (totalReinforcementValue / value) * 100 * 10
@@ -285,7 +286,7 @@ const SimulatorForm: React.FC = () => {
     if (!userSetValues.keysValue) {
       newData.keysValue = calculateValue(newData.keysPercentage, value);
     } else {
-      // Recalculate percentage for display
+      // Recalculate percentage for display only
       newData.keysPercentage = Math.round(
         (newData.keysValue / value) * 100 * 10
       ) / 10;
@@ -296,11 +297,12 @@ const SimulatorForm: React.FC = () => {
   };
 
   const handleDownPaymentValueChange = (value: number) => {
+    // Respect the user's input value as fixed
     const percentage = calculatePercentage(value, formData.propertyValue);
     setFormData({
       ...formData,
-      downPaymentValue: value,
-      downPaymentPercentage: Math.round(percentage * 10) / 10
+      downPaymentValue: value, // Keep user's exact value
+      downPaymentPercentage: Math.round(percentage * 10) / 10 // Calculate percentage for display
     });
     
     // Mark this value as manually set
@@ -320,12 +322,13 @@ const SimulatorForm: React.FC = () => {
   };
 
   const handleInstallmentsValueChange = (value: number) => {
+    // Respect the user's input value as fixed
     const totalValue = value * formData.installmentsCount;
     const percentage = calculatePercentage(totalValue, formData.propertyValue);
     setFormData({
       ...formData,
-      installmentsValue: value,
-      installmentsPercentage: Math.round(percentage * 10) / 10
+      installmentsValue: value, // Keep user's exact value
+      installmentsPercentage: Math.round(percentage * 10) / 10 // Calculate percentage for display
     });
     
     // Mark this value as manually set
@@ -346,6 +349,7 @@ const SimulatorForm: React.FC = () => {
   };
 
   const handleReinforcementsValueChange = (value: number) => {
+    // Respect the user's input value as fixed
     const months = getReinforcementMonths(
       formData.installmentsCount,
       formData.reinforcementFrequency,
@@ -357,8 +361,8 @@ const SimulatorForm: React.FC = () => {
     
     setFormData({
       ...formData,
-      reinforcementsValue: value,
-      reinforcementsPercentage: Math.round(percentage * 10) / 10
+      reinforcementsValue: value, // Keep user's exact value
+      reinforcementsPercentage: Math.round(percentage * 10) / 10 // Calculate percentage for display
     });
     
     // Mark this value as manually set
@@ -432,12 +436,13 @@ const SimulatorForm: React.FC = () => {
   };
 
   const handleKeysValueChange = (value: number) => {
+    // Respect the user's input value as fixed
     const percentage = calculatePercentage(value, formData.propertyValue);
     const roundedPercentage = Math.round(percentage * 10) / 10;
     setFormData({
       ...formData,
-      keysValue: value,
-      keysPercentage: roundedPercentage
+      keysValue: value, // Keep user's exact value
+      keysPercentage: roundedPercentage // Calculate percentage for display
     });
     
     // Mark this value as manually set and clear adjustment message
@@ -1080,7 +1085,7 @@ const SimulatorForm: React.FC = () => {
               rentalEstimate={resaleResults.rentalEstimate}
               annualRentalReturn={resaleResults.annualRentalReturn}
               appreciationIndex={formData.appreciationIndex}
-              formData={formData} // Pass formData to SimulationResults
+              formData={formData}
               {...resaleResults}
             />
           )}
