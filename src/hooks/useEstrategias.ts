@@ -1,3 +1,4 @@
+
 import { useState, useCallback, useMemo } from 'react';
 import { ImovelConfig, IndicesEconomicos, EstrategiaResultado, ROIEvolution } from '@/types/investment.types';
 import { calcularTodasEstrategias, gerarEvolucaoROI } from '@/utils/calculosFinanceiros';
@@ -46,7 +47,7 @@ export const useEstrategias = () => {
         mes: i,
         valor: valorFinal,
         data: dataParcela,
-        tipo: (i === meses ? 'chaves' : 'parcela') as 'entrada' | 'parcela' | 'reforco' | 'chaves'
+        tipo: i === meses ? 'chaves' as const : 'parcela' as const
       });
     }
 
