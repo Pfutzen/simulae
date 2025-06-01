@@ -1,4 +1,6 @@
-export type CorrectionMode = "manual" | "cub" | "CUB_NACIONAL" | "IPCA" | "IGP_M" | "INCC_NACIONAL";
+import { TipoIndice } from "@/types/indices";
+
+export type CorrectionMode = TipoIndice;
 
 export interface SimulationFormData {
   propertyValue: number;
@@ -34,3 +36,4 @@ export interface PaymentType {
   month?: number;
   reinforcementValue?: number; // Nova propriedade para o valor do reforço
 }
+

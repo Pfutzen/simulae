@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -21,7 +20,7 @@ import {
   calculateDeliveryDateFromStart,
   calculateStartDateFromValuation
 } from "@/utils/calculationUtils";
-import { SimulationFormData, PaymentType, CorrectionMode } from "@/utils/types";
+import { SimulationFormData, PaymentType } from "@/utils/types";
 import { saveSimulation, getSimulations, SavedSimulation, getActiveSimulation } from "@/utils/simulationHistoryUtils";
 import { wouldStartDateBeInPast, formatToMonthYear, calculateInstallmentsFromValuationAndDelivery, safeDateConversion } from "@/utils/dateUtils";
 import PropertyValueInput from "./PropertyValueInput";
@@ -41,6 +40,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import MonthYearInput from "./MonthYearInput";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { TipoIndice } from "@/types/indices";
 
 import PropostaButton from "./PropostaButton";
 
@@ -71,7 +71,7 @@ const SimulatorForm: React.FC = () => {
     finalMonthsWithoutReinforcement: 5,
     keysValue: 250000,
     keysPercentage: 50,
-    correctionMode: "manual",
+    correctionMode: "MANUAL" as TipoIndice,
     correctionIndex: 0.5,
     appreciationIndex: 1.35,
     resaleMonth: 24,
@@ -480,7 +480,7 @@ const SimulatorForm: React.FC = () => {
   // const handleKeysValueChange = ... (REMOVED)
   // const handleKeysPercentageChange = ... (REMOVED)
 
-  const handleCorrectionModeChange = (mode: CorrectionMode) => {
+  const handleCorrectionModeChange = (mode: TipoIndice) => {
     setFormData({ ...formData, correctionMode: mode });
   };
 
@@ -966,7 +966,7 @@ const SimulatorForm: React.FC = () => {
                         onChange={handleCorrectionModeChange}
                       />
                       
-                      {formData.correctionMode === "manual" && (
+                      {formData.correctionMode === "MANUAL" && (
                         <NumberInput
                           id="correction-index"
                           label="Índice de correção mensal"

@@ -30,7 +30,7 @@ const CorrectionSelector: React.FC<CorrectionSelectorProps> = ({ value, onChange
     { value: 'IPCA', label: 'IPCA', acumulado: acumuladoAnual.IPCA },
     { value: 'IGP_M', label: 'IGP-M', acumulado: acumuladoAnual.IGP_M },
     { value: 'INCC_NACIONAL', label: 'INCC Nacional', acumulado: acumuladoAnual.INCC_NACIONAL },
-    { value: 'MANUAL', label: 'Manual', acumulado: 'Customizado' }
+    { value: 'MANUAL', label: 'Manual', acumulado: null }
   ] as const;
 
   return (
@@ -56,7 +56,7 @@ const CorrectionSelector: React.FC<CorrectionSelectorProps> = ({ value, onChange
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {opcoes.slice(0, -1).map((opcao) => (
+                    {opcoes.filter(opcao => opcao.acumulado !== null).map((opcao) => (
                       <TableRow key={opcao.value}>
                         <TableCell>{opcao.label}</TableCell>
                         <TableCell className="text-right">{opcao.acumulado.toFixed(2)}%</TableCell>
@@ -80,7 +80,7 @@ const CorrectionSelector: React.FC<CorrectionSelectorProps> = ({ value, onChange
           <SelectGroup>
             {opcoes.map((opcao) => (
               <SelectItem key={opcao.value} value={opcao.value}>
-                {opcao.label} {opcao.value !== 'MANUAL' && `(${opcao.acumulado.toFixed(2)}% a.a.)`}
+                {opcao.label} {opcao.acumulado !== null && `(${opcao.acumulado.toFixed(2)}% a.a.)`}
               </SelectItem>
             ))}
           </SelectGroup>
