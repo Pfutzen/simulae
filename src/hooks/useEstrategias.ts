@@ -46,13 +46,14 @@ export const useEstrategias = () => {
         mes: i,
         valor: valorFinal,
         data: dataParcela,
-        tipo: i === meses ? ('chaves' as const) : ('parcela' as const)
+        tipo: (i === meses ? 'chaves' : 'parcela') as 'entrada' | 'parcela' | 'reforco' | 'chaves'
       });
     }
 
     return cronograma;
   }, []);
 
+  
   // Atualizar configuração do imóvel
   const updateImovelConfig = useCallback((updates: Partial<ImovelConfig>) => {
     setImovelConfig(prev => {
