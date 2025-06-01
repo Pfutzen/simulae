@@ -108,29 +108,20 @@ export const generatePaymentSchedule = (data: SimulationFormData): PaymentType[]
     currentDate = addMonthsToDate(currentDate, 1);
   }
 
-  // Chaves - aplicar a mesma lógica de correção
-  const monthlyCorrection = getMonthlyCorrection(data.installmentsCount + 1);
+  // Chaves - usar EXATAMENTE o valor definido pelo usuário
+  const keysAmount = data.keysValue; // Respeita o valor definido pelo usuário
   
-  // Calcular o valor das chaves necessário para zerar o saldo
-  // Considerando que pode haver correção sobre o saldo atual
-  let adjustedKeysValue = data.keysValue;
-  
-  // Se ainda há saldo devedor, as chaves devem cobrir esse saldo
-  if (balance > 0) {
-    adjustedKeysValue = balance;
-  }
-  
-  // Calcular o valor do imóvel no mês das chaves (aplicar valorização do último mês também)
+  // Calcular o valor do imóvel no mês das chaves
   const finalPropertyValue = data.propertyValue * Math.pow(1 + data.appreciationIndex / 100, data.installmentsCount + 1);
-  totalPaid += adjustedKeysValue;
+  totalPaid += keysAmount;
 
-  // Após o pagamento das chaves, o saldo deve ser zero
-  const finalBalance = Math.max(0, balance - adjustedKeysValue);
+  // Calcular saldo final: subtrai as chaves do saldo atual
+  const finalBalance = Math.max(0, balance - keysAmount);
 
   schedule.push({
     date: deliveryDate,
     description: "Chaves",
-    amount: adjustedKeysValue,
+    amount: keysAmount,
     balance: finalBalance,
     totalPaid,
     propertyValue: finalPropertyValue,
