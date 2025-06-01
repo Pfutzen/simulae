@@ -6,3 +6,6 @@ export * from './calculationHelpers';
 export * from './paymentSchedule';
 export * from './resaleAnalysis';
 export * from './formatters';
+
+// Re-export new financial lib functions
+export * from '../lib/financial';
