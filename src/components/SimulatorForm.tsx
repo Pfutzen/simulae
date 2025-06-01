@@ -33,6 +33,8 @@ import SimulationResults from "./SimulationResults";
 import SimulationHistory from "./SimulationHistory";
 import DatePicker from "./DatePicker";
 import ReinforcementDatesControl from "./ReinforcementDatesControl";
+import CurrencyInput from "./CurrencyInput";
+import PercentageInput from "./PercentageInput";
 import { CheckCircle, AlertCircle, DollarSign, Calendar, TrendingUp, Home, ExternalLink } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
