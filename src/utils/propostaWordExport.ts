@@ -1,4 +1,3 @@
-
 import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, BorderStyle } from 'docx';
 import { saveAs } from 'file-saver';
 import { PropostaData } from '@/types/proposta';
@@ -19,7 +18,7 @@ export const generatePropostaWord = async (data: PropostaData, simulation: Saved
   // Gerar descrição da correção monetária baseada no modo
   const getCorrectionDescription = () => {
     if (simulation.formData.correctionMode === "cub") {
-      return "Os valores apresentados acima são nominais. Toda a composição será corrigida mensalmente pelo índice CUB/SC acumulado (média dos últimos 12 meses) até a data de vencimento de cada parcela, conforme política vigente da construtora.";
+      return "Os valores apresentados acima são nominais. Toda a composição será corrigida mensalmente pelo índice CUB acumulado (média dos últimos 12 meses) até a data de vencimento de cada parcela, conforme política vigente da construtora.";
     } else {
       const percentage = (simulation.formData.correctionIndex * 100).toFixed(2);
       return `Os valores apresentados acima são nominais. Toda a composição será corrigida mensalmente pelo índice de ${percentage}% ao mês até a data de vencimento de cada parcela, conforme política vigente da construtora.`;
