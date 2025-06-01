@@ -125,12 +125,13 @@ export const exportScheduleToPDF = (schedule: PaymentType[], fileName: string = 
     'Valor do Imóvel'
   ];
   
-  const colWidths = [25, 35, 30, 25, 30, 30, 35]; // larguras das colunas ajustadas
+  // Ajustar larguras das colunas para melhor distribuição
+  const colWidths = [30, 40, 35, 30, 35, 35, 40]; // larguras aumentadas e melhor distribuídas
   let startX = margin;
   let currentY = 35;
   
   // Desenhar cabeçalhos
-  doc.setFontSize(10);
+  doc.setFontSize(9); // Diminuir fonte para caber melhor
   doc.setFont("helvetica", "bold");
   headers.forEach((header, index) => {
     doc.rect(startX, currentY - 5, colWidths[index], 10);
@@ -140,6 +141,7 @@ export const exportScheduleToPDF = (schedule: PaymentType[], fileName: string = 
   
   currentY += 10;
   doc.setFont("helvetica", "normal");
+  doc.setFontSize(8); // Fonte menor para os dados
   
   // Adicionar dados
   schedule.forEach((payment, index) => {
@@ -150,6 +152,7 @@ export const exportScheduleToPDF = (schedule: PaymentType[], fileName: string = 
       
       // Redesenhar cabeçalhos na nova página
       startX = margin;
+      doc.setFontSize(9);
       doc.setFont("helvetica", "bold");
       headers.forEach((header, headerIndex) => {
         doc.rect(startX, currentY - 5, colWidths[headerIndex], 10);
@@ -158,6 +161,7 @@ export const exportScheduleToPDF = (schedule: PaymentType[], fileName: string = 
       });
       currentY += 10;
       doc.setFont("helvetica", "normal");
+      doc.setFontSize(8);
     }
     
     startX = margin;
