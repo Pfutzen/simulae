@@ -41,7 +41,8 @@ const PercentageValueInput: React.FC<PercentageValueInputProps> = ({
   // Estado para controlar qual modo está ativo: "value" ou "percentage"
   const [fixedMode, setFixedMode] = useState<"value" | "percentage">("value");
   
-  // Ref para controlar se devemos ignorar mudanças externas
+  // Ref para armazenar o último valor definido pelo usuário no modo valor
+  const userSetValue = useRef<number>(value);
   const isInternalUpdate = useRef(false);
 
   const handleValueChange = (newValue: number) => {
@@ -49,6 +50,9 @@ const PercentageValueInput: React.FC<PercentageValueInputProps> = ({
     if (fixedMode !== "value") return;
     
     console.log(`[${label}] handleValueChange - newValue:`, newValue, 'mode:', fixedMode);
+    
+    // Armazena o valor que o usuário digitou
+    userSetValue.current = newValue;
     
     // Marca que esta é uma atualização interna
     isInternalUpdate.current = true;
@@ -111,6 +115,8 @@ const PercentageValueInput: React.FC<PercentageValueInputProps> = ({
     
     console.log(`[${label}] Calculated value:`, newValue);
     
+    // Atualiza o valor de referência do usuário também
+    userSetValue.current = newValue;
     onValueChange(newValue);
     
     // Reset the flag after a short delay
@@ -123,36 +129,58 @@ const PercentageValueInput: React.FC<PercentageValueInputProps> = ({
     if (newMode && (newMode === "value" || newMode === "percentage")) {
       console.log(`[${label}] Mode changed from ${fixedMode} to ${newMode}`);
       setFixedMode(newMode);
+      
+      if (newMode === "value") {
+        // Quando mudamos para modo valor, preservamos o valor atual como referência
+        userSetValue.current = value;
+      }
     }
   };
 
-  // Effect para prevenir mudanças externas quando em modo "value"
+  // Effect APENAS para recalcular percentual quando estamos em modo valor
   useEffect(() => {
     if (fixedMode === "value" && !isInternalUpdate.current) {
-      console.log(`[${label}] External change detected in value mode - ignoring percentage changes`);
-      // Se estamos em modo "value" e não é uma atualização interna,
-      // recalculamos o percentual baseado no valor atual
+      console.log(`[${label}] External change detected in value mode`);
+      
+      // PROTEÇÃO: Se o valor externo é diferente do que o usuário definiu,
+      // restauramos o valor do usuário e recalculamos apenas o percentual
+      if (Math.abs(value - userSetValue.current) > 0.01) {
+        console.log(`[${label}] Restoring user value:`, userSetValue.current, 'instead of:', value);
+        onValueChange(userSetValue.current);
+      }
+      
+      // Recalcula APENAS o percentual baseado no valor do usuário
       if (totalValue > 0) {
         let newPercentage = 0;
         if (label === "Parcelas" && installmentsCount > 0) {
-          const totalInstallmentValue = value * installmentsCount;
+          const totalInstallmentValue = userSetValue.current * installmentsCount;
           newPercentage = (totalInstallmentValue / totalValue) * 100;
         } else if (label === "Reforços" && installmentsCount > 0) {
-          const totalReinforcementValue = value * installmentsCount;
+          const totalReinforcementValue = userSetValue.current * installmentsCount;
           newPercentage = (totalReinforcementValue / totalValue) * 100;
         } else {
-          newPercentage = (value / totalValue) * 100;
+          newPercentage = (userSetValue.current / totalValue) * 100;
         }
         
         newPercentage = Math.round(newPercentage * 10) / 10;
         
         if (Math.abs(newPercentage - percentage) > 0.01) {
-          console.log(`[${label}] Recalculating percentage from value: ${newPercentage}`);
+          console.log(`[${label}] Recalculating percentage from user value: ${newPercentage}`);
           onPercentageChange(newPercentage);
         }
       }
     }
-  }, [value, totalValue, installmentsCount, fixedMode, label, percentage, onPercentageChange]);
+  }, [totalValue, installmentsCount, fixedMode, label]);
+
+  // Effect separado para detectar mudanças no valor externo e atualizar nossa referência
+  useEffect(() => {
+    if (fixedMode === "value" && !isInternalUpdate.current) {
+      // Se a diferença é muito pequena, provavelmente é uma mudança nossa
+      if (Math.abs(value - userSetValue.current) < 0.01) {
+        userSetValue.current = value;
+      }
+    }
+  }, [value, fixedMode]);
   
   return (
     <div className={cn(
