@@ -1,7 +1,8 @@
 
-import React, { useRef } from "react";
+import React, { useRef, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import CurrencyInput from "./CurrencyInput";
 import PercentageInput from "./PercentageInput";
 import { cn } from "@/lib/utils";
@@ -37,12 +38,12 @@ const PercentageValueInput: React.FC<PercentageValueInputProps> = ({
   hasError = false,
   isKeysInput = false
 }) => {
-  // Ref para controlar qual campo foi alterado por último
-  const lastChangedRef = useRef<'value' | 'percentage' | null>(null);
+  // Estado para controlar qual modo está ativo: "value" ou "percentage"
+  const [fixedMode, setFixedMode] = useState<"value" | "percentage">("value");
 
   const handleValueChange = (newValue: number) => {
-    // Marca que o último campo alterado foi o valor
-    lastChangedRef.current = 'value';
+    // Só processa se o modo for "value" (valor fixo)
+    if (fixedMode !== "value") return;
     
     // O valor digitado SEMPRE é respeitado - nunca alterado
     onValueChange(newValue);
@@ -69,15 +70,14 @@ const PercentageValueInput: React.FC<PercentageValueInputProps> = ({
   };
 
   const handlePercentageChange = (newPercentage: number) => {
-    // Marca que o último campo alterado foi o percentual
-    lastChangedRef.current = 'percentage';
+    // Só processa se o modo for "percentage" (percentual fixo)
+    if (fixedMode !== "percentage") return;
     
     // Arredonda percentual para 1 casa decimal
     const roundedPercentage = Math.round(newPercentage * 10) / 10;
     onPercentageChange(roundedPercentage);
     
-    // APENAS recalcula o valor se o usuário alterou o percentual
-    // (não recalcula se o percentual foi alterado programaticamente)
+    // Calcula o valor correspondente
     let newValue = 0;
     if (label === "Parcelas" && installmentsCount > 0) {
       const totalInstallmentValue = (roundedPercentage / 100) * totalValue;
@@ -91,6 +91,12 @@ const PercentageValueInput: React.FC<PercentageValueInputProps> = ({
     
     onValueChange(newValue);
   };
+
+  const handleModeChange = (newMode: string) => {
+    if (newMode && (newMode === "value" || newMode === "percentage")) {
+      setFixedMode(newMode);
+    }
+  };
   
   return (
     <div className={cn(
@@ -99,35 +105,66 @@ const PercentageValueInput: React.FC<PercentageValueInputProps> = ({
         ? "border-red-300 bg-red-50" 
         : "border-transparent"
     )}>
-      <Label className="text-base font-medium">{label}</Label>
+      <div className="flex flex-col space-y-2">
+        <Label className="text-base font-medium">{label}</Label>
+        
+        {/* Toggle para escolher o modo */}
+        <div className="flex items-center space-x-2">
+          <Label className="text-sm text-slate-600">Modo de entrada:</Label>
+          <ToggleGroup 
+            type="single" 
+            value={fixedMode} 
+            onValueChange={handleModeChange}
+            className="bg-slate-100 rounded-md p-1"
+          >
+            <ToggleGroupItem 
+              value="value" 
+              className="text-xs px-3 py-1 data-[state=on]:bg-white data-[state=on]:shadow-sm"
+            >
+              Valor fixo (R$)
+            </ToggleGroupItem>
+            <ToggleGroupItem 
+              value="percentage" 
+              className="text-xs px-3 py-1 data-[state=on]:bg-white data-[state=on]:shadow-sm"
+            >
+              Percentual fixo (%)
+            </ToggleGroupItem>
+          </ToggleGroup>
+        </div>
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         <div>
           <Label htmlFor={`${label}-value`} className="text-sm text-slate-500 block mb-1">
-            {valueLabel}
+            {valueLabel} {fixedMode === "value" ? "(editável)" : "(calculado)"}
           </Label>
           <CurrencyInput
             id={`${label}-value`}
             value={value}
             onChange={handleValueChange}
+            disabled={fixedMode !== "value"}
             className={cn(
               valueInputClassName,
-              hasError && "border-red-500 focus:ring-red-500"
+              hasError && "border-red-500 focus:ring-red-500",
+              fixedMode !== "value" && "bg-slate-100 text-slate-600"
             )}
           />
         </div>
         
         <div>
           <Label htmlFor={`${label}-percentage`} className="text-sm text-slate-500 block mb-1">
-            Percentual (%)
+            Percentual (%) {fixedMode === "percentage" ? "(editável)" : "(calculado)"}
           </Label>
           <PercentageInput
             id={`${label}-percentage`}
             value={percentage}
             onChange={handlePercentageChange}
+            disabled={fixedMode !== "percentage"}
             noDecimals={noDecimalsForPercentage}
             className={cn(
               percentageInputClassName,
-              hasError && "border-red-500 focus:ring-red-500"
+              hasError && "border-red-500 focus:ring-red-500",
+              fixedMode !== "percentage" && "bg-slate-100 text-slate-600"
             )}
           />
         </div>
