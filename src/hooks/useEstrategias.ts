@@ -1,4 +1,3 @@
-
 import { useState, useCallback, useMemo } from 'react';
 import { ImovelConfig, IndicesEconomicos, EstrategiaResultado, ROIEvolution } from '@/types/investment.types';
 import { calcularTodasEstrategias, gerarEvolucaoROI } from '@/utils/calculosFinanceiros';

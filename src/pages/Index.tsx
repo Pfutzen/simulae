@@ -15,7 +15,7 @@ const Index = () => {
           </TabsList>
 
           <TabsContent value="simulador">
-            <FinancingSimulator />
+            <FinancingSimulator keysValue={250000} />
           </TabsContent>
 
           <TabsContent value="estrategias">
