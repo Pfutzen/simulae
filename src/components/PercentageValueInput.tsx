@@ -1,5 +1,5 @@
 
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
@@ -40,10 +40,18 @@ const PercentageValueInput: React.FC<PercentageValueInputProps> = ({
 }) => {
   // Estado para controlar qual modo está ativo: "value" ou "percentage"
   const [fixedMode, setFixedMode] = useState<"value" | "percentage">("value");
+  
+  // Ref para controlar se devemos ignorar mudanças externas
+  const isInternalUpdate = useRef(false);
 
   const handleValueChange = (newValue: number) => {
     // Só processa se o modo for "value" (valor fixo)
     if (fixedMode !== "value") return;
+    
+    console.log(`[${label}] handleValueChange - newValue:`, newValue, 'mode:', fixedMode);
+    
+    // Marca que esta é uma atualização interna
+    isInternalUpdate.current = true;
     
     // O valor digitado SEMPRE é respeitado - nunca alterado
     onValueChange(newValue);
@@ -65,13 +73,25 @@ const PercentageValueInput: React.FC<PercentageValueInputProps> = ({
       newPercentage = Math.round(newPercentage * 10) / 10;
     }
     
+    console.log(`[${label}] Calculated percentage:`, newPercentage);
+    
     // Informa o percentual calculado (apenas para exibição)
     onPercentageChange(newPercentage);
+    
+    // Reset the flag after a short delay
+    setTimeout(() => {
+      isInternalUpdate.current = false;
+    }, 0);
   };
 
   const handlePercentageChange = (newPercentage: number) => {
     // Só processa se o modo for "percentage" (percentual fixo)
     if (fixedMode !== "percentage") return;
+    
+    console.log(`[${label}] handlePercentageChange - newPercentage:`, newPercentage, 'mode:', fixedMode);
+    
+    // Marca que esta é uma atualização interna
+    isInternalUpdate.current = true;
     
     // Arredonda percentual para 1 casa decimal
     const roundedPercentage = Math.round(newPercentage * 10) / 10;
@@ -89,14 +109,50 @@ const PercentageValueInput: React.FC<PercentageValueInputProps> = ({
       newValue = (roundedPercentage / 100) * totalValue;
     }
     
+    console.log(`[${label}] Calculated value:`, newValue);
+    
     onValueChange(newValue);
+    
+    // Reset the flag after a short delay
+    setTimeout(() => {
+      isInternalUpdate.current = false;
+    }, 0);
   };
 
   const handleModeChange = (newMode: string) => {
     if (newMode && (newMode === "value" || newMode === "percentage")) {
+      console.log(`[${label}] Mode changed from ${fixedMode} to ${newMode}`);
       setFixedMode(newMode);
     }
   };
+
+  // Effect para prevenir mudanças externas quando em modo "value"
+  useEffect(() => {
+    if (fixedMode === "value" && !isInternalUpdate.current) {
+      console.log(`[${label}] External change detected in value mode - ignoring percentage changes`);
+      // Se estamos em modo "value" e não é uma atualização interna,
+      // recalculamos o percentual baseado no valor atual
+      if (totalValue > 0) {
+        let newPercentage = 0;
+        if (label === "Parcelas" && installmentsCount > 0) {
+          const totalInstallmentValue = value * installmentsCount;
+          newPercentage = (totalInstallmentValue / totalValue) * 100;
+        } else if (label === "Reforços" && installmentsCount > 0) {
+          const totalReinforcementValue = value * installmentsCount;
+          newPercentage = (totalReinforcementValue / totalValue) * 100;
+        } else {
+          newPercentage = (value / totalValue) * 100;
+        }
+        
+        newPercentage = Math.round(newPercentage * 10) / 10;
+        
+        if (Math.abs(newPercentage - percentage) > 0.01) {
+          console.log(`[${label}] Recalculating percentage from value: ${newPercentage}`);
+          onPercentageChange(newPercentage);
+        }
+      }
+    }
+  }, [value, totalValue, installmentsCount, fixedMode, label, percentage, onPercentageChange]);
   
   return (
     <div className={cn(
