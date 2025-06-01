@@ -38,40 +38,19 @@ const PercentageValueInput: React.FC<PercentageValueInputProps> = ({
   hasError = false,
   isKeysInput = false
 }) => {
-  // Estado para controlar qual modo está ativo: "value" ou "percentage"
   const [fixedMode, setFixedMode] = useState<"value" | "percentage">("value");
 
-  // Handler para valor em R$ (quando modo for 'value')
+  // Handler para valor em R$ - APENAS quando modo for 'value'
   const handleValueChange = (newValue: number) => {
     if (fixedMode !== "value") return;
     
     console.log(`[${label}] handleValueChange - newValue:`, newValue, 'mode:', fixedMode);
     
-    // O valor digitado SEMPRE é respeitado - nunca alterado
+    // Valor digitado NUNCA é alterado
     onValueChange(newValue);
-    
-    // Calcula o percentual correspondente para exibição
-    let newPercentage = 0;
-    if (totalValue > 0) {
-      if (label === "Parcelas" && installmentsCount > 0) {
-        const totalInstallmentValue = newValue * installmentsCount;
-        newPercentage = (totalInstallmentValue / totalValue) * 100;
-      } else if (label === "Reforços" && installmentsCount > 0) {
-        const totalReinforcementValue = newValue * installmentsCount;
-        newPercentage = (totalReinforcementValue / totalValue) * 100;
-      } else {
-        newPercentage = (newValue / totalValue) * 100;
-      }
-      
-      // Arredonda apenas para exibição (1 casa decimal)
-      newPercentage = Math.round(newPercentage * 10) / 10;
-    }
-    
-    console.log(`[${label}] Calculated percentage:`, newPercentage);
-    onPercentageChange(newPercentage);
   };
 
-  // Handler para percentual (quando modo for 'percentage')
+  // Handler para percentual - APENAS quando modo for 'percentage'
   const handlePercentageChange = (newPercentage: number) => {
     if (fixedMode !== "percentage") return;
     
@@ -104,25 +83,28 @@ const PercentageValueInput: React.FC<PercentageValueInputProps> = ({
     }
   };
 
-  // Percentual calculado para exibição quando modo for 'value'
-  const displayPercentage = fixedMode === "value" 
-    ? (() => {
-        if (totalValue > 0) {
-          let calculatedPercentage = 0;
-          if (label === "Parcelas" && installmentsCount > 0) {
-            const totalInstallmentValue = value * installmentsCount;
-            calculatedPercentage = (totalInstallmentValue / totalValue) * 100;
-          } else if (label === "Reforços" && installmentsCount > 0) {
-            const totalReinforcementValue = value * installmentsCount;
-            calculatedPercentage = (totalReinforcementValue / totalValue) * 100;
-          } else {
-            calculatedPercentage = (value / totalValue) * 100;
-          }
-          return Math.round(calculatedPercentage * 10) / 10;
-        }
-        return 0;
-      })()
-    : percentage;
+  // Calcula percentual APENAS para exibição quando modo for 'value'
+  const getDisplayPercentage = () => {
+    if (fixedMode === "percentage") {
+      return percentage;
+    }
+    
+    // Modo 'value' - calcula percentual apenas para exibição
+    if (totalValue > 0) {
+      let calculatedPercentage = 0;
+      if (label === "Parcelas" && installmentsCount > 0) {
+        const totalInstallmentValue = value * installmentsCount;
+        calculatedPercentage = (totalInstallmentValue / totalValue) * 100;
+      } else if (label === "Reforços" && installmentsCount > 0) {
+        const totalReinforcementValue = value * installmentsCount;
+        calculatedPercentage = (totalReinforcementValue / totalValue) * 100;
+      } else {
+        calculatedPercentage = (value / totalValue) * 100;
+      }
+      return Math.round(calculatedPercentage * 10) / 10;
+    }
+    return 0;
+  };
   
   return (
     <div className={cn(
@@ -183,7 +165,7 @@ const PercentageValueInput: React.FC<PercentageValueInputProps> = ({
           </Label>
           <PercentageInput
             id={`${label}-percentage`}
-            value={displayPercentage}
+            value={getDisplayPercentage()}
             onChange={handlePercentageChange}
             disabled={fixedMode !== "percentage"}
             noDecimals={noDecimalsForPercentage}
