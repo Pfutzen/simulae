@@ -28,6 +28,7 @@ export const generatePaymentSchedule = (data: SimulationFormData): PaymentType[]
 
   let currentDate = new Date(startDate);
   let totalPaid = data.downPaymentValue;
+  // SALDO INICIAL = VALOR DO IMÓVEL - ENTRADA
   let balance = data.propertyValue - data.downPaymentValue;
 
   // Determinar quais meses terão reforços
@@ -69,26 +70,29 @@ export const generatePaymentSchedule = (data: SimulationFormData): PaymentType[]
 
   // Parcelas mensais
   for (let i = 1; i <= data.installmentsCount; i++) {
+    // NOVA LÓGICA CORRETA:
+    // 1. Primeiro aplica a correção monetária sobre o saldo remanescente
+    const monthlyCorrection = getMonthlyCorrection(i);
+    const correctedBalance = balance * (1 + monthlyCorrection);
+    
+    // 2. Calcula a parcela do mês (com reforço se necessário)
     const isReinforcementMonth = reinforcementMonths.includes(i);
-    const installmentAmount = isReinforcementMonth 
+    let installmentAmount = isReinforcementMonth 
       ? data.installmentsValue + data.reinforcementsValue 
       : data.installmentsValue;
-
-    totalPaid += installmentAmount;
-
-    // LÓGICA CORRIGIDA: 
-    // 1. Primeiro subtrai a parcela do saldo
-    balance = balance - installmentAmount;
     
-    // 2. Depois aplica a correção monetária sobre o saldo restante
-    // IMPORTANTE: NÃO aplicar correção no último mês de parcelas
-    if (i < data.installmentsCount) {
-      const monthlyCorrection = getMonthlyCorrection(i);
-      balance = balance * (1 + monthlyCorrection);
+    // 3. Se for a última parcela, ajustar para quitar o saldo
+    if (i === data.installmentsCount) {
+      installmentAmount = correctedBalance; // Quita o saldo restante
     }
     
-    // Garantir que o saldo não fique negativo por problemas de arredondamento
+    // 4. Subtrai a parcela do saldo corrigido
+    balance = correctedBalance - installmentAmount;
+    
+    // 5. Garantir que o saldo não fique negativo
     balance = Math.max(0, balance);
+
+    totalPaid += installmentAmount;
 
     // Calcular valor do imóvel no mês atual
     const currentPropertyValue = data.propertyValue * Math.pow(1 + data.appreciationIndex / 100, i);
@@ -98,6 +102,9 @@ export const generatePaymentSchedule = (data: SimulationFormData): PaymentType[]
     if (isReinforcementMonth) {
       const reinforcementNumber = reinforcementMonths.indexOf(i) + 1;
       description = `Parcela ${i} + Reforço ${reinforcementNumber}`;
+    }
+    if (i === data.installmentsCount) {
+      description = `Parcela ${i} (Quitação)`;
     }
 
     schedule.push({
@@ -120,7 +127,7 @@ export const generatePaymentSchedule = (data: SimulationFormData): PaymentType[]
   const finalPropertyValue = data.propertyValue * Math.pow(1 + data.appreciationIndex / 100, data.installmentsCount + 1);
   totalPaid += keysAmount;
 
-  // O saldo final após as chaves
+  // O saldo final após as chaves (deve ser zero se a última parcela quitou tudo)
   const finalBalance = Math.max(0, balance - keysAmount);
 
   schedule.push({
