@@ -37,11 +37,17 @@ const PercentageValueInput: React.FC<PercentageValueInputProps> = ({
   hasError = false,
   isKeysInput = false
 }) => {
+  // Ref para controlar qual campo foi alterado por último
+  const lastChangedRef = useRef<'value' | 'percentage' | null>(null);
+
   const handleValueChange = (newValue: number) => {
-    // Sempre respeita o valor digitado pelo usuário - nunca altera
+    // Marca que o último campo alterado foi o valor
+    lastChangedRef.current = 'value';
+    
+    // O valor digitado SEMPRE é respeitado - nunca alterado
     onValueChange(newValue);
     
-    // Calcula o percentual correspondente apenas para exibição
+    // Calcula o percentual correspondente com alta precisão interna
     let newPercentage = 0;
     if (totalValue > 0) {
       if (label === "Parcelas" && installmentsCount > 0) {
@@ -54,19 +60,24 @@ const PercentageValueInput: React.FC<PercentageValueInputProps> = ({
         newPercentage = (newValue / totalValue) * 100;
       }
       
-      // Arredonda percentual para 1 casa decimal apenas para exibição
+      // Arredonda apenas para exibição (1 casa decimal)
       newPercentage = Math.round(newPercentage * 10) / 10;
     }
     
+    // Informa o percentual calculado (apenas para exibição)
     onPercentageChange(newPercentage);
   };
 
   const handlePercentageChange = (newPercentage: number) => {
+    // Marca que o último campo alterado foi o percentual
+    lastChangedRef.current = 'percentage';
+    
     // Arredonda percentual para 1 casa decimal
     const roundedPercentage = Math.round(newPercentage * 10) / 10;
     onPercentageChange(roundedPercentage);
     
-    // Calcula valor baseado no percentual
+    // APENAS recalcula o valor se o usuário alterou o percentual
+    // (não recalcula se o percentual foi alterado programaticamente)
     let newValue = 0;
     if (label === "Parcelas" && installmentsCount > 0) {
       const totalInstallmentValue = (roundedPercentage / 100) * totalValue;
