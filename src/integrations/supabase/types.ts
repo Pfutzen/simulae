@@ -84,6 +84,33 @@ export type Database = {
         }
         Relationships: []
       }
+      indices_economicos: {
+        Row: {
+          cub_nacional: number | null
+          id: number
+          igpm: number | null
+          incc: number | null
+          ipca: number | null
+          mes_ano: string
+        }
+        Insert: {
+          cub_nacional?: number | null
+          id?: number
+          igpm?: number | null
+          incc?: number | null
+          ipca?: number | null
+          mes_ano: string
+        }
+        Update: {
+          cub_nacional?: number | null
+          id?: number
+          igpm?: number | null
+          incc?: number | null
+          ipca?: number | null
+          mes_ano?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
