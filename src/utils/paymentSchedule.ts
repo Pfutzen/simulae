@@ -78,9 +78,14 @@ export const generatePaymentSchedule = (data: SimulationFormData): PaymentType[]
 
     // Aplicar a lógica correta do saldo devedor
     // 1. Primeiro subtrai a parcela do saldo anterior
+    balance = balance - installmentAmount;
+    
     // 2. Depois aplica a correção monetária sobre o saldo reduzido
-    const monthlyCorrection = getMonthlyCorrection(i);
-    balance = (balance - installmentAmount) * (1 + monthlyCorrection);
+    // IMPORTANTE: só aplicar correção se não é o último mês
+    if (i < data.installmentsCount) {
+      const monthlyCorrection = getMonthlyCorrection(i);
+      balance = balance * (1 + monthlyCorrection);
+    }
     
     // Garantir que o saldo não fique negativo por problemas de arredondamento
     balance = Math.max(0, balance);
@@ -108,22 +113,15 @@ export const generatePaymentSchedule = (data: SimulationFormData): PaymentType[]
     currentDate = addMonthsToDate(currentDate, 1);
   }
 
-  // Chaves - o valor das chaves deve quitar exatamente o saldo remanescente
-  // Se o usuário definiu um valor específico, usamos esse valor
-  // Mas o saldo final sempre deve considerar o que realmente sobrou
-  const userDefinedKeysValue = data.keysValue;
-  const remainingBalance = balance;
-  
-  // Se o usuário definiu valor zero para as chaves, respeitamos isso
-  // Mas mostramos o saldo que realmente sobrou
-  const keysAmount = userDefinedKeysValue;
+  // Chaves - usar o valor exato definido pelo usuário
+  const keysAmount = data.keysValue;
   
   // Calcular o valor do imóvel no mês das chaves
   const finalPropertyValue = data.propertyValue * Math.pow(1 + data.appreciationIndex / 100, data.installmentsCount + 1);
   totalPaid += keysAmount;
 
-  // O saldo final é a diferença entre o que sobrou e o que foi pago nas chaves
-  const finalBalance = Math.max(0, remainingBalance - keysAmount);
+  // O saldo final após as chaves
+  const finalBalance = Math.max(0, balance - keysAmount);
 
   schedule.push({
     date: deliveryDate,
