@@ -68,31 +68,38 @@ export const generatePaymentSchedule = (data: SimulationFormData): PaymentType[]
     return 0; // Sem correção
   };
 
+  // Calcular correção acumulada para as parcelas
+  let accumulatedCorrection = 1;
+
   // Parcelas mensais
   for (let i = 1; i <= data.installmentsCount; i++) {
-    // NOVA LÓGICA CORRETA:
-    // 1. Primeiro aplica a correção monetária sobre o saldo remanescente
+    // 1. CORREÇÃO DO SALDO: Aplicar correção sobre o saldo remanescente
     const monthlyCorrection = getMonthlyCorrection(i);
     const correctedBalance = balance * (1 + monthlyCorrection);
     
-    // 2. Calcula a parcela do mês (com reforço se necessário)
+    // 2. CORREÇÃO DA PARCELA: Acumular correção e aplicar na parcela base
+    accumulatedCorrection *= (1 + monthlyCorrection);
+    
     const isReinforcementMonth = reinforcementMonths.includes(i);
-    let installmentAmount = isReinforcementMonth 
+    const baseParcela = isReinforcementMonth 
       ? data.installmentsValue + data.reinforcementsValue 
       : data.installmentsValue;
     
-    // 3. Se for a última parcela, ajustar para quitar o saldo
+    // Parcela corrigida pela correção acumulada
+    let correctedInstallment = baseParcela * accumulatedCorrection;
+    
+    // 3. AJUSTE DA ÚLTIMA PARCELA: Se for a última parcela, ajustar para quitar o saldo
     if (i === data.installmentsCount) {
-      installmentAmount = correctedBalance; // Quita o saldo restante
+      correctedInstallment = correctedBalance; // Quita exatamente o saldo restante
     }
     
-    // 4. Subtrai a parcela do saldo corrigido
-    balance = correctedBalance - installmentAmount;
+    // 4. NOVO SALDO: Saldo corrigido menos parcela corrigida
+    balance = correctedBalance - correctedInstallment;
     
-    // 5. Garantir que o saldo não fique negativo
+    // 5. Garantir que o saldo não fique negativo por problemas de arredondamento
     balance = Math.max(0, balance);
 
-    totalPaid += installmentAmount;
+    totalPaid += correctedInstallment;
 
     // Calcular valor do imóvel no mês atual
     const currentPropertyValue = data.propertyValue * Math.pow(1 + data.appreciationIndex / 100, i);
@@ -110,7 +117,7 @@ export const generatePaymentSchedule = (data: SimulationFormData): PaymentType[]
     schedule.push({
       date: new Date(currentDate),
       description,
-      amount: installmentAmount,
+      amount: correctedInstallment,
       balance,
       totalPaid,
       propertyValue: currentPropertyValue,
