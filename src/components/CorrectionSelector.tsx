@@ -10,20 +10,28 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { CorrectionMode } from "@/utils/types";
-import { CUB_CORRECTION_DATA } from "@/utils/correctionData";
+import { TipoIndice } from "@/types/indices";
+import { indicesHistoricos, descricaoIndices, acumuladoAnual } from "@/data/indicesEconomicos";
 import { HelpCircle } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 interface CorrectionSelectorProps {
-  value: CorrectionMode;
-  onChange: (value: CorrectionMode) => void;
+  value: TipoIndice;
+  onChange: (value: TipoIndice) => void;
 }
 
 const CorrectionSelector: React.FC<CorrectionSelectorProps> = ({ value, onChange }) => {
   const handleValueChange = (newValue: string) => {
-    onChange(newValue as CorrectionMode);
+    onChange(newValue as TipoIndice);
   };
+
+  const opcoes = [
+    { value: 'CUB_NACIONAL', label: 'CUB Nacional', acumulado: acumuladoAnual.CUB_NACIONAL },
+    { value: 'IPCA', label: 'IPCA', acumulado: acumuladoAnual.IPCA },
+    { value: 'IGP_M', label: 'IGP-M', acumulado: acumuladoAnual.IGP_M },
+    { value: 'INCC_NACIONAL', label: 'INCC Nacional', acumulado: acumuladoAnual.INCC_NACIONAL },
+    { value: 'MANUAL', label: 'Manual', acumulado: 'Customizado' }
+  ] as const;
 
   return (
     <div className="space-y-2">
@@ -35,28 +43,31 @@ const CorrectionSelector: React.FC<CorrectionSelectorProps> = ({ value, onChange
           <TooltipTrigger asChild>
             <HelpCircle className="h-4 w-4 text-muted-foreground cursor-help" />
           </TooltipTrigger>
-          <TooltipContent className="max-w-[350px]">
+          <TooltipContent className="max-w-[400px]">
             <div className="space-y-2">
               <p><strong>Manual:</strong> Use um índice fixo mensal para correção.</p>
-              <p><strong>CUB:</strong> Use os índices reais do CUB nacional dos últimos 12 meses.</p>
+              <p><strong>Índices Econômicos:</strong> Use dados históricos reais dos últimos 12 meses que se repetem ciclicamente.</p>
               <div className="max-h-[300px] overflow-auto mt-2">
                 <Table className="w-full">
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="w-1/3">Período</TableHead>
-                      <TableHead className="text-right">Variação (%)</TableHead>
+                      <TableHead className="w-2/3">Índice</TableHead>
+                      <TableHead className="text-right">Anual (%)</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {CUB_CORRECTION_DATA.map((item) => (
-                      <TableRow key={item.month}>
-                        <TableCell>{item.description}</TableCell>
-                        <TableCell className="text-right">{item.percentage.toFixed(2)}%</TableCell>
+                    {opcoes.slice(0, -1).map((opcao) => (
+                      <TableRow key={opcao.value}>
+                        <TableCell>{opcao.label}</TableCell>
+                        <TableCell className="text-right">{opcao.acumulado.toFixed(2)}%</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
                 </Table>
               </div>
+              <p className="text-xs text-muted-foreground mt-2">
+                📊 Os índices seguem o ciclo histórico de Mai/24 a Abr/25 e se repetem mensalmente.
+              </p>
             </div>
           </TooltipContent>
         </Tooltip>
@@ -67,8 +78,11 @@ const CorrectionSelector: React.FC<CorrectionSelectorProps> = ({ value, onChange
         </SelectTrigger>
         <SelectContent>
           <SelectGroup>
-            <SelectItem value="manual">Manual</SelectItem>
-            <SelectItem value="cub">CUB</SelectItem>
+            {opcoes.map((opcao) => (
+              <SelectItem key={opcao.value} value={opcao.value}>
+                {opcao.label} {opcao.value !== 'MANUAL' && `(${opcao.acumulado.toFixed(2)}% a.a.)`}
+              </SelectItem>
+            ))}
           </SelectGroup>
         </SelectContent>
       </Select>

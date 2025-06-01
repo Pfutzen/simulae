@@ -1,5 +1,4 @@
-
-export type CorrectionMode = "manual" | "cub";
+export type CorrectionMode = "manual" | "cub" | "CUB_NACIONAL" | "IPCA" | "IGP_M" | "INCC_NACIONAL";
 
 export interface SimulationFormData {
   propertyValue: number;
