@@ -1,5 +1,5 @@
 
-import React, { useRef, useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
@@ -40,27 +40,17 @@ const PercentageValueInput: React.FC<PercentageValueInputProps> = ({
 }) => {
   // Estado para controlar qual modo está ativo: "value" ou "percentage"
   const [fixedMode, setFixedMode] = useState<"value" | "percentage">("value");
-  
-  // Ref para armazenar o último valor definido pelo usuário no modo valor
-  const userSetValue = useRef<number>(value);
-  const isInternalUpdate = useRef(false);
 
+  // Handler para valor em R$ (quando modo for 'value')
   const handleValueChange = (newValue: number) => {
-    // Só processa se o modo for "value" (valor fixo)
     if (fixedMode !== "value") return;
     
     console.log(`[${label}] handleValueChange - newValue:`, newValue, 'mode:', fixedMode);
     
-    // Armazena o valor que o usuário digitou
-    userSetValue.current = newValue;
-    
-    // Marca que esta é uma atualização interna
-    isInternalUpdate.current = true;
-    
     // O valor digitado SEMPRE é respeitado - nunca alterado
     onValueChange(newValue);
     
-    // Calcula o percentual correspondente com alta precisão interna
+    // Calcula o percentual correspondente para exibição
     let newPercentage = 0;
     if (totalValue > 0) {
       if (label === "Parcelas" && installmentsCount > 0) {
@@ -78,24 +68,14 @@ const PercentageValueInput: React.FC<PercentageValueInputProps> = ({
     }
     
     console.log(`[${label}] Calculated percentage:`, newPercentage);
-    
-    // Informa o percentual calculado (apenas para exibição)
     onPercentageChange(newPercentage);
-    
-    // Reset the flag after a short delay
-    setTimeout(() => {
-      isInternalUpdate.current = false;
-    }, 0);
   };
 
+  // Handler para percentual (quando modo for 'percentage')
   const handlePercentageChange = (newPercentage: number) => {
-    // Só processa se o modo for "percentage" (percentual fixo)
     if (fixedMode !== "percentage") return;
     
     console.log(`[${label}] handlePercentageChange - newPercentage:`, newPercentage, 'mode:', fixedMode);
-    
-    // Marca que esta é uma atualização interna
-    isInternalUpdate.current = true;
     
     // Arredonda percentual para 1 casa decimal
     const roundedPercentage = Math.round(newPercentage * 10) / 10;
@@ -114,73 +94,35 @@ const PercentageValueInput: React.FC<PercentageValueInputProps> = ({
     }
     
     console.log(`[${label}] Calculated value:`, newValue);
-    
-    // Atualiza o valor de referência do usuário também
-    userSetValue.current = newValue;
     onValueChange(newValue);
-    
-    // Reset the flag after a short delay
-    setTimeout(() => {
-      isInternalUpdate.current = false;
-    }, 0);
   };
 
   const handleModeChange = (newMode: string) => {
     if (newMode && (newMode === "value" || newMode === "percentage")) {
       console.log(`[${label}] Mode changed from ${fixedMode} to ${newMode}`);
       setFixedMode(newMode);
-      
-      if (newMode === "value") {
-        // Quando mudamos para modo valor, preservamos o valor atual como referência
-        userSetValue.current = value;
-      }
     }
   };
 
-  // Effect APENAS para recalcular percentual quando estamos em modo valor
-  useEffect(() => {
-    if (fixedMode === "value" && !isInternalUpdate.current) {
-      console.log(`[${label}] External change detected in value mode`);
-      
-      // PROTEÇÃO: Se o valor externo é diferente do que o usuário definiu,
-      // restauramos o valor do usuário e recalculamos apenas o percentual
-      if (Math.abs(value - userSetValue.current) > 0.01) {
-        console.log(`[${label}] Restoring user value:`, userSetValue.current, 'instead of:', value);
-        onValueChange(userSetValue.current);
-      }
-      
-      // Recalcula APENAS o percentual baseado no valor do usuário
-      if (totalValue > 0) {
-        let newPercentage = 0;
-        if (label === "Parcelas" && installmentsCount > 0) {
-          const totalInstallmentValue = userSetValue.current * installmentsCount;
-          newPercentage = (totalInstallmentValue / totalValue) * 100;
-        } else if (label === "Reforços" && installmentsCount > 0) {
-          const totalReinforcementValue = userSetValue.current * installmentsCount;
-          newPercentage = (totalReinforcementValue / totalValue) * 100;
-        } else {
-          newPercentage = (userSetValue.current / totalValue) * 100;
+  // Percentual calculado para exibição quando modo for 'value'
+  const displayPercentage = fixedMode === "value" 
+    ? (() => {
+        if (totalValue > 0) {
+          let calculatedPercentage = 0;
+          if (label === "Parcelas" && installmentsCount > 0) {
+            const totalInstallmentValue = value * installmentsCount;
+            calculatedPercentage = (totalInstallmentValue / totalValue) * 100;
+          } else if (label === "Reforços" && installmentsCount > 0) {
+            const totalReinforcementValue = value * installmentsCount;
+            calculatedPercentage = (totalReinforcementValue / totalValue) * 100;
+          } else {
+            calculatedPercentage = (value / totalValue) * 100;
+          }
+          return Math.round(calculatedPercentage * 10) / 10;
         }
-        
-        newPercentage = Math.round(newPercentage * 10) / 10;
-        
-        if (Math.abs(newPercentage - percentage) > 0.01) {
-          console.log(`[${label}] Recalculating percentage from user value: ${newPercentage}`);
-          onPercentageChange(newPercentage);
-        }
-      }
-    }
-  }, [totalValue, installmentsCount, fixedMode, label]);
-
-  // Effect separado para detectar mudanças no valor externo e atualizar nossa referência
-  useEffect(() => {
-    if (fixedMode === "value" && !isInternalUpdate.current) {
-      // Se a diferença é muito pequena, provavelmente é uma mudança nossa
-      if (Math.abs(value - userSetValue.current) < 0.01) {
-        userSetValue.current = value;
-      }
-    }
-  }, [value, fixedMode]);
+        return 0;
+      })()
+    : percentage;
   
   return (
     <div className={cn(
@@ -241,7 +183,7 @@ const PercentageValueInput: React.FC<PercentageValueInputProps> = ({
           </Label>
           <PercentageInput
             id={`${label}-percentage`}
-            value={percentage}
+            value={displayPercentage}
             onChange={handlePercentageChange}
             disabled={fixedMode !== "percentage"}
             noDecimals={noDecimalsForPercentage}
