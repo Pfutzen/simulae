@@ -56,21 +56,15 @@ export const generatePaymentSchedule = (data: SimulationFormData): PaymentType[]
   }
 
   // Calcular fator de correção para cada mês
-  const getCorrectionFactor = (monthNumber: number) => {
+  const getMonthlyCorrection = (monthNumber: number) => {
     if (data.correctionMode === "manual" && data.correctionIndex > 0) {
-      return Math.pow(1 + data.correctionIndex / 100, monthNumber - 1);
+      return data.correctionIndex / 100;
     } else if (data.correctionMode === "cub") {
-      // Aplicar CUB sequencialmente mês a mês
-      let accumulatedFactor = 1;
-      for (let i = 1; i < monthNumber; i++) {
-        // Usar o índice CUB do mês correspondente (ciclo de 12 meses)
-        const cubIndex = (i - 1) % 12;
-        const monthlyPercentage = CUB_CORRECTION_DATA[cubIndex].percentage;
-        accumulatedFactor *= (1 + monthlyPercentage / 100);
-      }
-      return accumulatedFactor;
+      // Usar o índice CUB do mês correspondente (ciclo de 12 meses)
+      const cubIndex = (monthNumber - 1) % 12;
+      return CUB_CORRECTION_DATA[cubIndex].percentage / 100;
     }
-    return 1; // Sem correção
+    return 0; // Sem correção
   };
 
   // Parcelas mensais
@@ -80,12 +74,16 @@ export const generatePaymentSchedule = (data: SimulationFormData): PaymentType[]
       ? data.installmentsValue + data.reinforcementsValue 
       : data.installmentsValue;
 
-    // Aplicar correção baseada no índice escolhido
-    const correctionFactor = getCorrectionFactor(i);
-    const correctedAmount = installmentAmount * correctionFactor;
+    totalPaid += installmentAmount;
 
-    totalPaid += correctedAmount;
-    balance = Math.max(0, data.propertyValue - totalPaid);
+    // CORREÇÃO: Aplicar a lógica correta do saldo devedor
+    // 1. Primeiro subtrai a parcela do saldo anterior
+    // 2. Depois aplica a correção monetária sobre o saldo reduzido
+    const monthlyCorrection = getMonthlyCorrection(i);
+    balance = (balance - installmentAmount) * (1 + monthlyCorrection);
+    
+    // Garantir que o saldo não fique negativo por problemas de arredondamento
+    balance = Math.max(0, balance);
 
     // Calcular valor do imóvel no mês atual
     const currentPropertyValue = data.propertyValue * Math.pow(1 + data.appreciationIndex / 100, i);
@@ -100,7 +98,7 @@ export const generatePaymentSchedule = (data: SimulationFormData): PaymentType[]
     schedule.push({
       date: new Date(currentDate),
       description,
-      amount: correctedAmount,
+      amount: installmentAmount,
       balance,
       totalPaid,
       propertyValue: currentPropertyValue,
@@ -110,19 +108,30 @@ export const generatePaymentSchedule = (data: SimulationFormData): PaymentType[]
     currentDate = addMonthsToDate(currentDate, 1);
   }
 
-  // Chaves - aplicar correção também aqui
-  const keysCorrectionFactor = getCorrectionFactor(data.installmentsCount + 1);
-  const correctedKeysValue = data.keysValue * keysCorrectionFactor;
+  // Chaves - aplicar a mesma lógica de correção
+  const monthlyCorrection = getMonthlyCorrection(data.installmentsCount + 1);
+  
+  // Calcular o valor das chaves necessário para zerar o saldo
+  // Considerando que pode haver correção sobre o saldo atual
+  let adjustedKeysValue = data.keysValue;
+  
+  // Se ainda há saldo devedor, as chaves devem cobrir esse saldo
+  if (balance > 0) {
+    adjustedKeysValue = balance;
+  }
   
   // Calcular o valor do imóvel no mês das chaves (aplicar valorização do último mês também)
   const finalPropertyValue = data.propertyValue * Math.pow(1 + data.appreciationIndex / 100, data.installmentsCount + 1);
-  totalPaid += correctedKeysValue;
+  totalPaid += adjustedKeysValue;
+
+  // Após o pagamento das chaves, o saldo deve ser zero
+  const finalBalance = Math.max(0, balance - adjustedKeysValue);
 
   schedule.push({
     date: deliveryDate,
     description: "Chaves",
-    amount: correctedKeysValue,
-    balance: Math.max(0, data.propertyValue - totalPaid),
+    amount: adjustedKeysValue,
+    balance: finalBalance,
     totalPaid,
     propertyValue: finalPropertyValue,
     month: data.installmentsCount + 1
