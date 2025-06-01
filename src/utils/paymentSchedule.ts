@@ -29,7 +29,6 @@ export const generatePaymentSchedule = (data: SimulationFormData): PaymentType[]
 
   let currentDate = new Date(startDate);
   let totalPaid = data.downPaymentValue;
-  // SALDO INICIAL = VALOR DO IMÓVEL - ENTRADA
   let balance = data.propertyValue - data.downPaymentValue;
 
   // Determinar quais meses terão reforços
@@ -37,16 +36,13 @@ export const generatePaymentSchedule = (data: SimulationFormData): PaymentType[]
   let reinforcementDates: Date[] = [];
 
   if (data.customReinforcementDates && data.customReinforcementDates.length > 0) {
-    // Usar datas personalizadas
     reinforcementDates = data.customReinforcementDates.map(date => new Date(date));
-    // Calcular os meses correspondentes às datas personalizadas
     reinforcementMonths = reinforcementDates.map(date => {
       const monthsDiff = (date.getFullYear() - startDate.getFullYear()) * 12 + 
                         (date.getMonth() - startDate.getMonth()) + 1;
       return monthsDiff;
     });
   } else {
-    // Usar frequência automática
     reinforcementMonths = getReinforcementMonths(
       data.installmentsCount,
       data.reinforcementFrequency,
@@ -57,71 +53,87 @@ export const generatePaymentSchedule = (data: SimulationFormData): PaymentType[]
     );
   }
 
-  // Função para obter correção mensal correta
-  const getMonthlyCorrection = (monthNumber: number) => {
+  // CORREÇÃO: Função para obter taxa de correção CUB FIXA
+  const getMonthlyCorrection = () => {
     if (data.correctionMode === "manual" && data.correctionIndex > 0) {
-      // CORREÇÃO: Dividir por 100 para converter percentual em decimal
       return data.correctionIndex / 100;
     } else if (data.correctionMode === "cub") {
-      // CORREÇÃO: Usar o índice CUB correto e dividir por 100
-      const cubIndex = (monthNumber - 1) % 12;
-      return CUB_CORRECTION_DATA[cubIndex].percentage / 100;
+      // CORREÇÃO: Taxa CUB média fixa de 0,38% ao mês
+      return 0.0038;
     }
-    return 0; // Sem correção
+    return 0;
   };
 
-  // Função para calcular valorização do imóvel
+  // CORREÇÃO: Função para calcular valor do imóvel com taxa FIXA de valorização
   const calculatePropertyValue = (monthNumber: number) => {
-    // Aplicar correção CUB primeiro, depois valorização
-    const correctionFactor = Math.pow(1 + getMonthlyCorrection(monthNumber), monthNumber);
+    // CORREÇÃO: Aplicar correção CUB constante + valorização constante
+    const monthlyCorrection = getMonthlyCorrection();
+    const correctionFactor = Math.pow(1 + monthlyCorrection, monthNumber);
     const appreciationFactor = Math.pow(1 + data.appreciationIndex / 100, monthNumber);
-    return data.propertyValue * correctionFactor * appreciationFactor;
+    
+    const finalValue = data.propertyValue * correctionFactor * appreciationFactor;
+    
+    console.log(`=== CÁLCULO VALOR IMÓVEL MÊS ${monthNumber} ===`);
+    console.log(`Valor base: R$ ${data.propertyValue.toFixed(2)}`);
+    console.log(`Taxa correção mensal: ${(monthlyCorrection * 100).toFixed(4)}%`);
+    console.log(`Taxa valorização mensal: ${data.appreciationIndex}%`);
+    console.log(`Fator correção (${monthNumber} meses): ${correctionFactor.toFixed(6)}`);
+    console.log(`Fator valorização (${monthNumber} meses): ${appreciationFactor.toFixed(6)}`);
+    console.log(`Valor final: R$ ${finalValue.toFixed(2)}`);
+    
+    return finalValue;
   };
 
-  let keysAmount = data.keysValue; // Valor inicial das chaves
+  let keysAmount = data.keysValue;
+  const monthlyCorrection = getMonthlyCorrection();
 
-  // Parcelas mensais - CORRIGINDO OS CÁLCULOS
+  // CORREÇÃO: Parcelas mensais com cálculos corrigidos
   for (let i = 1; i <= data.installmentsCount; i++) {
-    const monthlyCorrection = getMonthlyCorrection(i);
-    
-    // 1. CORRIGIR O SALDO (aplicar correção ao saldo devedor)
+    // 1. CORREÇÃO: Aplicar correção FIXA ao saldo devedor
     const correctedBalance = balance * (1 + monthlyCorrection);
     
-    // 2. VERIFICAR SE É MÊS DE REFORÇO
+    console.log(`=== CÁLCULO SALDO MÊS ${i} ===`);
+    console.log(`Saldo anterior: R$ ${balance.toFixed(2)}`);
+    console.log(`Taxa correção: ${(monthlyCorrection * 100).toFixed(4)}%`);
+    console.log(`Saldo corrigido: R$ ${correctedBalance.toFixed(2)}`);
+    
+    // 2. Verificar se é mês de reforço
     const isReinforcementMonth = reinforcementMonths.includes(i);
     
-    // 3. CALCULAR PARCELA COM CORREÇÃO ACUMULADA
+    // 3. CORREÇÃO: Calcular parcela com correção acumulada FIXA
     const baseParcela = data.installmentsValue;
-    
-    // CORREÇÃO: Aplicar correção acumulada corretamente
     const correctionFactor = Math.pow(1 + monthlyCorrection, i);
     
-    // Calcular o valor do reforço corrigido
     const reinforcementValue = isReinforcementMonth 
       ? data.reinforcementsValue * correctionFactor
       : 0;
     
-    // Parcela corrigida
     let correctedInstallment = baseParcela * correctionFactor + reinforcementValue;
     
-    // 4. ÚLTIMA PARCELA = SALDO RESTANTE (vai para as chaves)
+    console.log(`Parcela base: R$ ${baseParcela.toFixed(2)}`);
+    console.log(`Fator correção acumulada: ${correctionFactor.toFixed(6)}`);
+    console.log(`Parcela corrigida: R$ ${(baseParcela * correctionFactor).toFixed(2)}`);
+    console.log(`Reforço: R$ ${reinforcementValue.toFixed(2)}`);
+    console.log(`Total parcela: R$ ${correctedInstallment.toFixed(2)}`);
+    
+    // 4. Última parcela = saldo restante vai para as chaves
     if (i === data.installmentsCount) {
-      keysAmount = correctedBalance; // O saldo restante vai para as chaves
-      correctedInstallment = 0; // Não há parcela, o valor vai direto para chaves
-      balance = 0; // Saldo zerado
+      keysAmount = correctedBalance;
+      correctedInstallment = 0;
+      balance = 0;
     } else {
-      // 5. NOVO SALDO = SALDO CORRIGIDO - PARCELA
+      // 5. CORREÇÃO: Novo saldo = saldo corrigido - parcela
       balance = correctedBalance - correctedInstallment;
     }
     
-    // Só adiciona parcela se não for a última (que vai para chaves)
+    console.log(`Novo saldo: R$ ${balance.toFixed(2)}`);
+    
     if (i < data.installmentsCount) {
       totalPaid += correctedInstallment;
 
-      // Calcular valor do imóvel no mês atual (com correção + valorização)
+      // CORREÇÃO: Calcular valor do imóvel com valorização FIXA
       const currentPropertyValue = calculatePropertyValue(i);
 
-      // Descrição da parcela
       let description = `Parcela ${i}`;
       if (isReinforcementMonth) {
         const reinforcementNumber = reinforcementMonths.indexOf(i) + 1;
@@ -136,37 +148,33 @@ export const generatePaymentSchedule = (data: SimulationFormData): PaymentType[]
         totalPaid,
         propertyValue: currentPropertyValue,
         month: i,
-        reinforcementValue // Incluir o valor do reforço
+        reinforcementValue
       });
 
       currentDate = addMonthsToDate(currentDate, 1);
     }
   }
 
-  // Chaves - VALOR CORRIGIDO (saldo devedor restante)
+  // CORREÇÃO: Chaves com valor corrigido
   totalPaid += keysAmount;
-  
-  // Calcular o valor do imóvel no mês das chaves
   const finalPropertyValue = calculatePropertyValue(data.installmentsCount + 1);
 
   schedule.push({
     date: deliveryDate,
     description: "Chaves",
     amount: keysAmount,
-    balance: 0, // Saldo zerado após as chaves
+    balance: 0,
     totalPaid,
     propertyValue: finalPropertyValue,
     month: data.installmentsCount + 1,
     reinforcementValue: 0
   });
 
-  console.log('=== DEBUG CRONOGRAMA ===');
-  console.log('Configuração de correção:', data.correctionMode, data.correctionIndex);
-  schedule.slice(0, 3).forEach((item, index) => {
-    if (index === 0) return; // Pular entrada
-    const monthlyCorrection = getMonthlyCorrection(item.month || 1);
-    console.log(`Mês ${item.month}: Correção ${(monthlyCorrection * 100).toFixed(4)}%, Saldo: R$ ${item.balance.toFixed(2)}`);
-  });
+  console.log('=== RESUMO CORREÇÕES APLICADAS ===');
+  console.log(`Taxa correção CUB fixa: ${(monthlyCorrection * 100).toFixed(4)}%`);
+  console.log(`Taxa valorização fixa: ${data.appreciationIndex}%`);
+  console.log(`Total pago: R$ ${totalPaid.toFixed(2)}`);
+  console.log(`Valor final imóvel: R$ ${finalPropertyValue.toFixed(2)}`);
 
   return schedule;
 };

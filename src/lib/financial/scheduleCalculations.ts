@@ -1,6 +1,6 @@
 
 import { PaymentType, SimulationFormData } from '@/utils/types';
-import { getMonthlyCorrection, applyCorrectionToBalance, validateCorrectionCalculation } from './correctionCalculations';
+import { getMonthlyCorrection, applyCorrectionToBalance, validateCorrectionCalculation, calculatePropertyValueWithFixedRates } from './correctionCalculations';
 
 /**
  * Functions for payment schedule calculations
@@ -11,17 +11,33 @@ export const calculateInstallmentBalance = (
   installmentAmount: number,
   correctionRate: number
 ): number => {
-  // CORREÇÃO: Usar função validada de correção
-  const validation = validateCorrectionCalculation(previousBalance, correctionRate, installmentAmount);
-  return validation.finalBalance;
+  // CORREÇÃO: Usar cálculo validado e correto
+  const correctedBalance = previousBalance * (1 + correctionRate);
+  const finalBalance = correctedBalance - installmentAmount;
+  
+  console.log('=== CÁLCULO SALDO PARCELA ===');
+  console.log(`Saldo anterior: R$ ${previousBalance.toFixed(2)}`);
+  console.log(`Taxa correção: ${(correctionRate * 100).toFixed(4)}%`);
+  console.log(`Saldo corrigido: R$ ${correctedBalance.toFixed(2)}`);
+  console.log(`Parcela: R$ ${installmentAmount.toFixed(2)}`);
+  console.log(`Saldo final: R$ ${finalBalance.toFixed(2)}`);
+  
+  return finalBalance;
 };
 
 export const calculateFinalKeysAmount = (
   remainingBalance: number,
   correctionRate: number
 ): number => {
-  // CORREÇÃO: Aplicar correção correta ao saldo das chaves
-  return applyCorrectionToBalance(remainingBalance, correctionRate);
+  // CORREÇÃO: Aplicar correção fixa ao saldo das chaves
+  const correctedKeysAmount = applyCorrectionToBalance(remainingBalance, correctionRate);
+  
+  console.log('=== CÁLCULO VALOR CHAVES ===');
+  console.log(`Saldo restante: R$ ${remainingBalance.toFixed(2)}`);
+  console.log(`Taxa correção: ${(correctionRate * 100).toFixed(4)}%`);
+  console.log(`Valor chaves: R$ ${correctedKeysAmount.toFixed(2)}`);
+  
+  return correctedKeysAmount;
 };
 
 export const calculateMonthlyPropertyValue = (
@@ -30,13 +46,18 @@ export const calculateMonthlyPropertyValue = (
   correctionRate: number,
   monthNumber: number
 ): number => {
-  // CORREÇÃO: Aplicar correção CUB primeiro, depois valorização
-  const correctionFactor = Math.pow(1 + correctionRate, monthNumber);
-  const appreciationFactor = Math.pow(1 + appreciationRate / 100, monthNumber);
-  return baseValue * correctionFactor * appreciationFactor;
+  // CORREÇÃO: Usar função com taxas FIXAS
+  return calculatePropertyValueWithFixedRates(
+    baseValue,
+    correctionRate,
+    appreciationRate,
+    monthNumber
+  );
 };
 
 export const validateScheduleIntegrity = (schedule: PaymentType[]): boolean => {
+  console.log('=== VALIDAÇÃO INTEGRIDADE CRONOGRAMA ===');
+  
   // Check if schedule is properly ordered by date
   for (let i = 1; i < schedule.length; i++) {
     if (schedule[i].date < schedule[i - 1].date) {
@@ -53,47 +74,69 @@ export const validateScheduleIntegrity = (schedule: PaymentType[]): boolean => {
     console.error(`Saldo final não é zero: R$ ${lastPayment.balance.toFixed(2)}`);
   }
   
-  // NOVA VALIDAÇÃO: Verificar taxas de correção
+  // VALIDAÇÃO CORRIGIDA: Verificar se taxas estão sendo aplicadas corretamente
+  const expectedCorrectionRate = 0.0038; // CUB fixo de 0,38%
   let previousBalance = schedule[0].balance;
-  for (let i = 1; i < schedule.length - 1; i++) { // Excluir entrada e chaves
+  
+  for (let i = 1; i < schedule.length - 1; i++) {
     const current = schedule[i];
     if (current.month) {
-      // Simular cálculo esperado
-      const expectedCorrection = 0.0038; // CUB padrão para teste
-      const expectedCorrectedBalance = previousBalance * (1 + expectedCorrection);
+      const expectedCorrectedBalance = previousBalance * (1 + expectedCorrectionRate);
       const expectedFinalBalance = expectedCorrectedBalance - current.amount;
       
-      const difference = Math.abs(current.balance - expectedFinalBalance);
-      if (difference > 1000) { // Tolerância de R$ 1000
-        console.warn(`Possível erro no mês ${current.month}: diferença de R$ ${difference.toFixed(2)}`);
+      const balanceDifference = Math.abs(current.balance - expectedFinalBalance);
+      const correctionDifference = Math.abs(expectedCorrectedBalance - (previousBalance * (1 + expectedCorrectionRate)));
+      
+      console.log(`Mês ${current.month}:`);
+      console.log(`  Saldo anterior: R$ ${previousBalance.toFixed(2)}`);
+      console.log(`  Esperado corrigido: R$ ${expectedCorrectedBalance.toFixed(2)}`);
+      console.log(`  Esperado final: R$ ${expectedFinalBalance.toFixed(2)}`);
+      console.log(`  Cronograma: R$ ${current.balance.toFixed(2)}`);
+      console.log(`  Diferença: R$ ${balanceDifference.toFixed(2)}`);
+      
+      if (balanceDifference > 100) {
+        console.warn(`Possível erro no mês ${current.month}: diferença de R$ ${balanceDifference.toFixed(2)}`);
       }
       
       previousBalance = current.balance;
     }
   }
   
+  console.log(`Validação concluída. Saldo final zerado: ${balanceIsZero ? 'SIM' : 'NÃO'}`);
   return balanceIsZero;
 };
 
-// Nova função para recalcular cronograma com validação
-export const recalculateScheduleWithValidation = (
+// NOVA: Função para recalcular cronograma com taxas FIXAS
+export const recalculateScheduleWithFixedRates = (
   formData: SimulationFormData
-): { isValid: boolean, errors: string[] } => {
+): { isValid: boolean, errors: string[], correctedData: SimulationFormData } => {
   const errors: string[] = [];
+  const correctedData = { ...formData };
   
-  // Validar taxa de correção
-  if (formData.correctionMode === 'manual' && formData.correctionIndex > 10) {
-    errors.push(`Taxa manual muito alta: ${formData.correctionIndex}% (suspeita)`);
-  }
-  
-  // Validar se as taxas estão em percentual correto
+  // CORREÇÃO: Garantir taxa CUB fixa
   if (formData.correctionMode === 'cub') {
-    const expectedRange = { min: 0.1, max: 2.0 }; // 0.1% a 2.0% ao mês é razoável
-    // A validação será feita durante os cálculos
+    correctedData.correctionIndex = 0.38; // Taxa fixa de 0,38%
+    console.log('Taxa CUB fixada em 0,38% ao mês');
   }
+  
+  // Validar se as taxas estão em range razoável
+  if (formData.correctionMode === 'manual' && formData.correctionIndex > 5) {
+    errors.push(`Taxa manual muito alta: ${formData.correctionIndex}% (máximo recomendado: 5%)`);
+  }
+  
+  // Validar taxa de valorização
+  if (formData.appreciationIndex > 10) {
+    errors.push(`Taxa de valorização muito alta: ${formData.appreciationIndex}% (máximo recomendado: 10%)`);
+  }
+  
+  console.log('=== CONFIGURAÇÕES CORRIGIDAS ===');
+  console.log(`Modo correção: ${correctedData.correctionMode}`);
+  console.log(`Taxa correção: ${correctedData.correctionIndex}%`);
+  console.log(`Taxa valorização: ${correctedData.appreciationIndex}%`);
   
   return {
     isValid: errors.length === 0,
-    errors
+    errors,
+    correctedData
   };
 };
