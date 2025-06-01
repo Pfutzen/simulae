@@ -10,6 +10,7 @@ export const exportScheduleToCSV = (schedule: PaymentType[], fileName: string = 
     'Data do Pagamento',
     'Tipo',
     'Valor',
+    'Valor do Reforço',
     'Saldo',
     'Total Pago',
     'Valor Corrigido do Imóvel'
@@ -20,6 +21,7 @@ export const exportScheduleToCSV = (schedule: PaymentType[], fileName: string = 
     payment.date ? formatDateForDisplay(payment.date) : '-',
     payment.description,
     formatCurrency(payment.amount),
+    formatCurrency(payment.reinforcementValue || 0),
     formatCurrency(payment.balance),
     formatCurrency(payment.totalPaid),
     formatCurrency(payment.propertyValue)
@@ -50,6 +52,7 @@ export const exportScheduleToExcel = (schedule: PaymentType[], fileName: string 
     'Data do Pagamento',
     'Tipo',
     'Valor',
+    'Valor do Reforço',
     'Saldo',
     'Total Pago',
     'Valor Corrigido do Imóvel'
@@ -70,6 +73,7 @@ export const exportScheduleToExcel = (schedule: PaymentType[], fileName: string 
     excelContent += `<td style="border: 1px solid #ccc; padding: 8px;">${payment.date ? formatDateForDisplay(payment.date) : '-'}</td>`;
     excelContent += `<td style="border: 1px solid #ccc; padding: 8px;">${payment.description}</td>`;
     excelContent += `<td style="border: 1px solid #ccc; padding: 8px;">${formatCurrency(payment.amount)}</td>`;
+    excelContent += `<td style="border: 1px solid #ccc; padding: 8px;">${formatCurrency(payment.reinforcementValue || 0)}</td>`;
     excelContent += `<td style="border: 1px solid #ccc; padding: 8px;">${formatCurrency(payment.balance)}</td>`;
     excelContent += `<td style="border: 1px solid #ccc; padding: 8px;">${formatCurrency(payment.totalPaid)}</td>`;
     excelContent += `<td style="border: 1px solid #ccc; padding: 8px;">${formatCurrency(payment.propertyValue)}</td>`;
@@ -115,12 +119,13 @@ export const exportScheduleToPDF = (schedule: PaymentType[], fileName: string = 
     'Data',
     'Tipo',
     'Valor',
+    'Reforço',
     'Saldo',
     'Total Pago',
     'Valor do Imóvel'
   ];
   
-  const colWidths = [30, 40, 35, 35, 35, 40]; // larguras das colunas
+  const colWidths = [25, 35, 30, 25, 30, 30, 35]; // larguras das colunas ajustadas
   let startX = margin;
   let currentY = 35;
   
@@ -160,6 +165,7 @@ export const exportScheduleToPDF = (schedule: PaymentType[], fileName: string = 
       payment.date ? formatDateForDisplay(payment.date) : '-',
       payment.description,
       formatCurrency(payment.amount),
+      formatCurrency(payment.reinforcementValue || 0),
       formatCurrency(payment.balance),
       formatCurrency(payment.totalPaid),
       formatCurrency(payment.propertyValue)

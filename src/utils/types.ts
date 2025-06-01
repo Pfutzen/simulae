@@ -33,4 +33,5 @@ export interface PaymentType {
   totalPaid: number;
   propertyValue: number;
   month?: number;
+  reinforcementValue?: number; // Nova propriedade para o valor do reforço
 }

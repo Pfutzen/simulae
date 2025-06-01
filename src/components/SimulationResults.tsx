@@ -676,6 +676,9 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
                     Valor
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                    Valor do Reforço
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
                     Saldo
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
@@ -697,6 +700,9 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       {formatCurrency(payment.amount)}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {formatCurrency(payment.reinforcementValue || 0)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       {formatCurrency(payment.balance)}

@@ -23,7 +23,8 @@ export const generatePaymentSchedule = (data: SimulationFormData): PaymentType[]
     balance: data.propertyValue - data.downPaymentValue,
     totalPaid: data.downPaymentValue,
     propertyValue: data.propertyValue,
-    month: 0
+    month: 0,
+    reinforcementValue: 0
   });
 
   let currentDate = new Date(startDate);
@@ -79,13 +80,16 @@ export const generatePaymentSchedule = (data: SimulationFormData): PaymentType[]
     
     // 2. CALCULAR PARCELA (como na sua planilha: parcela base * (1 + correção)^mês)
     const isReinforcementMonth = reinforcementMonths.includes(i);
-    const baseParcela = isReinforcementMonth 
-      ? data.installmentsValue + data.reinforcementsValue 
-      : data.installmentsValue;
+    const baseParcela = data.installmentsValue; // Só a parcela base
+    
+    // Calcular o valor do reforço corrigido
+    const reinforcementValue = isReinforcementMonth 
+      ? data.reinforcementsValue * Math.pow(1 + monthlyCorrection, i)
+      : 0;
     
     // Parcela corrigida com correção acumulada (como na sua planilha)
     const correctionFactor = Math.pow(1 + monthlyCorrection, i);
-    let correctedInstallment = baseParcela * correctionFactor;
+    let correctedInstallment = baseParcela * correctionFactor + reinforcementValue;
     
     // 3. ÚLTIMA PARCELA = SALDO RESTANTE (vai para as chaves)
     if (i === data.installmentsCount) {
@@ -118,7 +122,8 @@ export const generatePaymentSchedule = (data: SimulationFormData): PaymentType[]
         balance,
         totalPaid,
         propertyValue: currentPropertyValue,
-        month: i
+        month: i,
+        reinforcementValue // Incluir o valor do reforço
       });
 
       currentDate = addMonthsToDate(currentDate, 1);
@@ -138,7 +143,8 @@ export const generatePaymentSchedule = (data: SimulationFormData): PaymentType[]
     balance: 0, // Saldo zerado após as chaves
     totalPaid,
     propertyValue: finalPropertyValue,
-    month: data.installmentsCount + 1
+    month: data.installmentsCount + 1,
+    reinforcementValue: 0
   });
 
   return schedule;
