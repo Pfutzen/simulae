@@ -76,16 +76,16 @@ export const generatePaymentSchedule = (data: SimulationFormData): PaymentType[]
 
     totalPaid += installmentAmount;
 
-    // Aplicar a lógica correta do saldo devedor
-    // 1. Primeiro subtrai a parcela do saldo anterior
-    balance = balance - installmentAmount;
-    
-    // 2. Depois aplica a correção monetária sobre o saldo reduzido
-    // IMPORTANTE: só aplicar correção se não é o último mês
-    if (i < data.installmentsCount) {
+    // NOVA LÓGICA: Aplicar correção ANTES de subtrair a parcela
+    // Isso simula o que acontece na prática: o saldo é corrigido no início do mês
+    // e depois a parcela é paga
+    if (i <= data.installmentsCount) {
       const monthlyCorrection = getMonthlyCorrection(i);
       balance = balance * (1 + monthlyCorrection);
     }
+    
+    // Depois subtrai a parcela do saldo corrigido
+    balance = balance - installmentAmount;
     
     // Garantir que o saldo não fique negativo por problemas de arredondamento
     balance = Math.max(0, balance);
