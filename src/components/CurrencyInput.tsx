@@ -8,6 +8,7 @@ interface CurrencyInputProps {
   onChange: (value: number) => void;
   className?: string;
   placeholder?: string;
+  disabled?: boolean;
 }
 
 const CurrencyInput: React.FC<CurrencyInputProps> = ({
@@ -15,7 +16,8 @@ const CurrencyInput: React.FC<CurrencyInputProps> = ({
   value,
   onChange,
   className = "",
-  placeholder = "0"
+  placeholder = "0",
+  disabled = false
 }) => {
   const [internalValue, setInternalValue] = useState<string>("");
   const [isFormatted, setIsFormatted] = useState<boolean>(false);
@@ -35,6 +37,8 @@ const CurrencyInput: React.FC<CurrencyInputProps> = ({
   }, [value]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (disabled) return;
+    
     const newValue = e.target.value;
     
     // Allow free typing - only numbers, dots and commas
@@ -55,6 +59,8 @@ const CurrencyInput: React.FC<CurrencyInputProps> = ({
   };
 
   const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
+    if (disabled) return;
+    
     // On focus, show raw numeric value without formatting
     setInternalValue(value.toString());
     setIsFormatted(false);
@@ -66,6 +72,8 @@ const CurrencyInput: React.FC<CurrencyInputProps> = ({
   };
 
   const handleBlur = () => {
+    if (disabled) return;
+    
     // Format properly on blur
     const formatted = value.toLocaleString('pt-BR', {
       minimumFractionDigits: 2,
@@ -84,6 +92,7 @@ const CurrencyInput: React.FC<CurrencyInputProps> = ({
       onChange={handleChange}
       onBlur={handleBlur}
       onFocus={handleFocus}
+      disabled={disabled}
       className={`text-right font-medium ${className}`}
       suffix="R$"
       placeholder={placeholder}

@@ -8,6 +8,7 @@ interface PercentageInputProps {
   onChange: (value: number) => void;
   noDecimals?: boolean;
   className?: string;
+  disabled?: boolean;
 }
 
 const PercentageInput: React.FC<PercentageInputProps> = ({
@@ -15,7 +16,8 @@ const PercentageInput: React.FC<PercentageInputProps> = ({
   value,
   onChange,
   noDecimals = false,
-  className = ""
+  className = "",
+  disabled = false
 }) => {
   const [internalValue, setInternalValue] = useState<string>("");
   const [isFormatted, setIsFormatted] = useState<boolean>(false);
@@ -41,6 +43,8 @@ const PercentageInput: React.FC<PercentageInputProps> = ({
   }, [value, noDecimals]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (disabled) return;
+    
     const newValue = e.target.value;
     
     if (noDecimals) {
@@ -72,6 +76,8 @@ const PercentageInput: React.FC<PercentageInputProps> = ({
   };
 
   const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
+    if (disabled) return;
+    
     // On focus, show raw numeric value without formatting
     const displayValue = noDecimals ? value.toString() : (Math.round(value * 10) / 10).toString();
     setInternalValue(displayValue);
@@ -84,6 +90,8 @@ const PercentageInput: React.FC<PercentageInputProps> = ({
   };
 
   const handleBlur = () => {
+    if (disabled) return;
+    
     // Format properly on blur
     if (noDecimals) {
       setInternalValue(Math.round(value).toString());
@@ -108,6 +116,7 @@ const PercentageInput: React.FC<PercentageInputProps> = ({
       onChange={handleChange}
       onBlur={handleBlur}
       onFocus={handleFocus}
+      disabled={disabled}
       className={`text-right font-medium ${className}`}
       suffix="%"
     />
