@@ -68,6 +68,8 @@ export const generatePaymentSchedule = (data: SimulationFormData): PaymentType[]
     return 0; // Sem correção
   };
 
+  let keysAmount = data.keysValue; // Valor inicial das chaves
+
   // Parcelas mensais - EXATAMENTE como na sua planilha
   for (let i = 1; i <= data.installmentsCount; i++) {
     const monthlyCorrection = getMonthlyCorrection(i);
@@ -85,57 +87,55 @@ export const generatePaymentSchedule = (data: SimulationFormData): PaymentType[]
     const correctionFactor = Math.pow(1 + monthlyCorrection, i);
     let correctedInstallment = baseParcela * correctionFactor;
     
-    // 3. ÚLTIMA PARCELA = SALDO RESTANTE (para zerar como na sua planilha)
+    // 3. ÚLTIMA PARCELA = SALDO RESTANTE (vai para as chaves)
     if (i === data.installmentsCount) {
-      correctedInstallment = correctedBalance;
+      keysAmount = correctedBalance; // O saldo restante vai para as chaves
+      correctedInstallment = 0; // Não há parcela, o valor vai direto para chaves
+      balance = 0; // Saldo zerado
+    } else {
+      // 4. NOVO SALDO = SALDO CORRIGIDO - PARCELA (como na sua planilha)
+      balance = correctedBalance - correctedInstallment;
     }
     
-    // 4. NOVO SALDO = SALDO CORRIGIDO - PARCELA (como na sua planilha)
-    balance = correctedBalance - correctedInstallment;
-    
-    totalPaid += correctedInstallment;
+    // Só adiciona parcela se não for a última (que vai para chaves)
+    if (i < data.installmentsCount) {
+      totalPaid += correctedInstallment;
 
-    // Calcular valor do imóvel no mês atual
-    const currentPropertyValue = data.propertyValue * Math.pow(1 + data.appreciationIndex / 100, i);
+      // Calcular valor do imóvel no mês atual
+      const currentPropertyValue = data.propertyValue * Math.pow(1 + data.appreciationIndex / 100, i);
 
-    // Descrição da parcela
-    let description = `Parcela ${i}`;
-    if (isReinforcementMonth) {
-      const reinforcementNumber = reinforcementMonths.indexOf(i) + 1;
-      description = `Parcela ${i} + Reforço ${reinforcementNumber}`;
+      // Descrição da parcela
+      let description = `Parcela ${i}`;
+      if (isReinforcementMonth) {
+        const reinforcementNumber = reinforcementMonths.indexOf(i) + 1;
+        description = `Parcela ${i} + Reforço ${reinforcementNumber}`;
+      }
+
+      schedule.push({
+        date: new Date(currentDate),
+        description,
+        amount: correctedInstallment,
+        balance,
+        totalPaid,
+        propertyValue: currentPropertyValue,
+        month: i
+      });
+
+      currentDate = addMonthsToDate(currentDate, 1);
     }
-    if (i === data.installmentsCount) {
-      description = `Parcela ${i} (Quitação)`;
-    }
-
-    schedule.push({
-      date: new Date(currentDate),
-      description,
-      amount: correctedInstallment,
-      balance,
-      totalPaid,
-      propertyValue: currentPropertyValue,
-      month: i
-    });
-
-    currentDate = addMonthsToDate(currentDate, 1);
   }
 
-  // Chaves - VALOR FIXO INDEPENDENTE (não sai do saldo devedor)
-  const keysAmount = data.keysValue;
+  // Chaves - VALOR CORRIGIDO (saldo devedor restante)
+  totalPaid += keysAmount;
   
   // Calcular o valor do imóvel no mês das chaves
   const finalPropertyValue = data.propertyValue * Math.pow(1 + data.appreciationIndex / 100, data.installmentsCount + 1);
-  totalPaid += keysAmount;
-
-  // O saldo já é zero após as parcelas
-  const finalBalance = 0;
 
   schedule.push({
     date: deliveryDate,
     description: "Chaves",
     amount: keysAmount,
-    balance: finalBalance,
+    balance: 0, // Saldo zerado após as chaves
     totalPaid,
     propertyValue: finalPropertyValue,
     month: data.installmentsCount + 1
