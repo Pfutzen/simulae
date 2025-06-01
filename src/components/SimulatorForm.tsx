@@ -118,9 +118,6 @@ const SimulatorForm: React.FC = () => {
   const [currentSimulation, setCurrentSimulation] = useState<SavedSimulation | undefined>(undefined);
   const [customResaleEnabled, setCustomResaleEnabled] = useState<boolean>(true);
 
-  // Add new state for tracking adjustment message
-  const [adjustmentMessage, setAdjustmentMessage] = useState<string>("");
-
   useEffect(() => {
     const savedSimulations = getSimulations();
     setSimulations(savedSimulations);
@@ -153,39 +150,36 @@ const SimulatorForm: React.FC = () => {
   }, [toast]);
 
   useEffect(() => {
-    const total = calculateTotalPercentage(formData);
-    setTotalPercentage(total);
+    // Calculate total percentage EXCLUDING keys
+    const totalWithoutKeys = 
+      formData.downPaymentPercentage +
+      formData.installmentsPercentage +
+      formData.reinforcementsPercentage;
     
-    // Auto-adjust keys value ONLY if percentage total is not 100% and no keys value was manually set
-    if (total !== 100 && total > 0 && !userSetValues.keysValue) {
-      const difference = 100 - total;
-      const adjustmentValue = (difference / 100) * formData.propertyValue;
-      const newKeysValue = formData.keysValue + adjustmentValue;
-      const newKeysPercentage = (newKeysValue / formData.propertyValue) * 100;
+    // Keys percentage is always the remainder to complete 100%
+    const keysPercentage = Math.max(0, 100 - totalWithoutKeys);
+    
+    // Only update if there's a meaningful change to avoid infinite loops
+    if (Math.abs(formData.keysPercentage - keysPercentage) > 0.01) {
+      const keysValue = calculateValue(keysPercentage, formData.propertyValue);
       
-      // Only auto-adjust if the difference is significant (more than 0.1%)
-      if (Math.abs(difference) > 0.1) {
-        setFormData(prev => ({
-          ...prev,
-          keysValue: newKeysValue,
-          keysPercentage: Math.round(newKeysPercentage * 10) / 10
-        }));
-        
-        setAdjustmentMessage("A diferença foi ajustada no valor das chaves para manter o equilíbrio financeiro conforme os valores inseridos.");
-        
-        // Clear message after 5 seconds
-        setTimeout(() => {
-          setAdjustmentMessage("");
-        }, 5000);
-      }
+      setFormData(prev => ({
+        ...prev,
+        keysValue: keysValue,
+        keysPercentage: Math.round(keysPercentage * 10) / 10
+      }));
+      
+      // Reset the manual flag since we're auto-calculating
+      setUserSetValues(prev => ({ ...prev, keysValue: false }));
     }
+    
+    const total = totalWithoutKeys + keysPercentage;
+    setTotalPercentage(total);
   }, [
     formData.downPaymentPercentage,
     formData.installmentsPercentage,
     formData.reinforcementsPercentage,
-    formData.keysPercentage,
-    formData.propertyValue,
-    userSetValues.keysValue
+    formData.propertyValue
   ]);
 
   useEffect(() => {
@@ -305,15 +299,8 @@ const SimulatorForm: React.FC = () => {
         : 0;
     }
     
-    if (userSetValues.keysValue) {
-      // Mantém o valor exato manual, apenas recalcula percentual para exibição
-      newData.keysPercentage = Math.round(
-        (newData.keysValue / value) * 100 * 10
-      ) / 10;
-    } else {
-      // Só recalcula valor se não foi definido manualmente
-      newData.keysValue = calculateValue(newData.keysPercentage, value);
-    }
+    // CHAVES sempre será recalculada automaticamente no useEffect
+    // Não fazemos nada aqui para as chaves
     
     setFormData(newData);
     setReinforcementMonths(months);
@@ -486,34 +473,9 @@ const SimulatorForm: React.FC = () => {
     setReinforcementMonths(newMonths);
   };
 
-  const handleKeysValueChange = (value: number) => {
-    // O valor digitado NUNCA é alterado - fica exatamente como o usuário digitou
-    const percentage = calculatePercentage(value, formData.propertyValue);
-    const roundedPercentage = Math.round(percentage * 10) / 10;
-    setFormData({
-      ...formData,
-      keysValue: value, // FIXO - nunca muda
-      keysPercentage: roundedPercentage
-    });
-    
-    // Marca que este valor foi definido manualmente e limpa mensagem de ajuste
-    setUserSetValues(prev => ({ ...prev, keysValue: true }));
-    setAdjustmentMessage("");
-  };
-
-  const handleKeysPercentageChange = (percentage: number) => {
-    const roundedPercentage = Math.round(percentage * 10) / 10;
-    const value = calculateValue(roundedPercentage, formData.propertyValue);
-    setFormData({
-      ...formData,
-      keysValue: value,
-      keysPercentage: roundedPercentage
-    });
-    
-    // Remove o flag de manual quando o percentual é alterado e limpa mensagem de ajuste
-    setUserSetValues(prev => ({ ...prev, keysValue: false }));
-    setAdjustmentMessage("");
-  };
+  // Remove the keys handlers since they will be auto-calculated
+  // const handleKeysValueChange = ... (REMOVED)
+  // const handleKeysPercentageChange = ... (REMOVED)
 
   const handleCorrectionModeChange = (mode: CorrectionMode) => {
     setFormData({ ...formData, correctionMode: mode });
@@ -754,14 +716,7 @@ const SimulatorForm: React.FC = () => {
                   className="mb-6"
                 />
 
-                {adjustmentMessage && (
-                  <Alert className="bg-blue-50 border-blue-200">
-                    <CheckCircle className="h-4 w-4 text-blue-600" />
-                    <AlertDescription className="text-blue-800">
-                      {adjustmentMessage}
-                    </AlertDescription>
-                  </Alert>
-                )}
+                {/* Remove the adjustment message since keys are always auto-calculated */}
 
                 <div className="rounded-lg border border-slate-200 p-5">
                   <div className="flex items-center mb-4 gap-2">
@@ -930,19 +885,42 @@ const SimulatorForm: React.FC = () => {
                         </div>
                       </div>
                       
-                      <PercentageValueInput
-                        label="Chaves"
-                        value={formData.keysValue}
-                        percentage={formData.keysPercentage}
-                        totalValue={formData.propertyValue}
-                        onValueChange={handleKeysValueChange}
-                        onPercentageChange={handleKeysPercentageChange}
-                        noDecimalsForPercentage={true}
-                        valueInputClassName="w-full md:w-[240px]"
-                        percentageInputClassName="w-full md:w-[120px]"
-                        hasError={!isPercentageValid}
-                        isKeysInput={true}
-                      />
+                      {/* Chaves agora sempre calculado automaticamente */}
+                      <div className="space-y-4 p-3 rounded-lg border-2 border-green-200 bg-green-50">
+                        <div className="flex flex-col space-y-2">
+                          <Label className="text-base font-medium">Chaves (Saldo Automático)</Label>
+                          <p className="text-sm text-green-700">
+                            Calculado automaticamente para completar 100%
+                          </p>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                          <div>
+                            <Label className="text-sm text-slate-500 block mb-1">
+                              Valor (R$) (calculado)
+                            </Label>
+                            <CurrencyInput
+                              value={formData.keysValue}
+                              onChange={() => {}} // Não faz nada - é só visualização
+                              disabled={true}
+                              className="bg-green-100 text-green-800 font-medium"
+                            />
+                          </div>
+                          
+                          <div>
+                            <Label className="text-sm text-slate-500 block mb-1">
+                              Percentual (%) (calculado)
+                            </Label>
+                            <PercentageInput
+                              value={formData.keysPercentage}
+                              onChange={() => {}} // Não faz nada - é só visualização
+                              disabled={true}
+                              noDecimals={true}
+                              className="bg-green-100 text-green-800 font-medium"
+                            />
+                          </div>
+                        </div>
+                      </div>
                     </div>
 
                     <ReinforcementDatesControl
