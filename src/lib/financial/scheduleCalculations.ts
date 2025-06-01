@@ -1,23 +1,33 @@
 
 import { PaymentType, SimulationFormData } from '@/utils/types';
-import { getMonthlyCorrection, applyCorrectionToBalance, validateCorrectionCalculation, calculatePropertyValueWithFixedRates } from './correctionCalculations';
+import { applyCorrectionToBalance, calculatePropertyValueWithFixedRates } from './correctionCalculations';
+import { TipoIndice } from '@/types/indices';
 
 /**
- * Functions for payment schedule calculations
+ * Functions for payment schedule calculations with Supabase integration
  */
 
 export const calculateInstallmentBalance = (
   previousBalance: number,
   installmentAmount: number,
-  correctionRate: number
+  correctionMode: TipoIndice,
+  monthNumber: number,
+  mesInicial: number = 0,
+  manualCorrectionIndex: number = 0
 ): number => {
-  // CORREÇÃO: Usar cálculo validado e correto
-  const correctedBalance = previousBalance * (1 + correctionRate);
+  // Usar correção com dados do Supabase
+  const correctedBalance = applyCorrectionToBalance(
+    previousBalance,
+    correctionMode,
+    monthNumber,
+    mesInicial,
+    manualCorrectionIndex
+  );
+  
   const finalBalance = correctedBalance - installmentAmount;
   
-  console.log('=== CÁLCULO SALDO PARCELA ===');
+  console.log('=== CÁLCULO SALDO PARCELA (SUPABASE) ===');
   console.log(`Saldo anterior: R$ ${previousBalance.toFixed(2)}`);
-  console.log(`Taxa correção: ${(correctionRate * 100).toFixed(4)}%`);
   console.log(`Saldo corrigido: R$ ${correctedBalance.toFixed(2)}`);
   console.log(`Parcela: R$ ${installmentAmount.toFixed(2)}`);
   console.log(`Saldo final: R$ ${finalBalance.toFixed(2)}`);
@@ -27,14 +37,22 @@ export const calculateInstallmentBalance = (
 
 export const calculateFinalKeysAmount = (
   remainingBalance: number,
-  correctionRate: number
+  correctionMode: TipoIndice,
+  monthNumber: number,
+  mesInicial: number = 0,
+  manualCorrectionIndex: number = 0
 ): number => {
-  // CORREÇÃO: Aplicar correção fixa ao saldo das chaves
-  const correctedKeysAmount = applyCorrectionToBalance(remainingBalance, correctionRate);
+  // Aplicar correção final usando dados do Supabase
+  const correctedKeysAmount = applyCorrectionToBalance(
+    remainingBalance,
+    correctionMode,
+    monthNumber,
+    mesInicial,
+    manualCorrectionIndex
+  );
   
-  console.log('=== CÁLCULO VALOR CHAVES ===');
+  console.log('=== CÁLCULO VALOR CHAVES (SUPABASE) ===');
   console.log(`Saldo restante: R$ ${remainingBalance.toFixed(2)}`);
-  console.log(`Taxa correção: ${(correctionRate * 100).toFixed(4)}%`);
   console.log(`Valor chaves: R$ ${correctedKeysAmount.toFixed(2)}`);
   
   return correctedKeysAmount;
@@ -42,21 +60,27 @@ export const calculateFinalKeysAmount = (
 
 export const calculateMonthlyPropertyValue = (
   baseValue: number,
-  appreciationRate: number,
-  correctionRate: number,
-  monthNumber: number
+  appreciationMode: TipoIndice,
+  correctionMode: TipoIndice,
+  monthNumber: number,
+  mesInicial: number = 0,
+  manualAppreciationIndex: number = 0,
+  manualCorrectionIndex: number = 0
 ): number => {
-  // CORREÇÃO: Usar função com taxas FIXAS
+  // Usar função com dados do Supabase
   return calculatePropertyValueWithFixedRates(
     baseValue,
-    correctionRate,
-    appreciationRate,
-    monthNumber
+    correctionMode,
+    appreciationMode,
+    monthNumber,
+    mesInicial,
+    manualCorrectionIndex,
+    manualAppreciationIndex
   );
 };
 
 export const validateScheduleIntegrity = (schedule: PaymentType[]): boolean => {
-  console.log('=== VALIDAÇÃO INTEGRIDADE CRONOGRAMA ===');
+  console.log('=== VALIDAÇÃO INTEGRIDADE CRONOGRAMA (SUPABASE) ===');
   
   // Check if schedule is properly ordered by date
   for (let i = 1; i < schedule.length; i++) {
@@ -74,50 +98,15 @@ export const validateScheduleIntegrity = (schedule: PaymentType[]): boolean => {
     console.error(`Saldo final não é zero: R$ ${lastPayment.balance.toFixed(2)}`);
   }
   
-  // VALIDAÇÃO CORRIGIDA: Verificar se taxas estão sendo aplicadas corretamente
-  const expectedCorrectionRate = 0.0038; // CUB fixo de 0,38%
-  let previousBalance = schedule[0].balance;
-  
-  for (let i = 1; i < schedule.length - 1; i++) {
-    const current = schedule[i];
-    if (current.month) {
-      const expectedCorrectedBalance = previousBalance * (1 + expectedCorrectionRate);
-      const expectedFinalBalance = expectedCorrectedBalance - current.amount;
-      
-      const balanceDifference = Math.abs(current.balance - expectedFinalBalance);
-      const correctionDifference = Math.abs(expectedCorrectedBalance - (previousBalance * (1 + expectedCorrectionRate)));
-      
-      console.log(`Mês ${current.month}:`);
-      console.log(`  Saldo anterior: R$ ${previousBalance.toFixed(2)}`);
-      console.log(`  Esperado corrigido: R$ ${expectedCorrectedBalance.toFixed(2)}`);
-      console.log(`  Esperado final: R$ ${expectedFinalBalance.toFixed(2)}`);
-      console.log(`  Cronograma: R$ ${current.balance.toFixed(2)}`);
-      console.log(`  Diferença: R$ ${balanceDifference.toFixed(2)}`);
-      
-      if (balanceDifference > 100) {
-        console.warn(`Possível erro no mês ${current.month}: diferença de R$ ${balanceDifference.toFixed(2)}`);
-      }
-      
-      previousBalance = current.balance;
-    }
-  }
-  
   console.log(`Validação concluída. Saldo final zerado: ${balanceIsZero ? 'SIM' : 'NÃO'}`);
   return balanceIsZero;
 };
 
-// NOVA: Função para recalcular cronograma com taxas FIXAS
 export const recalculateScheduleWithFixedRates = (
   formData: SimulationFormData
 ): { isValid: boolean, errors: string[], correctedData: SimulationFormData } => {
   const errors: string[] = [];
   const correctedData = { ...formData };
-  
-  // CORREÇÃO: Garantir taxa CUB fixa
-  if (formData.correctionMode === 'CUB_NACIONAL') {
-    correctedData.correctionIndex = 0.38; // Taxa fixa de 0,38%
-    console.log('Taxa CUB fixada em 0,38% ao mês');
-  }
   
   // Validar se as taxas estão em range razoável
   if (formData.correctionMode === 'MANUAL' && formData.correctionIndex > 5) {
@@ -129,7 +118,7 @@ export const recalculateScheduleWithFixedRates = (
     errors.push(`Taxa de valorização muito alta: ${formData.appreciationIndex}% (máximo recomendado: 10%)`);
   }
   
-  console.log('=== CONFIGURAÇÕES CORRIGIDAS ===');
+  console.log('=== CONFIGURAÇÕES CORRIGIDAS (SUPABASE) ===');
   console.log(`Modo correção: ${correctedData.correctionMode}`);
   console.log(`Taxa correção: ${correctedData.correctionIndex}%`);
   console.log(`Taxa valorização: ${correctedData.appreciationIndex}%`);

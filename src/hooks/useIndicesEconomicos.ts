@@ -1,9 +1,12 @@
 
 import { useState, useMemo } from 'react';
 import { ConfiguracaoIndices, TipoIndice } from '@/types/indices';
-import { obterTaxaMensal, calcularValorCorrigido, calcularSaldoComIndice } from '@/utils/calculosIndices';
+import { obterTaxaMensalSupabase, calcularValorCorrigidoSupabase, calcularSaldoComIndiceSupabase } from '@/utils/calculosIndicesSupabase';
+import { useIndicesSupabase } from './useIndicesSupabase';
 
 export const useIndicesEconomicos = () => {
+  const { indices, loading, error } = useIndicesSupabase();
+  
   const [config, setConfig] = useState<ConfiguracaoIndices>({
     correcaoMonetaria: {
       tipo: 'CUB_NACIONAL'
@@ -16,7 +19,7 @@ export const useIndicesEconomicos = () => {
   });
 
   const getTaxaCorrecao = (mesSimulacao: number): number => {
-    return obterTaxaMensal(
+    return obterTaxaMensalSupabase(
       config.correcaoMonetaria.tipo,
       mesSimulacao,
       config.mesInicial,
@@ -25,7 +28,7 @@ export const useIndicesEconomicos = () => {
   };
 
   const getTaxaValorizacao = (mesSimulacao: number): number => {
-    return obterTaxaMensal(
+    return obterTaxaMensalSupabase(
       config.valorizacao.tipo,
       mesSimulacao,
       config.mesInicial,
@@ -34,7 +37,7 @@ export const useIndicesEconomicos = () => {
   };
 
   const calcularSaldoCorrigido = (saldoAnterior: number, mesSimulacao: number): number => {
-    return calcularSaldoComIndice(
+    return calcularSaldoComIndiceSupabase(
       saldoAnterior,
       config.correcaoMonetaria.tipo,
       mesSimulacao,
@@ -44,7 +47,7 @@ export const useIndicesEconomicos = () => {
   };
 
   const calcularValorImovel = (valorBase: number, meses: number): number => {
-    return calcularValorCorrigido(
+    return calcularValorCorrigidoSupabase(
       valorBase,
       config.correcaoMonetaria.tipo,
       config.valorizacao.tipo,
@@ -56,7 +59,7 @@ export const useIndicesEconomicos = () => {
   };
 
   const estatisticas = useMemo(() => {
-    // Calcular médias e totais para 12 meses
+    // Calcular médias e totais para 12 meses usando dados do Supabase
     let somaCorrecao = 0;
     let somaValorizacao = 0;
     
@@ -71,7 +74,7 @@ export const useIndicesEconomicos = () => {
       correcaoAnual: somaCorrecao,
       valorizacaoAnual: somaValorizacao
     };
-  }, [config]);
+  }, [config, indices]);
 
   return {
     config,
@@ -80,6 +83,9 @@ export const useIndicesEconomicos = () => {
     getTaxaValorizacao,
     calcularSaldoCorrigido,
     calcularValorImovel,
-    estatisticas
+    estatisticas,
+    loading,
+    error,
+    indices
   };
 };

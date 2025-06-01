@@ -2,29 +2,61 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ConfiguracaoIndices } from '@/types/indices';
-import { obterTaxaMensal } from '@/utils/calculosIndices';
-import { nomesMeses } from '@/data/indicesEconomicos';
+import { obterTaxaMensalSupabase } from '@/utils/calculosIndicesSupabase';
+import { useIndicesSupabase } from '@/hooks/useIndicesSupabase';
 
 interface PreviewTaxasProps {
   config: ConfiguracaoIndices;
 }
 
 const PreviewTaxas: React.FC<PreviewTaxasProps> = ({ config }) => {
-  const proximosMeses = Array.from({ length: 6 }, (_, i) => ({
-    mes: nomesMeses[(config.mesInicial + i) % 12],
-    correcao: obterTaxaMensal(
+  const { indices, loading } = useIndicesSupabase();
+
+  if (loading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg flex items-center gap-2">
+            📅 Preview - Próximos 6 Meses
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center py-4">Carregando índices...</div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const proximosMeses = Array.from({ length: 6 }, (_, i) => {
+    const correcao = obterTaxaMensalSupabase(
       config.correcaoMonetaria.tipo, 
       i, 
       config.mesInicial,
       config.correcaoMonetaria.valorManual
-    ),
-    valorizacao: obterTaxaMensal(
+    );
+    
+    const valorizacao = obterTaxaMensalSupabase(
       config.valorizacao.tipo, 
       i, 
       config.mesInicial,
       config.valorizacao.valorManual
-    )
-  }));
+    );
+
+    // Determinar o nome do mês baseado nos dados do Supabase
+    const mesIndex = (config.mesInicial + i) % 12;
+    let mesNome = `Mês ${i + 1}`;
+    
+    if (indices.length > 0) {
+      const mesData = indices[mesIndex % indices.length];
+      mesNome = mesData?.mes_ano || `Mês ${i + 1}`;
+    }
+
+    return {
+      mes: mesNome,
+      correcao,
+      valorizacao
+    };
+  });
 
   return (
     <Card>
@@ -54,7 +86,7 @@ const PreviewTaxas: React.FC<PreviewTaxasProps> = ({ config }) => {
         
         <div className="mt-4 p-3 bg-slate-50 rounded-lg">
           <p className="text-xs text-slate-600">
-            ℹ️ As taxas seguem o ciclo histórico dos últimos 12 meses e se repetem mensalmente.
+            ℹ️ As taxas seguem o ciclo histórico dos dados do Supabase e se repetem mensalmente.
             O mês inicial define onde começar no ciclo.
           </p>
         </div>
