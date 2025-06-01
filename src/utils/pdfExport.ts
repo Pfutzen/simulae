@@ -1,3 +1,4 @@
+
 import jsPDF from 'jspdf';
 import { SavedSimulation } from './simulationHistoryUtils';
 import { formatCurrency, formatPercentage } from './calculationUtils';
@@ -93,7 +94,7 @@ export function exportToPdf(simulation: SavedSimulation, simulationName?: string
   yPos += 5;
   
   // Display correction based on mode
-  if (simulation.formData.correctionMode === "cub") {
+  if (simulation.formData.correctionMode === "CUB_NACIONAL") {
     // Calculate average CUB correction
     const avgCubCorrection = CUB_CORRECTION_DATA.reduce((sum, item) => sum + item.percentage, 0) / CUB_CORRECTION_DATA.length;
     doc.text(`Correção: CUB (média ${formatPercentage(avgCubCorrection/100)} ao mês)`, 20, yPos);

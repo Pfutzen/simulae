@@ -1,6 +1,6 @@
 
 import { CUB_CORRECTION_DATA } from '@/utils/correctionData';
-import { CorrectionMode } from '@/utils/types';
+import { TipoIndice } from '@/types/indices';
 
 /**
  * Functions for monetary correction calculations
@@ -8,13 +8,13 @@ import { CorrectionMode } from '@/utils/types';
 
 export const getMonthlyCorrection = (
   monthNumber: number,
-  correctionMode: CorrectionMode,
+  correctionMode: TipoIndice,
   manualCorrectionIndex: number = 0
 ): number => {
-  if (correctionMode === "manual" && manualCorrectionIndex > 0) {
+  if (correctionMode === "MANUAL" && manualCorrectionIndex > 0) {
     // CORREÇÃO: Taxa manual fixa em decimal
     return manualCorrectionIndex / 100;
-  } else if (correctionMode === "cub") {
+  } else if (correctionMode === "CUB_NACIONAL") {
     // CORREÇÃO: Taxa CUB fixa de 0,38% ao mês (média histórica)
     return 0.0038;
   }

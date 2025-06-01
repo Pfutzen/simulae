@@ -114,13 +114,13 @@ export const recalculateScheduleWithFixedRates = (
   const correctedData = { ...formData };
   
   // CORREÇÃO: Garantir taxa CUB fixa
-  if (formData.correctionMode === 'cub') {
+  if (formData.correctionMode === 'CUB_NACIONAL') {
     correctedData.correctionIndex = 0.38; // Taxa fixa de 0,38%
     console.log('Taxa CUB fixada em 0,38% ao mês');
   }
   
   // Validar se as taxas estão em range razoável
-  if (formData.correctionMode === 'manual' && formData.correctionIndex > 5) {
+  if (formData.correctionMode === 'MANUAL' && formData.correctionIndex > 5) {
     errors.push(`Taxa manual muito alta: ${formData.correctionIndex}% (máximo recomendado: 5%)`);
   }
   

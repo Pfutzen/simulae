@@ -55,9 +55,9 @@ export const generatePaymentSchedule = (data: SimulationFormData): PaymentType[]
 
   // CORREÇÃO: Função para obter taxa de correção CUB FIXA
   const getMonthlyCorrection = () => {
-    if (data.correctionMode === "manual" && data.correctionIndex > 0) {
+    if (data.correctionMode === "MANUAL" && data.correctionIndex > 0) {
       return data.correctionIndex / 100;
-    } else if (data.correctionMode === "cub") {
+    } else if (data.correctionMode === "CUB_NACIONAL") {
       // CORREÇÃO: Taxa CUB média fixa de 0,38% ao mês
       return 0.0038;
     }

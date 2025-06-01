@@ -1,3 +1,4 @@
+
 import { PropostaData } from '@/types/proposta';
 import { SavedSimulation } from './simulationHistoryUtils';
 import { formatCurrency, formatDateBR } from './formatUtils';
@@ -15,7 +16,7 @@ export const generatePropostaText = (data: PropostaData, simulation: SavedSimula
 
   // Gerar descrição da correção monetária baseada no modo
   const getCorrectionDescription = () => {
-    if (simulation.formData.correctionMode === "cub") {
+    if (simulation.formData.correctionMode === "CUB_NACIONAL") {
       return "Os valores apresentados acima são nominais. Toda a composição será corrigida mensalmente pelo índice CUB acumulado (média dos últimos 12 meses) até a data de vencimento de cada parcela, conforme política vigente da construtora.";
     } else {
       const percentage = (simulation.formData.correctionIndex * 100).toFixed(2);
