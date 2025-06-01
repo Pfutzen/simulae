@@ -28,7 +28,7 @@ export const generatePaymentSchedule = (data: SimulationFormData): PaymentType[]
 
   let currentDate = new Date(startDate);
   let totalPaid = data.downPaymentValue;
-  // SALDO INICIAL = VALOR DO IMÓVEL - ENTRADA
+  // SALDO INICIAL = VALOR DO IMÓVEL - ENTRADA (como na sua planilha)
   let balance = data.propertyValue - data.downPaymentValue;
 
   // Determinar quais meses terão reforços
@@ -68,44 +68,37 @@ export const generatePaymentSchedule = (data: SimulationFormData): PaymentType[]
     return 0; // Sem correção
   };
 
-  // Calcular correção acumulada apenas para as parcelas
-  let parcelaAccumulatedCorrection = 1;
-
-  // Parcelas mensais
+  // Parcelas mensais - EXATAMENTE como na sua planilha
   for (let i = 1; i <= data.installmentsCount; i++) {
-    // 1. CORREÇÃO DO SALDO: Aplicar correção sobre o saldo atual
     const monthlyCorrection = getMonthlyCorrection(i);
+    
+    // 1. CORRIGIR O SALDO (como na sua planilha: saldo anterior * (1 + correção))
     const correctedBalance = balance * (1 + monthlyCorrection);
     
-    // 2. CALCULAR PARCELA CORRIGIDA
-    // Acumular correção para a parcela base
-    parcelaAccumulatedCorrection *= (1 + monthlyCorrection);
-    
+    // 2. CALCULAR PARCELA (como na sua planilha: parcela base * (1 + correção)^mês)
     const isReinforcementMonth = reinforcementMonths.includes(i);
     const baseParcela = isReinforcementMonth 
       ? data.installmentsValue + data.reinforcementsValue 
       : data.installmentsValue;
     
-    // Parcela corrigida pela correção acumulada
-    let correctedInstallment = baseParcela * parcelaAccumulatedCorrection;
+    // Parcela corrigida com correção acumulada (como na sua planilha)
+    const correctionFactor = Math.pow(1 + monthlyCorrection, i);
+    let correctedInstallment = baseParcela * correctionFactor;
     
-    // 3. AJUSTE DA ÚLTIMA PARCELA: Se for a última parcela, usar exatamente o saldo restante
+    // 3. ÚLTIMA PARCELA = SALDO RESTANTE (para zerar como na sua planilha)
     if (i === data.installmentsCount) {
-      correctedInstallment = correctedBalance; // Quita exatamente o saldo restante
+      correctedInstallment = correctedBalance;
     }
     
-    // 4. NOVO SALDO: Saldo corrigido menos parcela
+    // 4. NOVO SALDO = SALDO CORRIGIDO - PARCELA (como na sua planilha)
     balance = correctedBalance - correctedInstallment;
     
-    // 5. Garantir que o saldo não fique negativo por problemas de arredondamento
-    balance = Math.max(0, balance);
-
     totalPaid += correctedInstallment;
 
     // Calcular valor do imóvel no mês atual
     const currentPropertyValue = data.propertyValue * Math.pow(1 + data.appreciationIndex / 100, i);
 
-    // Melhorar a descrição das parcelas
+    // Descrição da parcela
     let description = `Parcela ${i}`;
     if (isReinforcementMonth) {
       const reinforcementNumber = reinforcementMonths.indexOf(i) + 1;
@@ -128,14 +121,14 @@ export const generatePaymentSchedule = (data: SimulationFormData): PaymentType[]
     currentDate = addMonthsToDate(currentDate, 1);
   }
 
-  // Chaves - usar o valor exato definido pelo usuário (SEM correção adicional)
+  // Chaves - VALOR FIXO INDEPENDENTE (não sai do saldo devedor)
   const keysAmount = data.keysValue;
   
   // Calcular o valor do imóvel no mês das chaves
   const finalPropertyValue = data.propertyValue * Math.pow(1 + data.appreciationIndex / 100, data.installmentsCount + 1);
   totalPaid += keysAmount;
 
-  // O saldo após as chaves deve ser zero (pois as parcelas já quitaram tudo)
+  // O saldo já é zero após as parcelas
   const finalBalance = 0;
 
   schedule.push({
