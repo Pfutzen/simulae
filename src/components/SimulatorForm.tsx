@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -697,7 +698,7 @@ const SimulatorForm: React.FC = () => {
   const isPercentageValid = totalPercentage === 100;
 
   return (
-    <div className="space-y-8 max-w-5xl mx-auto">
+    <div className="space-y-8 max-w-6xl mx-auto px-4 sm:px-6">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="mb-4">
           <TabsTrigger value="simulator">Simulador</TabsTrigger>
@@ -705,7 +706,7 @@ const SimulatorForm: React.FC = () => {
         </TabsList>
         
         <TabsContent value="simulator" className="space-y-8">
-          <Card className="shadow">
+          <Card className="shadow-lg border-0">
             <CardContent className="pt-6">
               <div className="space-y-8">
                 <PropertyValueInput
@@ -718,15 +719,14 @@ const SimulatorForm: React.FC = () => {
                   className="mb-6"
                 />
 
-                {/* Remove the adjustment message since keys are always auto-calculated */}
-
-                <div className="rounded-lg border border-slate-200 p-5">
-                  <div className="flex items-center mb-4 gap-2">
+                {/* Cronograma de Pagamentos */}
+                <div className="rounded-lg border border-slate-200 p-6 bg-white">
+                  <div className="flex items-center mb-6 gap-2">
                     <Calendar className="h-5 w-5 text-green-600" />
                     <h3 className="text-lg font-semibold text-slate-800">Cronograma de Pagamentos</h3>
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-4">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div className="space-y-6">
                       <MonthYearInput
                         id="valuation-date"
                         label="Data de avaliação"
@@ -734,7 +734,7 @@ const SimulatorForm: React.FC = () => {
                         onChange={handleValuationDateChange}
                         placeholder="MM/AAAA"
                         required={true}
-                        className="w-full md:w-[280px]"
+                        className="w-full"
                       />
                       
                       <MonthYearInput
@@ -744,14 +744,14 @@ const SimulatorForm: React.FC = () => {
                         onChange={handleDeliveryDateChange}
                         placeholder="MM/AAAA"
                         required={true}
-                        className="w-full md:w-[280px]"
+                        className="w-full"
                       />
                       
                       <div className="space-y-2">
                         <Label className="text-sm font-medium text-slate-700">
                           Parcelas mensais (calculado automaticamente)
                         </Label>
-                        <div className="bg-slate-50 border border-slate-200 rounded-md px-3 py-2 text-sm">
+                        <div className="bg-slate-50 border border-slate-200 rounded-md px-3 py-2 text-sm min-h-[40px] flex items-center">
                           {formData.valuationDate && formData.deliveryDate ? (
                             <span className="font-medium text-slate-800">
                               {formData.installmentsCount} parcelas
@@ -763,7 +763,7 @@ const SimulatorForm: React.FC = () => {
                           )}
                         </div>
                         {formData.valuationDate && formData.deliveryDate && formData.startDate && (
-                          <p className="text-xs text-slate-600">
+                          <p className="text-xs text-slate-600 mt-2">
                             Entrada: {formatToMonthYear(formData.valuationDate)}<br/>
                             Parcelas: {formatToMonthYear(formData.startDate)} até {formatToMonthYear(formData.deliveryDate)}<br/>
                             Chaves: {formatToMonthYear(formData.deliveryDate)}
@@ -773,13 +773,13 @@ const SimulatorForm: React.FC = () => {
                     </div>
                     
                     {formData.valuationDate && formData.deliveryDate && formData.startDate && (
-                      <div className="flex flex-col justify-center space-y-3">
-                        <div className="bg-blue-50 p-3 rounded-lg">
-                          <p className="text-sm text-blue-800">
+                      <div className="flex flex-col justify-center space-y-4">
+                        <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                          <p className="text-sm text-blue-800 mb-2">
                             <strong>Entrada paga em:</strong>{" "}
                             {formatToMonthYear(formData.valuationDate)}
                           </p>
-                          <p className="text-sm text-blue-800">
+                          <p className="text-sm text-blue-800 mb-2">
                             <strong>Primeira parcela:</strong>{" "}
                             {formatToMonthYear(formData.startDate)}
                           </p>
@@ -790,7 +790,7 @@ const SimulatorForm: React.FC = () => {
                         </div>
                         
                         {formData.installmentsCount < 3 && (
-                          <Alert className="bg-amber-50">
+                          <Alert className="bg-amber-50 border-amber-200">
                             <AlertCircle className="h-4 w-4 text-amber-600" />
                             <AlertDescription className="text-amber-800">
                               Atenção: Prazo muito curto ({formData.installmentsCount} parcelas). Considere uma data de entrega mais distante.
@@ -802,25 +802,30 @@ const SimulatorForm: React.FC = () => {
                   </div>
                 </div>
                 
-                <div className="rounded-lg border border-slate-200 p-5">
-                  <div className="flex items-center mb-4 gap-2">
+                {/* Entrada e Parcelamento - Grid unificado */}
+                <div className="rounded-lg border border-slate-200 p-6 bg-white">
+                  <div className="flex items-center mb-6 gap-2">
                     <DollarSign className="h-5 w-5 text-simulae-600" />
                     <h3 className="text-lg font-semibold text-slate-800">Entrada e Parcelamento</h3>
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <PercentageValueInput
-                      label="Entrada"
-                      value={formData.downPaymentValue}
-                      percentage={formData.downPaymentPercentage}
-                      totalValue={formData.propertyValue}
-                      onValueChange={handleDownPaymentValueChange}
-                      onPercentageChange={handleDownPaymentPercentageChange}
-                      noDecimalsForPercentage={true}
-                      valueInputClassName="w-full md:w-[240px]"
-                      percentageInputClassName="w-full md:w-[120px]"
-                      hasError={!isPercentageValid}
-                    />
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    {/* Entrada */}
+                    <div className="space-y-4">
+                      <PercentageValueInput
+                        label="Entrada"
+                        value={formData.downPaymentValue}
+                        percentage={formData.downPaymentPercentage}
+                        totalValue={formData.propertyValue}
+                        onValueChange={handleDownPaymentValueChange}
+                        onPercentageChange={handleDownPaymentPercentageChange}
+                        noDecimalsForPercentage={true}
+                        valueInputClassName="w-full"
+                        percentageInputClassName="w-full"
+                        hasError={!isPercentageValid}
+                      />
+                    </div>
                     
+                    {/* Parcelas */}
                     <div className="space-y-4">
                       <PercentageValueInput
                         label="Parcelas"
@@ -831,8 +836,8 @@ const SimulatorForm: React.FC = () => {
                         onValueChange={handleInstallmentsValueChange}
                         onPercentageChange={handleInstallmentsPercentageChange}
                         noDecimalsForPercentage={true}
-                        valueInputClassName="w-full md:w-[240px]"
-                        percentageInputClassName="w-full md:w-[120px]"
+                        valueInputClassName="w-full"
+                        percentageInputClassName="w-full"
                         installmentsCount={formData.installmentsCount}
                         hasError={!isPercentageValid}
                       />
@@ -840,13 +845,16 @@ const SimulatorForm: React.FC = () => {
                   </div>
                 </div>
                 
-                <div className="rounded-lg border border-slate-200 p-5">
-                  <div className="flex items-center mb-4 gap-2">
+                {/* Reforços e Chaves - Grid unificado */}
+                <div className="rounded-lg border border-slate-200 p-6 bg-white">
+                  <div className="flex items-center mb-6 gap-2">
                     <Calendar className="h-5 w-5 text-blue-600" />
-                    <h3 className="text-lg font-semibold text-slate-800">Reforços Programados</h3>
+                    <h3 className="text-lg font-semibold text-slate-800">Reforços Programados e Chaves</h3>
                   </div>
-                  <div className="grid grid-cols-1 gap-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    {/* Reforços */}
+                    <div className="space-y-6">
                       <div className="space-y-4">
                         <PercentageValueInput
                           label="Reforços"
@@ -857,74 +865,80 @@ const SimulatorForm: React.FC = () => {
                           onValueChange={handleReinforcementsValueChange}
                           onPercentageChange={handleReinforcementsPercentageChange}
                           noDecimalsForPercentage={true}
-                          valueInputClassName="w-full md:w-[240px]"
-                          percentageInputClassName="w-full md:w-[120px]"
+                          valueInputClassName="w-full"
+                          percentageInputClassName="w-full"
                           installmentsCount={reinforcementMonths.length}
                           hasError={!isPercentageValid}
                         />
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <NumberInput
-                            id="reinforcement-frequency"
-                            label="Frequência (meses)"
-                            value={formData.reinforcementFrequency}
-                            onChange={handleReinforcementFrequencyChange}
-                            min={0}
-                            suffix="meses"
-                            noDecimals={true}
-                            className="w-full"
-                          />
-                          <NumberInput
-                            id="final-months-without-reinforcement"
-                            label="Meses finais sem reforço"
-                            value={formData.finalMonthsWithoutReinforcement}
-                            onChange={handleFinalMonthsWithoutReinforcementChange}
-                            min={0}
-                            max={formData.installmentsCount - 1}
-                            suffix="meses"
-                            noDecimals={true}
-                            className="w-full"
-                          />
-                        </div>
                       </div>
                       
-                      {/* Chaves agora sempre calculado automaticamente */}
-                      <div className="space-y-4 p-3 rounded-lg border-2 border-green-200 bg-green-50">
-                        <div className="flex flex-col space-y-2">
-                          <Label className="text-base font-medium">Chaves (Saldo Automático)</Label>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <NumberInput
+                          id="reinforcement-frequency"
+                          label="Frequência (meses)"
+                          value={formData.reinforcementFrequency}
+                          onChange={handleReinforcementFrequencyChange}
+                          min={0}
+                          suffix="meses"
+                          noDecimals={true}
+                          className="w-full"
+                        />
+                        <NumberInput
+                          id="final-months-without-reinforcement"
+                          label="Meses finais sem reforço"
+                          value={formData.finalMonthsWithoutReinforcement}
+                          onChange={handleFinalMonthsWithoutReinforcementChange}
+                          min={0}
+                          max={formData.installmentsCount - 1}
+                          suffix="meses"
+                          noDecimals={true}
+                          className="w-full"
+                        />
+                      </div>
+                    </div>
+                    
+                    {/* Chaves - harmonizado com os demais blocos */}
+                    <div className="p-4 rounded-lg border-2 border-green-200 bg-green-50 h-fit">
+                      <div className="space-y-4">
+                        <div className="space-y-2">
+                          <Label className="text-base font-medium text-green-800">Chaves (Saldo Automático)</Label>
                           <p className="text-sm text-green-700">
                             Calculado automaticamente para completar 100%
                           </p>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                          <div>
-                            <Label className="text-sm text-slate-500 block mb-1">
-                              Valor (R$) (calculado)
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label className="text-sm text-green-700 font-medium">
+                              Valor (R$)
                             </Label>
                             <CurrencyInput
                               value={formData.keysValue}
-                              onChange={() => {}} // Não faz nada - é só visualização
+                              onChange={() => {}}
                               disabled={true}
-                              className="bg-green-100 text-green-800 font-medium"
+                              className="bg-green-100 text-green-800 font-medium border-green-300 h-10"
                             />
                           </div>
                           
-                          <div>
-                            <Label className="text-sm text-slate-500 block mb-1">
-                              Percentual (%) (calculado)
+                          <div className="space-y-2">
+                            <Label className="text-sm text-green-700 font-medium">
+                              Percentual (%)
                             </Label>
                             <PercentageInput
                               value={formData.keysPercentage}
-                              onChange={() => {}} // Não faz nada - é só visualização
+                              onChange={() => {}}
                               disabled={true}
                               noDecimals={true}
-                              className="bg-green-100 text-green-800 font-medium"
+                              className="bg-green-100 text-green-800 font-medium border-green-300 h-10"
                             />
                           </div>
                         </div>
                       </div>
                     </div>
+                  </div>
 
+                  {/* Controle de datas de reforço */}
+                  <div className="mt-8">
                     <ReinforcementDatesControl
                       valuationDate={formData.valuationDate}
                       deliveryDate={formData.deliveryDate}
@@ -939,12 +953,13 @@ const SimulatorForm: React.FC = () => {
                   </div>
                 </div>
                 
-                <div className="rounded-lg border border-slate-200 p-5">
-                  <div className="flex items-center mb-4 gap-2">
+                {/* Correção Monetária e Valorização */}
+                <div className="rounded-lg border border-slate-200 p-6 bg-white">
+                  <div className="flex items-center mb-6 gap-2">
                     <TrendingUp className="h-5 w-5 text-green-600" />
                     <h3 className="text-lg font-semibold text-slate-800">Correção Monetária e Valorização</h3>
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                     <div className="space-y-4">
                       <CorrectionSelector
                         value={formData.correctionMode}
@@ -960,58 +975,57 @@ const SimulatorForm: React.FC = () => {
                           min={0}
                           step={0.01}
                           suffix="%"
-                          className="w-full md:w-[240px]"
+                          className="w-full"
                         />
                       )}
                     </div>
                     
                     <div className="space-y-4">
-                      <div className="space-y-4">
-                        <div className="flex items-center gap-2">
-                          <div className="flex-1">
-                            <PercentageSlider
-                              id="appreciation-index"
-                              label="Índice de valorização mensal"
-                              value={formData.appreciationIndex}
-                              onChange={handleAppreciationIndexChange}
-                              min={0}
-                              max={5}
-                              step={0.05}
-                              suffix="%"
-                              showIncrementButtons={true}
-                              incrementStep={0.05}
-                            />
-                          </div>
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Button
-                                  type="button"
-                                  variant="ghost"
-                                  size="sm"
-                                  className="h-8 w-8 p-0 text-blue-600 hover:text-blue-800 hover:bg-blue-50"
-                                  onClick={() => window.open('https://www.datazap.com.br/conteudos-fipezap/', '_blank')}
-                                >
-                                  <ExternalLink className="h-4 w-4" />
-                                </Button>
-                              </TooltipTrigger>
-                              <TooltipContent>
-                                <p>Consultar índices oficiais da FipeZap</p>
-                              </TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
+                      <div className="flex items-center gap-2">
+                        <div className="flex-1">
+                          <PercentageSlider
+                            id="appreciation-index"
+                            label="Índice de valorização mensal"
+                            value={formData.appreciationIndex}
+                            onChange={handleAppreciationIndexChange}
+                            min={0}
+                            max={5}
+                            step={0.05}
+                            suffix="%"
+                            showIncrementButtons={true}
+                            incrementStep={0.05}
+                          />
                         </div>
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                className="h-8 w-8 p-0 text-blue-600 hover:text-blue-800 hover:bg-blue-50"
+                                onClick={() => window.open('https://www.datazap.com.br/conteudos-fipezap/', '_blank')}
+                              >
+                                <ExternalLink className="h-4 w-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Consultar índices oficiais da FipeZap</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
                       </div>
                     </div>
                   </div>
                 </div>
                 
-                <div className="rounded-lg border border-slate-200 p-5">
-                  <div className="flex items-center mb-4 gap-2">
+                {/* Revenda e Aluguel */}
+                <div className="rounded-lg border border-slate-200 p-6 bg-white">
+                  <div className="flex items-center mb-6 gap-2">
                     <Home className="h-5 w-5 text-purple-600" />
                     <h3 className="text-lg font-semibold text-slate-800">Revenda e Aluguel</h3>
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                     <div className="space-y-4">
                       <div className="flex items-center justify-between">
                         <Label htmlFor="custom-resale-toggle" className="flex items-center gap-2 cursor-pointer">
@@ -1034,7 +1048,7 @@ const SimulatorForm: React.FC = () => {
                           max={formData.installmentsCount}
                           suffix="mês"
                           noDecimals={true}
-                          className="w-full md:w-[240px]"
+                          className="w-full"
                         />
                       )}
                     </div>
@@ -1054,19 +1068,20 @@ const SimulatorForm: React.FC = () => {
                   </div>
                 </div>
                 
+                {/* Seção de ações */}
                 <div className="pt-4">
-                  <div className="mb-4">
-                    <Label htmlFor="simulation-name">Nome da Simulação</Label>
+                  <div className="mb-6">
+                    <Label htmlFor="simulation-name" className="text-base font-medium">Nome da Simulação</Label>
                     <Input
                       id="simulation-name"
                       placeholder="Ex: Cliente João - Apto 802"
                       value={simulationName}
                       onChange={handleSimulationNameChange}
-                      className="mt-1"
+                      className="mt-2 h-12"
                     />
                   </div>
                   
-                  <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                  <div className="flex flex-col sm:flex-row gap-4 justify-center">
                     <Button 
                       onClick={handleSimulate} 
                       disabled={
@@ -1075,7 +1090,7 @@ const SimulatorForm: React.FC = () => {
                         !formData.deliveryDate ||
                         formData.installmentsCount < 1
                       }
-                      className="bg-simulae-600 hover:bg-simulae-700 text-white px-8 py-6 text-lg w-full sm:w-auto"
+                      className="bg-simulae-600 hover:bg-simulae-700 text-white px-8 py-6 text-lg w-full sm:w-auto min-w-[200px]"
                     >
                       Simular
                     </Button>
@@ -1084,7 +1099,7 @@ const SimulatorForm: React.FC = () => {
                       <>
                         <Button
                           onClick={handleSaveSimulation}
-                          className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-6 text-lg w-full sm:w-auto"
+                          className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-6 text-lg w-full sm:w-auto min-w-[200px]"
                           disabled={!simulationName.trim()}
                         >
                           Salvar Simulação
