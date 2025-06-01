@@ -1,3 +1,4 @@
+
 import { useState, useCallback, useMemo } from 'react';
 import { ImovelConfig, IndicesEconomicos, EstrategiaResultado, ROIEvolution } from '@/types/investment.types';
 import { calcularTodasEstrategias, gerarEvolucaoROI } from '@/utils/calculosFinanceiros';
@@ -40,11 +41,14 @@ export const useEstrategias = () => {
       const dataParcela = new Date(dataInicio);
       dataParcela.setMonth(dataParcela.getMonth() + i);
       
+      const tipoParcela = i === meses ? 'chaves' as const : 'parcela' as const;
+      const valorFinal = i === meses ? saldoRestante - (valorParcela * (meses - 1)) : valorParcela;
+      
       cronograma.push({
         mes: i,
-        valor: i === meses ? saldoRestante - (valorParcela * (meses - 1)) : valorParcela, // Ajusta última parcela
+        valor: valorFinal,
         data: dataParcela,
-        tipo: i === meses ? 'chaves' as const : 'parcela' as const
+        tipo: tipoParcela
       });
     }
 
