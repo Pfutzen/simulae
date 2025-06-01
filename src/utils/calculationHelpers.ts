@@ -2,15 +2,6 @@
 import { addMonths as addMonthsToDate } from 'date-fns';
 import { SimulationFormData } from './types';
 
-export const calculatePercentage = (value: number, total: number): number => {
-  if (total === 0) return 0;
-  return (value / total) * 100;
-};
-
-export const calculateValue = (percentage: number, total: number): number => {
-  return (percentage / 100) * total;
-};
-
 export const calculateTotalPercentage = (data: SimulationFormData): number => {
   return (
     data.downPaymentPercentage +
