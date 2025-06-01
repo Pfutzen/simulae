@@ -1,50 +1,28 @@
 
-import React from "react";
-import SimulatorForm from "@/components/SimulatorForm";
-import SessionTimeoutModal from "@/components/SessionTimeoutModal";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { useSessionTimeout } from "@/hooks/useSessionTimeout";
+import React from 'react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import FinancingSimulator from '@/components/FinancingSimulator';
+import EstrategiaInvestimento from '@/components/EstrategiaInvestimento';
 
 const Index = () => {
-  const { isSessionExpired, resetSession } = useSessionTimeout();
-
-  const handleValidPassword = () => {
-    resetSession();
-  };
-
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50">
-      <header className="bg-white py-6 shadow-sm">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6">
-          <div className="flex flex-col items-center md:items-start">
-            <img 
-              src="/lovable-uploads/c2a68237-fb14-4957-891c-3d3581836ace.png" 
-              alt="Simulae Logo" 
-              className="h-16 md:h-20 mb-2"
-            />
-            <p className="text-slate-600 mt-1">
-              Simulador de investimento imobiliário para imóveis na planta
-            </p>
-          </div>
-        </div>
-      </header>
-      
-      <main className="flex-grow px-4 sm:px-6 py-8">
-        <TooltipProvider>
-          <SimulatorForm />
-        </TooltipProvider>
-      </main>
-      
-      <footer className="bg-white py-6 border-t border-slate-200">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 text-center text-slate-500 text-sm">
-          © 2025 Simulae. Todos os direitos reservados.
-        </div>
-      </footer>
+    <div className="min-h-screen bg-gray-50 p-4">
+      <div className="container mx-auto">
+        <Tabs defaultValue="simulador" className="w-full">
+          <TabsList className="grid w-full grid-cols-2 mb-6">
+            <TabsTrigger value="simulador">Simulador Financeiro</TabsTrigger>
+            <TabsTrigger value="estrategias">Estratégias de Investimento</TabsTrigger>
+          </TabsList>
 
-      <SessionTimeoutModal 
-        isOpen={isSessionExpired}
-        onValidPassword={handleValidPassword}
-      />
+          <TabsContent value="simulador">
+            <FinancingSimulator />
+          </TabsContent>
+
+          <TabsContent value="estrategias">
+            <EstrategiaInvestimento />
+          </TabsContent>
+        </Tabs>
+      </div>
     </div>
   );
 };
