@@ -82,7 +82,7 @@ export function obterTaxaMensalSupabase(
     return 0;
   }
 
-  // Calcula a posição no ciclo de 12 meses
+  // CORREÇÃO DO BUG: Usar mesSimulacao diretamente sem subtrair 1
   const posicaoNoCiclo = (mesInicial + mesSimulacao) % indices.length;
   const taxa = indices[posicaoNoCiclo];
   
