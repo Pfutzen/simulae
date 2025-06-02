@@ -1,7 +1,12 @@
 
 import { useState, useMemo } from 'react';
 import { ConfiguracaoIndices, TipoIndice } from '@/types/indices';
-import { obterTaxaMensalSupabase, calcularValorCorrigidoSupabase, calcularSaldoComIndiceSupabase } from '@/utils/calculosIndicesSupabase';
+import { 
+  carregarIndicesDoSupabase,
+  obterTaxaMensalSupabase, 
+  calcularValorCorrigidoSupabase, 
+  calcularSaldoComIndiceSupabase 
+} from '@/utils/calculosIndicesSupabase';
 import { useIndicesSupabase } from './useIndicesSupabase';
 
 export const useIndicesEconomicos = () => {
@@ -17,6 +22,13 @@ export const useIndicesEconomicos = () => {
     },
     mesInicial: 0 // Começar em Maio (posição 0 do array)
   });
+
+  // Carregar índices do Supabase automaticamente
+  useMemo(() => {
+    carregarIndicesDoSupabase().catch(error => {
+      console.error('Erro ao carregar índices:', error);
+    });
+  }, []);
 
   const getTaxaCorrecao = (mesSimulacao: number): number => {
     return obterTaxaMensalSupabase(

@@ -1,8 +1,8 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ConfiguracaoIndices } from '@/types/indices';
-import { obterTaxaMensalSupabase } from '@/utils/calculosIndicesSupabase';
+import { carregarIndicesDoSupabase, obterTaxaMensalSupabase } from '@/utils/calculosIndicesSupabase';
 import { useIndicesSupabase } from '@/hooks/useIndicesSupabase';
 
 interface PreviewTaxasProps {
@@ -11,8 +11,23 @@ interface PreviewTaxasProps {
 
 const PreviewTaxas: React.FC<PreviewTaxasProps> = ({ config }) => {
   const { indices, loading } = useIndicesSupabase();
+  const [indicesCarregados, setIndicesCarregados] = useState(false);
 
-  if (loading) {
+  useEffect(() => {
+    const carregarIndices = async () => {
+      try {
+        await carregarIndicesDoSupabase();
+        setIndicesCarregados(true);
+      } catch (error) {
+        console.error('Erro ao carregar índices:', error);
+        setIndicesCarregados(true); // Marcar como carregado mesmo com erro (fallback)
+      }
+    };
+
+    carregarIndices();
+  }, []);
+
+  if (loading || !indicesCarregados) {
     return (
       <Card>
         <CardHeader>
@@ -88,6 +103,9 @@ const PreviewTaxas: React.FC<PreviewTaxasProps> = ({ config }) => {
           <p className="text-xs text-slate-600">
             ℹ️ As taxas seguem o ciclo histórico dos dados do Supabase e se repetem mensalmente.
             O mês inicial define onde começar no ciclo.
+          </p>
+          <p className="text-xs text-slate-600 mt-1">
+            📊 Modo atual: {config.correcaoMonetaria.tipo} / {config.valorizacao.tipo}
           </p>
         </div>
       </CardContent>

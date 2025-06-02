@@ -1,52 +1,63 @@
 
 import { TipoIndice } from '../types/indices';
-import { useIndicesSupabase } from '../hooks/useIndicesSupabase';
 
-// Fallback para dados estáticos caso o Supabase não esteja disponível
-const indicesHistoricosFallback = {
-  CUB_NACIONAL: [0.59, 0.93, 0.69, 0.64, 0.61, 0.67, 0.44, 0.51, 0.71, 0.51, 0.38, 0.59],
-  IPCA: [0.46, 0.21, 0.12, -0.02, 0.44, 0.24, 0.39, 0.52, 0.42, 0.83, 0.16, 0.43],
-  IGP_M: [0.89, 0.81, 0.61, 0.29, 0.62, 1.52, 1.30, 0.94, 0.27, 1.06, -0.34, 0.24],
-  INCC_NACIONAL: [0.59, 0.93, 0.69, 0.64, 0.61, 0.67, 0.44, 0.51, 0.71, 0.51, 0.38, 0.59]
-};
-
+// Cache para os índices carregados
 let indicesCarregados: { [key in TipoIndice]?: number[] } = {};
 let indicesCarregadosFlag = false;
+let promiseCarregamento: Promise<void> | null = null;
 
 export async function carregarIndicesDoSupabase(): Promise<void> {
   if (indicesCarregadosFlag) return;
+  
+  // Se já existe uma promise de carregamento, aguarda ela
+  if (promiseCarregamento) return promiseCarregamento;
 
-  try {
-    const { supabase } = await import('@/integrations/supabase/client');
-    
-    const { data, error } = await supabase
-      .from('indices_economicos')
-      .select('*')
-      .order('id', { ascending: true });
-
-    if (error) {
-      console.warn('Erro ao carregar índices do Supabase, usando fallback:', error);
-      indicesCarregados = indicesHistoricosFallback;
-    } else if (data && data.length > 0) {
-      console.log('Índices carregados do Supabase:', data);
+  promiseCarregamento = (async () => {
+    try {
+      const { supabase } = await import('@/integrations/supabase/client');
       
-      indicesCarregados = {
-        CUB_NACIONAL: data.map(item => item.cub_nacional || 0),
-        IPCA: data.map(item => item.ipca || 0),
-        IGP_M: data.map(item => item.igpm || 0),
-        INCC_NACIONAL: data.map(item => item.incc || 0)
-      };
-    } else {
-      console.warn('Nenhum dado encontrado no Supabase, usando fallback');
-      indicesCarregados = indicesHistoricosFallback;
+      const { data, error } = await supabase
+        .from('indices_economicos')
+        .select('*')
+        .order('id', { ascending: true });
+
+      if (error) {
+        console.warn('Erro ao carregar índices do Supabase, usando fallback:', error);
+        usarDadosFallback();
+      } else if (data && data.length > 0) {
+        console.log('Índices carregados do Supabase:', data);
+        
+        indicesCarregados = {
+          CUB_NACIONAL: data.map(item => item.cub_nacional || 0),
+          IPCA: data.map(item => item.ipca || 0),
+          IGP_M: data.map(item => item.igpm || 0),
+          INCC_NACIONAL: data.map(item => item.incc || 0)
+        };
+        
+        console.log('Índices organizados por tipo:', indicesCarregados);
+      } else {
+        console.warn('Nenhum dado encontrado no Supabase, usando fallback');
+        usarDadosFallback();
+      }
+      
+      indicesCarregadosFlag = true;
+    } catch (error) {
+      console.warn('Erro ao conectar com Supabase, usando dados estáticos:', error);
+      usarDadosFallback();
+      indicesCarregadosFlag = true;
     }
-    
-    indicesCarregadosFlag = true;
-  } catch (error) {
-    console.warn('Erro ao conectar com Supabase, usando dados estáticos:', error);
-    indicesCarregados = indicesHistoricosFallback;
-    indicesCarregadosFlag = true;
-  }
+  })();
+
+  return promiseCarregamento;
+}
+
+function usarDadosFallback() {
+  indicesCarregados = {
+    CUB_NACIONAL: [0.59, 0.93, 0.69, 0.64, 0.61, 0.67, 0.44, 0.51, 0.71, 0.51, 0.38, 0.59],
+    IPCA: [0.46, 0.21, 0.12, -0.02, 0.44, 0.24, 0.39, 0.52, 0.42, 0.83, 0.16, 0.43],
+    IGP_M: [0.89, 0.81, 0.61, 0.29, 0.62, 1.52, 1.30, 0.94, 0.27, 1.06, -0.34, 0.24],
+    INCC_NACIONAL: [0.59, 0.93, 0.69, 0.64, 0.61, 0.67, 0.44, 0.51, 0.71, 0.51, 0.38, 0.59]
+  };
 }
 
 export function obterTaxaMensalSupabase(
@@ -55,20 +66,30 @@ export function obterTaxaMensalSupabase(
   mesInicial: number = 0,
   valorManual?: number
 ): number {
+  // Garantir que os índices foram carregados
+  if (!indicesCarregadosFlag) {
+    console.warn('Índices não carregados ainda, usando fallback temporário');
+    usarDadosFallback();
+  }
+
   if (tipo === 'MANUAL') {
     return valorManual ? valorManual / 100 : 0;
   }
 
-  const indices = indicesCarregados[tipo] || indicesHistoricosFallback[tipo] || [];
-  if (indices.length === 0) return 0;
+  const indices = indicesCarregados[tipo];
+  if (!indices || indices.length === 0) {
+    console.warn(`Índices não encontrados para ${tipo}, retornando 0`);
+    return 0;
+  }
 
   // Calcula a posição no ciclo de 12 meses
   const posicaoNoCiclo = (mesInicial + mesSimulacao) % indices.length;
+  const taxa = indices[posicaoNoCiclo];
   
-  console.log(`Taxa ${tipo} mês ${mesSimulacao}: ${indices[posicaoNoCiclo]}% (posição ${posicaoNoCiclo})`);
+  console.log(`Taxa ${tipo} mês ${mesSimulacao}: ${taxa}% (posição ${posicaoNoCiclo}, mesInicial: ${mesInicial})`);
   
   // Retorna a taxa em decimal (ex: 0.59% -> 0.0059)
-  return indices[posicaoNoCiclo] / 100;
+  return taxa / 100;
 }
 
 export function calcularCorrecaoAcumuladaSupabase(

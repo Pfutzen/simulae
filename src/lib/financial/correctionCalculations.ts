@@ -1,18 +1,25 @@
 
-import { CUB_CORRECTION_DATA } from '@/utils/correctionData';
 import { TipoIndice } from '@/types/indices';
-import { obterTaxaMensalSupabase, calcularSaldoComIndiceSupabase, calcularValorCorrigidoSupabase } from '@/utils/calculosIndicesSupabase';
+import { 
+  carregarIndicesDoSupabase,
+  obterTaxaMensalSupabase, 
+  calcularSaldoComIndiceSupabase, 
+  calcularValorCorrigidoSupabase 
+} from '@/utils/calculosIndicesSupabase';
 
 /**
  * Functions for monetary correction calculations with Supabase integration
  */
 
-export const getMonthlyCorrection = (
+export const getMonthlyCorrection = async (
   monthNumber: number,
   correctionMode: TipoIndice,
   manualCorrectionIndex: number = 0,
   mesInicial: number = 0
-): number => {
+): Promise<number> => {
+  // Garantir que os índices foram carregados
+  await carregarIndicesDoSupabase();
+  
   // Usar função do Supabase para obter taxa dinâmica
   return obterTaxaMensalSupabase(
     correctionMode,
@@ -22,13 +29,16 @@ export const getMonthlyCorrection = (
   );
 };
 
-export const applyCorrectionToBalance = (
+export const applyCorrectionToBalance = async (
   balance: number, 
   correctionMode: TipoIndice,
   monthNumber: number,
   mesInicial: number = 0,
   manualCorrectionIndex: number = 0
-): number => {
+): Promise<number> => {
+  // Garantir que os índices foram carregados
+  await carregarIndicesDoSupabase();
+  
   // Usar função do Supabase para aplicar correção com taxa dinâmica
   return calcularSaldoComIndiceSupabase(
     balance,
@@ -39,13 +49,16 @@ export const applyCorrectionToBalance = (
   );
 };
 
-export const applyCorrectionToInstallment = (
+export const applyCorrectionToInstallment = async (
   baseInstallment: number,
   correctionMode: TipoIndice,
   monthNumber: number,
   mesInicial: number = 0,
   manualCorrectionIndex: number = 0
-): number => {
+): Promise<number> => {
+  // Garantir que os índices foram carregados
+  await carregarIndicesDoSupabase();
+  
   // Aplicar correção acumulada usando taxas dinâmicas do Supabase
   let correctedInstallment = baseInstallment;
   
@@ -67,13 +80,16 @@ export const applyCorrectionToInstallment = (
   return correctedInstallment;
 };
 
-export const calculateAccumulatedCorrection = (
+export const calculateAccumulatedCorrection = async (
   baseValue: number,
   correctionMode: TipoIndice,
   months: number,
   mesInicial: number = 0,
   manualCorrectionIndex: number = 0
-): number => {
+): Promise<number> => {
+  // Garantir que os índices foram carregados
+  await carregarIndicesDoSupabase();
+  
   // Usar função do Supabase para correção acumulada
   let valorAcumulado = baseValue;
   
@@ -95,7 +111,7 @@ export const calculateAccumulatedCorrection = (
   return valorAcumulado;
 };
 
-export const calculatePropertyValueWithFixedRates = (
+export const calculatePropertyValueWithFixedRates = async (
   baseValue: number,
   correctionMode: TipoIndice,
   appreciationMode: TipoIndice,
@@ -103,7 +119,10 @@ export const calculatePropertyValueWithFixedRates = (
   mesInicial: number = 0,
   manualCorrectionIndex: number = 0,
   manualAppreciationIndex: number = 0
-): number => {
+): Promise<number> => {
+  // Garantir que os índices foram carregados
+  await carregarIndicesDoSupabase();
+  
   // Usar função do Supabase para cálculo com taxas dinâmicas
   return calcularValorCorrigidoSupabase(
     baseValue,
@@ -116,15 +135,15 @@ export const calculatePropertyValueWithFixedRates = (
   );
 };
 
-export const validateCorrectionCalculation = (
+export const validateCorrectionCalculation = async (
   initialBalance: number,
   correctionMode: TipoIndice,
   installmentAmount: number,
   monthNumber: number = 0,
   mesInicial: number = 0,
   manualCorrectionIndex: number = 0
-): { correctedBalance: number, finalBalance: number, isValid: boolean } => {
-  const correctedBalance = applyCorrectionToBalance(
+): Promise<{ correctedBalance: number, finalBalance: number, isValid: boolean }> => {
+  const correctedBalance = await applyCorrectionToBalance(
     initialBalance, 
     correctionMode, 
     monthNumber, 
