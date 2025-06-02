@@ -82,7 +82,7 @@ export function obterTaxaMensalSupabase(
     return 0;
   }
 
-  // CORREÇÃO DO BUG: Usar mesSimulacao diretamente sem subtrair 1
+  // CORREÇÃO DO BUG: Usar mesSimulacao diretamente (removendo o -1 que estava causando o offset)
   const posicaoNoCiclo = (mesInicial + mesSimulacao) % indices.length;
   const taxa = indices[posicaoNoCiclo];
   
