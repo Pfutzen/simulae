@@ -108,6 +108,8 @@ export const generatePaymentScheduleComIndicesSupabase = async (
     let correctedInstallment = baseParcela * correcaoAcumulada + reinforcementValue;
     
     console.log(`=== MÊS ${i} (SUPABASE) ===`);
+    console.log(`Saldo anterior: R$ ${balance.toFixed(2)}`);
+    console.log(`Saldo corrigido: R$ ${correctedBalance.toFixed(2)}`);
     console.log(`Parcela base: R$ ${baseParcela.toFixed(2)}`);
     console.log(`Correção acumulada: ${((correcaoAcumulada - 1) * 100).toFixed(4)}%`);
     console.log(`Parcela corrigida: R$ ${(baseParcela * correcaoAcumulada).toFixed(2)}`);

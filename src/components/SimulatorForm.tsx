@@ -10,7 +10,6 @@ import {
   calculatePercentage, 
   calculateValue, 
   calculateTotalPercentage, 
-  generatePaymentSchedule, 
   calculateResaleProfit,
   calculateMaxReinforcementCount,
   getReinforcementMonths,
@@ -23,6 +22,8 @@ import {
 import { SimulationFormData, PaymentType } from "@/utils/types";
 import { saveSimulation, getSimulations, SavedSimulation, getActiveSimulation } from "@/utils/simulationHistoryUtils";
 import { wouldStartDateBeInPast, formatToMonthYear, calculateInstallmentsFromValuationAndDelivery, safeDateConversion } from "@/utils/dateUtils";
+import { generatePaymentScheduleComIndicesSupabase } from "@/utils/paymentScheduleSupabase";
+import { ConfiguracaoIndices } from "@/types/indices";
 import PropertyValueInput from "./PropertyValueInput";
 import PercentageValueInput from "./PercentageValueInput";
 import PercentageValidationIndicator from "./PercentageValidationIndicator";
@@ -71,7 +72,7 @@ const SimulatorForm: React.FC = () => {
     finalMonthsWithoutReinforcement: 5,
     keysValue: 250000,
     keysPercentage: 50,
-    correctionMode: "MANUAL" as TipoIndice,
+    correctionMode: "CUB_NACIONAL" as TipoIndice,
     correctionIndex: 0.5,
     appreciationIndex: 1.35,
     resaleMonth: 24,
@@ -80,6 +81,18 @@ const SimulatorForm: React.FC = () => {
     deliveryDate: undefined,
     valuationDate: undefined,
     customReinforcementDates: undefined
+  });
+
+  // Configuração de índices para o Supabase
+  const [configIndices] = useState<ConfiguracaoIndices>({
+    correcaoMonetaria: {
+      tipo: 'CUB_NACIONAL'
+    },
+    valorizacao: {
+      tipo: 'MANUAL',
+      valorManual: 1.35 // 1.35% ao mês
+    },
+    mesInicial: 0 // Começar em Maio (posição 0 do array)
   });
 
   const [totalPercentage, setTotalPercentage] = useState<number>(0);
@@ -476,10 +489,6 @@ const SimulatorForm: React.FC = () => {
     setReinforcementMonths(newMonths);
   };
 
-  // Remove the keys handlers since they will be auto-calculated
-  // const handleKeysValueChange = ... (REMOVED)
-  // const handleKeysPercentageChange = ... (REMOVED)
-
   const handleCorrectionModeChange = (mode: TipoIndice) => {
     setFormData({ ...formData, correctionMode: mode });
   };
@@ -531,7 +540,7 @@ const SimulatorForm: React.FC = () => {
     });
   };
 
-  const handleUpdateSimulationWithCustomDates = () => {
+  const handleUpdateSimulationWithCustomDates = async () => {
     if (!formData.customReinforcementDates || formData.customReinforcementDates.length === 0) {
       toast({
         title: "Nenhuma data personalizada",
@@ -550,7 +559,20 @@ const SimulatorForm: React.FC = () => {
       return;
     }
 
-    const paymentSchedule = generatePaymentSchedule(formData);
+    // Criar configuração atualizada baseada no formData
+    const configAtualizada: ConfiguracaoIndices = {
+      correcaoMonetaria: {
+        tipo: formData.correctionMode,
+        valorManual: formData.correctionMode === 'MANUAL' ? formData.correctionIndex : undefined
+      },
+      valorizacao: {
+        tipo: 'MANUAL',
+        valorManual: formData.appreciationIndex
+      },
+      mesInicial: 0
+    };
+
+    const paymentSchedule = await generatePaymentScheduleComIndicesSupabase(formData, configAtualizada);
     setSchedule(paymentSchedule);
     
     const effectiveResaleMonth = customResaleEnabled 
@@ -581,7 +603,7 @@ const SimulatorForm: React.FC = () => {
     });
   };
 
-  const handleSimulate = () => {
+  const handleSimulate = async () => {
     if (totalPercentage !== 100) {
       toast({
         title: "Percentuais incorretos",
@@ -591,7 +613,26 @@ const SimulatorForm: React.FC = () => {
       return;
     }
 
-    const paymentSchedule = generatePaymentSchedule(formData);
+    console.log('=== INICIANDO SIMULAÇÃO COM SUPABASE ===');
+    console.log('Modo correção:', formData.correctionMode);
+    console.log('Taxa manual:', formData.correctionIndex);
+
+    // Criar configuração baseada no formData
+    const configAtualizada: ConfiguracaoIndices = {
+      correcaoMonetaria: {
+        tipo: formData.correctionMode,
+        valorManual: formData.correctionMode === 'MANUAL' ? formData.correctionIndex : undefined
+      },
+      valorizacao: {
+        tipo: 'MANUAL',
+        valorManual: formData.appreciationIndex
+      },
+      mesInicial: 0
+    };
+
+    console.log('Configuração criada:', configAtualizada);
+
+    const paymentSchedule = await generatePaymentScheduleComIndicesSupabase(formData, configAtualizada);
     setSchedule(paymentSchedule);
     
     const effectiveResaleMonth = customResaleEnabled 
