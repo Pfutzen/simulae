@@ -7,16 +7,16 @@ import { TipoIndice } from '@/types/indices';
  * Functions for payment schedule calculations with Supabase integration
  */
 
-export const calculateInstallmentBalance = (
+export const calculateInstallmentBalance = async (
   previousBalance: number,
   installmentAmount: number,
   correctionMode: TipoIndice,
   monthNumber: number,
   mesInicial: number = 0,
   manualCorrectionIndex: number = 0
-): number => {
+): Promise<number> => {
   // Usar correção com dados do Supabase
-  const correctedBalance = applyCorrectionToBalance(
+  const correctedBalance = await applyCorrectionToBalance(
     previousBalance,
     correctionMode,
     monthNumber,
@@ -35,15 +35,15 @@ export const calculateInstallmentBalance = (
   return finalBalance;
 };
 
-export const calculateFinalKeysAmount = (
+export const calculateFinalKeysAmount = async (
   remainingBalance: number,
   correctionMode: TipoIndice,
   monthNumber: number,
   mesInicial: number = 0,
   manualCorrectionIndex: number = 0
-): number => {
+): Promise<number> => {
   // Aplicar correção final usando dados do Supabase
-  const correctedKeysAmount = applyCorrectionToBalance(
+  const correctedKeysAmount = await applyCorrectionToBalance(
     remainingBalance,
     correctionMode,
     monthNumber,
@@ -58,7 +58,7 @@ export const calculateFinalKeysAmount = (
   return correctedKeysAmount;
 };
 
-export const calculateMonthlyPropertyValue = (
+export const calculateMonthlyPropertyValue = async (
   baseValue: number,
   appreciationMode: TipoIndice,
   correctionMode: TipoIndice,
@@ -66,9 +66,9 @@ export const calculateMonthlyPropertyValue = (
   mesInicial: number = 0,
   manualAppreciationIndex: number = 0,
   manualCorrectionIndex: number = 0
-): number => {
+): Promise<number> => {
   // Usar função com dados do Supabase
-  return calculatePropertyValueWithFixedRates(
+  return await calculatePropertyValueWithFixedRates(
     baseValue,
     correctionMode,
     appreciationMode,
