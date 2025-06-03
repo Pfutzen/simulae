@@ -55,6 +55,12 @@ export const calculateResaleProfit = (
 export const calculateBestResaleMonth = (schedule: PaymentType[]) => {
   if (schedule.length === 0) {
     return {
+      // Estratégias estruturadas
+      rapidResale: null,
+      balancedResale: null,
+      maximumResale: null,
+      
+      // Dados legados (mantidos para compatibilidade)
       bestProfitMonth: 0,
       maxProfit: 0,
       maxProfitPercentage: 0,
@@ -72,8 +78,23 @@ export const calculateBestResaleMonth = (schedule: PaymentType[]) => {
 
   // Encontrar o índice das chaves
   const keysIndex = schedule.findIndex(payment => payment.description === "Chaves");
+  const totalMonths = keysIndex > 0 ? keysIndex : schedule.length - 1;
+
+  // ========== NOVAS ESTRATÉGIAS ESTRUTURADAS ==========
   
-  // Estratégia 1: Maior Valor de Lucro Absoluto (parcela chaves)
+  // 1. REVENDA RÁPIDA (12-18 meses) - Perfil Conservador
+  const rapidResale = findOptimalResaleInRange(schedule, 12, 18, 'conservador');
+  
+  // 2. REVENDA EQUILIBRADA (24-30 meses) - Perfil Moderado  
+  const balancedResale = findOptimalResaleInRange(schedule, 24, 30, 'moderado');
+  
+  // 3. REVENDA MÁXIMA (36-48 meses ou final) - Perfil Arrojado
+  const maxMonthForMaximum = Math.min(48, totalMonths);
+  const maximumResale = findOptimalResaleInRange(schedule, 36, maxMonthForMaximum, 'arrojado');
+
+  // ========== MANTER DADOS LEGADOS PARA COMPATIBILIDADE ==========
+  
+  // Estratégia 1: Maior Valor de Lucro Absoluto (chaves)
   const keysData = schedule[keysIndex];
   const maxProfit = keysData.propertyValue - keysData.totalPaid;
   const maxProfitPercentage = keysData.totalPaid > 0 
@@ -83,17 +104,12 @@ export const calculateBestResaleMonth = (schedule: PaymentType[]) => {
   const bestProfitMonth = keysData.month;
 
   // Estratégia 2: Maior Percentual de Rentabilidade (última parcela antes das chaves)
-  // Aplicando a fórmula correta: Lucro real = Valor de revenda - Valor pago - Saldo devedor
-  // Encontrar a última parcela (antes das chaves)
-  const lastInstallmentIndex = schedule.findIndex(payment => payment.description === "Chaves") - 1;
+  const lastInstallmentIndex = Math.max(0, keysIndex - 1);
   const lastInstallmentData = schedule[lastInstallmentIndex];
   
-  // Calcular o saldo devedor na última parcela
-  // O saldo devedor é quanto ainda falta pagar do valor original do imóvel
   const originalPropertyValue = schedule[0]?.propertyValue || 0;
   const remainingBalance = originalPropertyValue - lastInstallmentData.totalPaid;
   
-  // Lucro real = Valor de revenda - Valor pago - Saldo devedor
   const maxRoiProfit = lastInstallmentData.propertyValue - lastInstallmentData.totalPaid - Math.max(0, remainingBalance);
   const maxRoi = lastInstallmentData.totalPaid > 0 
     ? (maxRoiProfit / lastInstallmentData.totalPaid) * 100 
@@ -102,7 +118,6 @@ export const calculateBestResaleMonth = (schedule: PaymentType[]) => {
   const bestRoiMonth = lastInstallmentData.month;
 
   // Estratégia 3: Primeiro mês com bom percentual de lucro (≥ 60%)
-  // Aplicando a mesma fórmula correta para todos os meses
   let earlyMonth: number | undefined;
   let earlyProfit: number | undefined;
   let earlyProfitPercentage: number | undefined;
@@ -112,25 +127,27 @@ export const calculateBestResaleMonth = (schedule: PaymentType[]) => {
     const monthData = schedule[i - 1];
     
     if (monthData.totalPaid > 0 && monthData.propertyValue > 0) {
-      // Calcular saldo devedor para este mês
       const monthRemainingBalance = originalPropertyValue - monthData.totalPaid;
-      
-      // Lucro real = Valor de revenda - Valor pago - Saldo devedor
       const profit = monthData.propertyValue - monthData.totalPaid - Math.max(0, monthRemainingBalance);
       const profitPercentage = (profit / monthData.totalPaid) * 100;
 
-      // Verificar se atende o critério: lucro ≥ 60% sobre valores investidos
       if (profitPercentage >= 60 && profit > 0) {
         earlyMonth = i;
         earlyProfit = profit;
         earlyProfitPercentage = profitPercentage;
         earlyTotalPaid = monthData.totalPaid;
-        break; // Pega o primeiro mês que atende o critério
+        break;
       }
     }
   }
 
   return {
+    // Novas estratégias estruturadas
+    rapidResale,
+    balancedResale,
+    maximumResale,
+    
+    // Dados legados (mantidos para compatibilidade)
     bestProfitMonth,
     maxProfit,
     maxProfitPercentage,
@@ -145,3 +162,69 @@ export const calculateBestResaleMonth = (schedule: PaymentType[]) => {
     earlyTotalPaid
   };
 };
+
+// Função auxiliar para encontrar a melhor revenda em um intervalo específico
+function findOptimalResaleInRange(
+  schedule: PaymentType[], 
+  minMonth: number, 
+  maxMonth: number, 
+  perfil: 'conservador' | 'moderado' | 'arrojado'
+) {
+  let bestMonth = minMonth;
+  let bestScore = -Infinity;
+  let bestData = null;
+
+  // Filtrar apenas meses dentro do intervalo válido
+  const validPayments = schedule.filter(payment => 
+    payment.month >= minMonth && 
+    payment.month <= maxMonth &&
+    payment.totalPaid > 0 &&
+    payment.propertyValue > 0
+  );
+
+  if (validPayments.length === 0) {
+    return null;
+  }
+
+  validPayments.forEach(payment => {
+    const profit = payment.propertyValue - payment.totalPaid - payment.balance;
+    const profitPercentage = payment.totalPaid > 0 ? (profit / payment.totalPaid) * 100 : 0;
+    
+    let score = 0;
+    
+    // Algoritmo de pontuação baseado no perfil
+    switch (perfil) {
+      case 'conservador':
+        // Prioriza liquidez (menor prazo) e segurança
+        score = profitPercentage * 0.7 - (payment.month - minMonth) * 2;
+        break;
+        
+      case 'moderado':
+        // Equilibra retorno e prazo
+        score = profitPercentage * 0.8 + (profit / 10000) * 0.2;
+        break;
+        
+      case 'arrojado':
+        // Prioriza máximo retorno absoluto
+        score = profit * 0.6 + profitPercentage * 0.4;
+        break;
+    }
+
+    if (score > bestScore) {
+      bestScore = score;
+      bestMonth = payment.month;
+      bestData = {
+        month: payment.month,
+        profit,
+        profitPercentage,
+        investmentValue: payment.totalPaid,
+        propertyValue: payment.propertyValue,
+        remainingBalance: payment.balance,
+        perfil,
+        score: Math.round(score)
+      };
+    }
+  });
+
+  return bestData;
+}

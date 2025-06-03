@@ -1,9 +1,6 @@
-
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -15,16 +12,16 @@ import {
   Home,
   Download,
   AlertCircle,
-  CheckCircle,
   FileText,
   Percent,
   CreditCard,
   Building,
   FileSpreadsheet,
   Calculator,
-  Info
+  Info,
+  Zap,
+  BarChart3
 } from "lucide-react";
-import { Link } from "react-router-dom";
 import { formatCurrency, formatPercentage } from "@/utils/formatUtils";
 import { formatDateForDisplay } from "@/utils/dateUtils";
 import { PaymentType } from "@/utils/calculationUtils";
@@ -45,6 +42,39 @@ interface SimulationResultsProps {
   remainingBalance: number;
   resaleMonth: number;
   bestResaleInfo: {
+    // Novas estratégias estruturadas
+    rapidResale?: {
+      month: number;
+      profit: number;
+      profitPercentage: number;
+      investmentValue: number;
+      propertyValue: number;
+      remainingBalance: number;
+      perfil: string;
+      score: number;
+    } | null;
+    balancedResale?: {
+      month: number;
+      profit: number;
+      profitPercentage: number;
+      investmentValue: number;
+      propertyValue: number;
+      remainingBalance: number;
+      perfil: string;
+      score: number;
+    } | null;
+    maximumResale?: {
+      month: number;
+      profit: number;
+      profitPercentage: number;
+      investmentValue: number;
+      propertyValue: number;
+      remainingBalance: number;
+      perfil: string;
+      score: number;
+    } | null;
+    
+    // Dados legados (mantidos para compatibilidade)
     bestProfitMonth: number;
     maxProfit: number;
     maxProfitPercentage: number;
@@ -421,131 +451,193 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
         </Card>
       </TooltipProvider>
 
-      {/* Melhores Estratégias de Revenda */}
+      {/* Novas Estratégias de Revenda Estruturadas */}
       <Card className="shadow">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Target className="h-5 w-5 text-orange-600" />
-            💼 Melhores Estratégias de Revenda
+            🎯 Estratégias de Revenda Recomendadas
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
+          <div className="bg-blue-50 p-4 rounded-lg border border-blue-200 mb-6">
+            <p className="text-sm text-blue-800">
+              <strong>Algoritmo inteligente:</strong> Baseado na valorização mensal configurada e análise de risco/retorno para diferentes perfis de investidor.
+            </p>
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Maior Valor de Lucro Absoluto */}
-            <div className="bg-white p-5 rounded-lg border border-orange-200">
-              <div className="flex items-center gap-2 mb-4">
-                <span className="text-lg">🥇</span>
-                <h3 className="font-semibold text-slate-800">Maior Valor de Lucro Absoluto</h3>
-              </div>
-              <div className="space-y-3">
-                <div className="flex items-center gap-2">
-                  <Calendar className="h-4 w-4 text-slate-600" />
-                  <span className="text-sm text-slate-600">Prazo:</span>
-                  <span className="font-bold text-orange-600">{bestResaleInfo.bestProfitMonth} meses</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <DollarSign className="h-4 w-4 text-slate-600" />
-                  <span className="text-sm text-slate-600">Lucro bruto:</span>
-                  <span className="font-bold text-green-600">{formatCurrency(bestResaleInfo.maxProfit)}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Percent className="h-4 w-4 text-slate-600" />
-                  <span className="text-sm text-slate-600">Rentabilidade:</span>
-                  <span className="font-bold text-blue-600">{formatPercentage(bestResaleInfo.maxProfitPercentage)}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <CreditCard className="h-4 w-4 text-slate-600" />
-                  <span className="text-sm text-slate-600">Valor pago até aqui:</span>
-                  <span className="font-bold text-slate-800">{formatCurrency(bestResaleInfo.maxProfitTotalPaid)}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Building className="h-4 w-4 text-slate-600" />
-                  <span className="text-sm text-slate-600">Valor de revenda:</span>
-                  <span className="font-bold text-green-600">{formatCurrency(getPropertyValueAtMonth(bestResaleInfo.bestProfitMonth))}</span>
-                </div>
-                <p className="text-xs text-slate-500 mt-3">
-                  Representa o maior valor bruto de lucro alcançado ao longo da simulação. Ideal para quem busca lucro máximo, mesmo que leve mais tempo.
-                </p>
-              </div>
-            </div>
-
-            {/* Maior Percentual de Rentabilidade */}
-            <div className="bg-white p-5 rounded-lg border border-blue-200">
-              <div className="flex items-center gap-2 mb-4">
-                <span className="text-lg">📊</span>
-                <h3 className="font-semibold text-slate-800">Maior Percentual de Rentabilidade</h3>
-              </div>
-              <div className="space-y-3">
-                <div className="flex items-center gap-2">
-                  <Calendar className="h-4 w-4 text-slate-600" />
-                  <span className="text-sm text-slate-600">Prazo:</span>
-                  <span className="font-bold text-blue-600">{bestResaleInfo.bestRoiMonth} meses</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <DollarSign className="h-4 w-4 text-slate-600" />
-                  <span className="text-sm text-slate-600">Lucro bruto:</span>
-                  <span className="font-bold text-green-600">{formatCurrency(bestResaleInfo.maxRoiProfit)}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Percent className="h-4 w-4 text-slate-600" />
-                  <span className="text-sm text-slate-600">Rentabilidade:</span>
-                  <span className="font-bold text-blue-600">{formatPercentage(bestResaleInfo.maxRoi)}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <CreditCard className="h-4 w-4 text-slate-600" />
-                  <span className="text-sm text-slate-600">Valor pago até aqui:</span>
-                  <span className="font-bold text-slate-800">{formatCurrency(bestResaleInfo.maxRoiTotalPaid)}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Building className="h-4 w-4 text-slate-600" />
-                  <span className="text-sm text-slate-600">Valor de revenda:</span>
-                  <span className="font-bold text-green-600">{formatCurrency(getPropertyValueAtMonth(bestResaleInfo.bestRoiMonth))}</span>
-                </div>
-                <p className="text-xs text-slate-500 mt-3">
-                  Reflete o melhor retorno proporcional (lucro dividido pelo tempo e investimento). Indicado para quem quer otimizar o rendimento do capital investido.
-                </p>
-              </div>
-            </div>
-
-            {/* Maior Lucro no Menor Prazo */}
-            {bestResaleInfo.earlyMonth && bestResaleInfo.earlyProfit && bestResaleInfo.earlyProfitPercentage && bestResaleInfo.earlyTotalPaid && (
-              <div className="bg-white p-5 rounded-lg border border-purple-200">
+            {/* Revenda Rápida */}
+            {bestResaleInfo.rapidResale && (
+              <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-6 rounded-lg border border-green-200">
                 <div className="flex items-center gap-2 mb-4">
-                  <span className="text-lg">⚡</span>
-                  <h3 className="font-semibold text-slate-800">Maior Lucro no Menor Prazo</h3>
+                  <Zap className="h-6 w-6 text-green-600" />
+                  <div>
+                    <h3 className="font-bold text-green-800 text-lg">Revenda Rápida</h3>
+                    <p className="text-sm text-green-600">Perfil Conservador</p>
+                  </div>
                 </div>
+                
                 <div className="space-y-3">
-                  <div className="flex items-center gap-2">
-                    <Calendar className="h-4 w-4 text-slate-600" />
-                    <span className="text-sm text-slate-600">Prazo:</span>
-                    <span className="font-bold text-purple-600">{bestResaleInfo.earlyMonth} meses</span>
+                  <div className="bg-white p-3 rounded border">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-slate-600">Prazo ideal</span>
+                      <span className="font-bold text-green-600">{bestResaleInfo.rapidResale.month} meses</span>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <DollarSign className="h-4 w-4 text-slate-600" />
-                    <span className="text-sm text-slate-600">Lucro bruto:</span>
-                    <span className="font-bold text-green-600">{formatCurrency(bestResaleInfo.earlyProfit)}</span>
+                  
+                  <div className="bg-white p-3 rounded border">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-slate-600">ROI</span>
+                      <span className="font-bold text-blue-600">{formatPercentage(bestResaleInfo.rapidResale.profitPercentage)}</span>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Percent className="h-4 w-4 text-slate-600" />
-                    <span className="text-sm text-slate-600">Rentabilidade:</span>
-                    <span className="font-bold text-blue-600">{formatPercentage(bestResaleInfo.earlyProfitPercentage)}</span>
+                  
+                  <div className="bg-white p-3 rounded border">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-slate-600">Lucro estimado</span>
+                      <span className="font-bold text-green-600">{formatCurrency(bestResaleInfo.rapidResale.profit)}</span>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <CreditCard className="h-4 w-4 text-slate-600" />
-                    <span className="text-sm text-slate-600">Valor pago até aqui:</span>
-                    <span className="font-bold text-slate-800">{formatCurrency(bestResaleInfo.earlyTotalPaid)}</span>
+                  
+                  <div className="bg-white p-3 rounded border">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-slate-600">Investimento</span>
+                      <span className="font-medium text-slate-800">{formatCurrency(bestResaleInfo.rapidResale.investmentValue)}</span>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Building className="h-4 w-4 text-slate-600" />
-                    <span className="text-sm text-slate-600">Valor de revenda:</span>
-                    <span className="font-bold text-green-600">{formatCurrency(getPropertyValueAtMonth(bestResaleInfo.earlyMonth))}</span>
-                  </div>
-                  <p className="text-xs text-slate-500 mt-3">
-                    Aponta o melhor lucro possível em prazo reduzido. Excelente para investidores com foco em retorno mais rápido.
+                </div>
+                
+                <div className="mt-4 p-3 bg-green-100 rounded border border-green-200">
+                  <p className="text-xs text-green-800">
+                    <strong>Ideal para:</strong> Investidores que priorizam liquidez e segurança, com foco em retorno rápido e menor exposição ao risco de mercado.
                   </p>
                 </div>
               </div>
             )}
+
+            {/* Revenda Equilibrada */}
+            {bestResaleInfo.balancedResale && (
+              <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-6 rounded-lg border border-blue-200">
+                <div className="flex items-center gap-2 mb-4">
+                  <BarChart3 className="h-6 w-6 text-blue-600" />
+                  <div>
+                    <h3 className="font-bold text-blue-800 text-lg">Revenda Equilibrada</h3>
+                    <p className="text-sm text-blue-600">Perfil Moderado</p>
+                  </div>
+                </div>
+                
+                <div className="space-y-3">
+                  <div className="bg-white p-3 rounded border">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-slate-600">Prazo ideal</span>
+                      <span className="font-bold text-blue-600">{bestResaleInfo.balancedResale.month} meses</span>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-white p-3 rounded border">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-slate-600">ROI</span>
+                      <span className="font-bold text-blue-600">{formatPercentage(bestResaleInfo.balancedResale.profitPercentage)}</span>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-white p-3 rounded border">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-slate-600">Lucro estimado</span>
+                      <span className="font-bold text-green-600">{formatCurrency(bestResaleInfo.balancedResale.profit)}</span>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-white p-3 rounded border">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-slate-600">Investimento</span>
+                      <span className="font-medium text-slate-800">{formatCurrency(bestResaleInfo.balancedResale.investmentValue)}</span>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="mt-4 p-3 bg-blue-100 rounded border border-blue-200">
+                  <p className="text-xs text-blue-800">
+                    <strong>Ideal para:</strong> Investidores que buscam equilíbrio entre risco e retorno, com prazo médio e boa rentabilidade sem exposição excessiva.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Revenda Máxima */}
+            {bestResaleInfo.maximumResale && (
+              <div className="bg-gradient-to-br from-purple-50 to-pink-50 p-6 rounded-lg border border-purple-200">
+                <div className="flex items-center gap-2 mb-4">
+                  <TrendingUp className="h-6 w-6 text-purple-600" />
+                  <div>
+                    <h3 className="font-bold text-purple-800 text-lg">Revenda Máxima</h3>
+                    <p className="text-sm text-purple-600">Perfil Arrojado</p>
+                  </div>
+                </div>
+                
+                <div className="space-y-3">
+                  <div className="bg-white p-3 rounded border">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-slate-600">Prazo ideal</span>
+                      <span className="font-bold text-purple-600">{bestResaleInfo.maximumResale.month} meses</span>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-white p-3 rounded border">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-slate-600">ROI</span>
+                      <span className="font-bold text-blue-600">{formatPercentage(bestResaleInfo.maximumResale.profitPercentage)}</span>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-white p-3 rounded border">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-slate-600">Lucro estimado</span>
+                      <span className="font-bold text-green-600">{formatCurrency(bestResaleInfo.maximumResale.profit)}</span>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-white p-3 rounded border">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-slate-600">Investimento</span>
+                      <span className="font-medium text-slate-800">{formatCurrency(bestResaleInfo.maximumResale.investmentValue)}</span>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="mt-4 p-3 bg-purple-100 rounded border border-purple-200">
+                  <p className="text-xs text-purple-800">
+                    <strong>Ideal para:</strong> Investidores com maior tolerância ao risco e prazo, focados no máximo retorno absoluto do investimento.
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Resumo comparativo */}
+          <div className="bg-slate-50 p-4 rounded-lg border">
+            <h4 className="font-semibold text-slate-800 mb-3">📊 Resumo Comparativo</h4>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+              {bestResaleInfo.rapidResale && (
+                <div>
+                  <span className="font-medium text-green-600">Rápida:</span>
+                  <span className="ml-2">{bestResaleInfo.rapidResale.month}m → {formatPercentage(bestResaleInfo.rapidResale.profitPercentage)}</span>
+                </div>
+              )}
+              {bestResaleInfo.balancedResale && (
+                <div>
+                  <span className="font-medium text-blue-600">Equilibrada:</span>
+                  <span className="ml-2">{bestResaleInfo.balancedResale.month}m → {formatPercentage(bestResaleInfo.balancedResale.profitPercentage)}</span>
+                </div>
+              )}
+              {bestResaleInfo.maximumResale && (
+                <div>
+                  <span className="font-medium text-purple-600">Máxima:</span>
+                  <span className="ml-2">{bestResaleInfo.maximumResale.month}m → {formatPercentage(bestResaleInfo.maximumResale.profitPercentage)}</span>
+                </div>
+              )}
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -563,6 +655,7 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
         </CardContent>
       </Card>
 
+      {/* Estimativa de Aluguel */}
       <Card className="shadow">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
