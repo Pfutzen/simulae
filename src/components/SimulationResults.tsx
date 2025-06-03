@@ -489,6 +489,13 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
                   
                   <div className="bg-white p-3 rounded border">
                     <div className="flex items-center justify-between">
+                      <span className="text-sm text-slate-600">Valor de venda</span>
+                      <span className="font-bold text-purple-600">{formatCurrency(bestResaleInfo.rapidResale.propertyValue)}</span>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-white p-3 rounded border">
+                    <div className="flex items-center justify-between">
                       <span className="text-sm text-slate-600">ROI</span>
                       <span className="font-bold text-blue-600">{formatPercentage(bestResaleInfo.rapidResale.profitPercentage)}</span>
                     </div>
@@ -538,6 +545,13 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
                   
                   <div className="bg-white p-3 rounded border">
                     <div className="flex items-center justify-between">
+                      <span className="text-sm text-slate-600">Valor de venda</span>
+                      <span className="font-bold text-purple-600">{formatCurrency(bestResaleInfo.balancedResale.propertyValue)}</span>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-white p-3 rounded border">
+                    <div className="flex items-center justify-between">
                       <span className="text-sm text-slate-600">ROI</span>
                       <span className="font-bold text-blue-600">{formatPercentage(bestResaleInfo.balancedResale.profitPercentage)}</span>
                     </div>
@@ -582,6 +596,13 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-slate-600">Prazo ideal</span>
                       <span className="font-bold text-purple-600">{bestResaleInfo.maximumResale.month} meses</span>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-white p-3 rounded border">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-slate-600">Valor de venda</span>
+                      <span className="font-bold text-purple-600">{formatCurrency(bestResaleInfo.maximumResale.propertyValue)}</span>
                     </div>
                   </div>
                   
