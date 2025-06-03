@@ -2,16 +2,14 @@
 import React, { useEffect, useState } from "react";
 import { PaymentType } from "@/utils/calculationUtils";
 import { 
-  LineChart, 
-  Line, 
+  AreaChart, 
+  Area, 
   XAxis, 
   YAxis, 
   CartesianGrid, 
   Tooltip, 
   Legend, 
-  ResponsiveContainer,
-  Area,
-  ComposedChart
+  ResponsiveContainer
 } from "recharts";
 import {
   ChartContainer,
@@ -36,19 +34,19 @@ interface ChartData {
 const chartConfig = {
   propertyValue: {
     label: "Valor do Imóvel",
-    color: "#0c4a6e" // Azul Marinho (Navy Blue)
+    color: "#0c4a6e"
   },
   totalPaid: {
     label: "Total Investido",
-    color: "#ef4444" // Vermelho claro (Light Red)
+    color: "#ef4444"
   },
   balance: {
     label: "Saldo Devedor", 
-    color: "#f97316" // Laranja (Orange)
+    color: "#f97316"
   },
   profit: {
     label: "Lucro",
-    color: "#16a34a" // Verde Bandeira (Flag Green)
+    color: "#16a34a"
   }
 };
 
@@ -108,7 +106,7 @@ const ResultsChart: React.FC<ResultsChartProps> = ({ schedule, resaleMonth }) =>
         className="h-[250px] sm:h-[350px] md:h-[400px] lg:h-[450px] xl:h-[500px] w-full max-w-full"
         config={chartConfig}
       >
-        <ComposedChart 
+        <AreaChart 
           data={chartData} 
           margin={chartMargins}
           width={windowWidth}
@@ -116,40 +114,27 @@ const ResultsChart: React.FC<ResultsChartProps> = ({ schedule, resaleMonth }) =>
           <defs>
             {/* Property Value Gradient */}
             <linearGradient id="propertyValueGradient" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor={chartConfig.propertyValue.color} stopOpacity={0.2}/>
-              <stop offset="95%" stopColor={chartConfig.propertyValue.color} stopOpacity={0}/>
+              <stop offset="5%" stopColor={chartConfig.propertyValue.color} stopOpacity={0.3}/>
+              <stop offset="95%" stopColor={chartConfig.propertyValue.color} stopOpacity={0.1}/>
             </linearGradient>
             
             {/* Total Paid Gradient */}
             <linearGradient id="totalPaidGradient" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor={chartConfig.totalPaid.color} stopOpacity={0.2}/>
-              <stop offset="95%" stopColor={chartConfig.totalPaid.color} stopOpacity={0}/>
+              <stop offset="5%" stopColor={chartConfig.totalPaid.color} stopOpacity={0.3}/>
+              <stop offset="95%" stopColor={chartConfig.totalPaid.color} stopOpacity={0.1}/>
             </linearGradient>
             
             {/* Balance Gradient */}
             <linearGradient id="balanceGradient" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor={chartConfig.balance.color} stopOpacity={0.2}/>
-              <stop offset="95%" stopColor={chartConfig.balance.color} stopOpacity={0}/>
+              <stop offset="5%" stopColor={chartConfig.balance.color} stopOpacity={0.3}/>
+              <stop offset="95%" stopColor={chartConfig.balance.color} stopOpacity={0.1}/>
             </linearGradient>
             
             {/* Profit Gradient */}
             <linearGradient id="profitGradient" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor={chartConfig.profit.color} stopOpacity={0.3}/>
-              <stop offset="95%" stopColor={chartConfig.profit.color} stopOpacity={0}/>
+              <stop offset="5%" stopColor={chartConfig.profit.color} stopOpacity={0.4}/>
+              <stop offset="95%" stopColor={chartConfig.profit.color} stopOpacity={0.1}/>
             </linearGradient>
-            
-            {/* Drop shadows for lines */}
-            <filter id="dropShadow" height="130%" width="130%">
-              <feGaussianBlur in="SourceAlpha" stdDeviation="3"/> 
-              <feOffset dx="0" dy="2" result="offsetblur"/>
-              <feComponentTransfer>
-                <feFuncA type="linear" slope="0.1"/>
-              </feComponentTransfer>
-              <feMerge> 
-                <feMergeNode/>
-                <feMergeNode in="SourceGraphic"/> 
-              </feMerge>
-            </filter>
           </defs>
           
           <CartesianGrid 
@@ -245,79 +230,71 @@ const ResultsChart: React.FC<ResultsChartProps> = ({ schedule, resaleMonth }) =>
             }}
           />
           
-          {/* Area for profit with enhanced styling */}
+          {/* Areas stacked for better visualization */}
+          <Area
+            type="monotone"
+            dataKey="balance"
+            stackId="1"
+            stroke={chartConfig.balance.color}
+            fill="url(#balanceGradient)"
+            strokeWidth={2}
+            dot={false}
+            activeDot={{ 
+              r: 4, 
+              strokeWidth: 2,
+              stroke: "#fff",
+              fill: chartConfig.balance.color
+            }}
+          />
+          
+          <Area
+            type="monotone"
+            dataKey="totalPaid"
+            stackId="1"
+            stroke={chartConfig.totalPaid.color}
+            fill="url(#totalPaidGradient)"
+            strokeWidth={2}
+            dot={false}
+            activeDot={{ 
+              r: 4, 
+              strokeWidth: 2,
+              stroke: "#fff",
+              fill: chartConfig.totalPaid.color
+            }}
+          />
+          
+          <Area
+            type="monotone"
+            dataKey="propertyValue"
+            stackId="2"
+            stroke={chartConfig.propertyValue.color}
+            fill="url(#propertyValueGradient)"
+            strokeWidth={2}
+            dot={false}
+            activeDot={{ 
+              r: 4, 
+              strokeWidth: 2,
+              stroke: "#fff",
+              fill: chartConfig.propertyValue.color
+            }}
+          />
+          
           <Area
             type="monotone"
             dataKey="profit"
-            fill="url(#profitGradient)"
+            stackId="3"
             stroke={chartConfig.profit.color}
-            strokeWidth={3}
+            fill="url(#profitGradient)"
+            strokeWidth={2}
             dot={false}
             activeDot={{ 
-              r: 5, 
+              r: 4, 
               strokeWidth: 2,
               stroke: "#fff",
-              fill: chartConfig.profit.color,
-              filter: "url(#dropShadow)"
+              fill: chartConfig.profit.color
             }}
-            style={{ filter: "url(#dropShadow)" }}
-            isAnimationActive={false}
           />
-          
-          {/* Line for property value with enhanced styling */}
-          <Line 
-            type="monotone" 
-            dataKey="propertyValue" 
-            stroke={chartConfig.propertyValue.color}
-            strokeWidth={3}
-            dot={false}
-            activeDot={{ 
-              r: 5, 
-              strokeWidth: 2,
-              stroke: "#fff",
-              fill: chartConfig.propertyValue.color,
-              filter: "url(#dropShadow)"
-            }}
-            style={{ filter: "url(#dropShadow)" }}
-            isAnimationActive={false}
-          />
-          
-          {/* Line for total paid with enhanced styling */}
-          <Line 
-            type="monotone" 
-            dataKey="totalPaid" 
-            stroke={chartConfig.totalPaid.color}
-            strokeWidth={3}
-            dot={false}
-            activeDot={{ 
-              r: 5, 
-              strokeWidth: 2,
-              stroke: "#fff",
-              fill: chartConfig.totalPaid.color,
-              filter: "url(#dropShadow)"
-            }}
-            style={{ filter: "url(#dropShadow)" }}
-            isAnimationActive={false}
-          />
-          
-          {/* Line for balance with enhanced styling */}
-          <Line 
-            type="monotone" 
-            dataKey="balance" 
-            stroke={chartConfig.balance.color}
-            strokeWidth={3}
-            dot={false} 
-            activeDot={{ 
-              r: 5, 
-              strokeWidth: 2,
-              stroke: "#fff",
-              fill: chartConfig.balance.color,
-              filter: "url(#dropShadow)"
-            }}
-            style={{ filter: "url(#dropShadow)" }}
-            isAnimationActive={false}
-          />
-        </ComposedChart>
+        </AreaChart>
       </ChartContainer>
     </div>
   );
