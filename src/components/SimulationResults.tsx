@@ -755,56 +755,70 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
           </div>
         </CardHeader>
         <CardContent>
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-slate-200">
+          <div className="w-full">
+            <table className="w-full text-xs border-collapse">
               <thead className="bg-slate-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
-                    Data do Pagamento
+                  <th className="px-1 py-2 text-left font-medium text-slate-500 uppercase tracking-wider border-r w-[12%]">
+                    Data
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                  <th className="px-1 py-2 text-left font-medium text-slate-500 uppercase tracking-wider border-r w-[15%]">
                     Tipo
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                  <th className="px-1 py-2 text-left font-medium text-slate-500 uppercase tracking-wider border-r w-[13%]">
                     Valor
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
-                    Valor do Reforço
+                  <th className="px-1 py-2 text-left font-medium text-slate-500 uppercase tracking-wider border-r w-[13%]">
+                    Reforço
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                  <th className="px-1 py-2 text-left font-medium text-slate-500 uppercase tracking-wider border-r w-[13%]">
                     Saldo
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                  <th className="px-1 py-2 text-left font-medium text-slate-500 uppercase tracking-wider border-r w-[13%]">
                     Total Pago
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
-                    Valor Corrigido do Imóvel
+                  <th className="px-1 py-2 text-left font-medium text-slate-500 uppercase tracking-wider w-[21%]">
+                    Valor do Imóvel
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-slate-200">
+              <tbody className="bg-white">
                 {schedule.map((payment, index) => (
-                  <tr key={index}>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {payment.date ? formatDateForDisplay(payment.date) : "-"}
+                  <tr key={index} className="border-b hover:bg-slate-50">
+                    <td className="px-1 py-2 border-r">
+                      <div className="truncate">
+                        {payment.date ? formatDateForDisplay(payment.date) : "-"}
+                      </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {payment.description}
+                    <td className="px-1 py-2 border-r">
+                      <div className="truncate" title={payment.description}>
+                        {payment.description}
+                      </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {formatCurrency(payment.amount)}
+                    <td className="px-1 py-2 border-r text-right">
+                      <div className="truncate">
+                        {formatCurrency(payment.amount)}
+                      </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {formatCurrency(payment.reinforcementValue || 0)}
+                    <td className="px-1 py-2 border-r text-right">
+                      <div className="truncate">
+                        {formatCurrency(payment.reinforcementValue || 0)}
+                      </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {formatCurrency(payment.balance)}
+                    <td className="px-1 py-2 border-r text-right">
+                      <div className="truncate">
+                        {formatCurrency(payment.balance)}
+                      </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {formatCurrency(payment.totalPaid)}
+                    <td className="px-1 py-2 border-r text-right">
+                      <div className="truncate">
+                        {formatCurrency(payment.totalPaid)}
+                      </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {formatCurrency(payment.propertyValue)}
+                    <td className="px-1 py-2 text-right">
+                      <div className="truncate">
+                        {formatCurrency(payment.propertyValue)}
+                      </div>
                     </td>
                   </tr>
                 ))}
