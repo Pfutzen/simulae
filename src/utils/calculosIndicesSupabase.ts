@@ -110,6 +110,24 @@ export function calcularCorrecaoAcumuladaSupabase(
   return valorAcumulado;
 }
 
+// NOVA FUNÇÃO: Calcular apenas valorização do imóvel (sem correção monetária)
+export function calcularValorizacaoImovelSupabase(
+  valorBase: number,
+  taxaValorizacaoMensal: number,
+  meses: number
+): number {
+  // Aplicar fórmula simples de juros compostos com taxa fixa
+  const valorFinal = valorBase * Math.pow(1 + (taxaValorizacaoMensal / 100), meses);
+  
+  console.log(`=== VALORIZAÇÃO IMÓVEL MÊS ${meses} ===`);
+  console.log(`Valor base: R$ ${valorBase.toFixed(2)}`);
+  console.log(`Taxa mensal: ${taxaValorizacaoMensal}%`);
+  console.log(`Fator acumulado: ${Math.pow(1 + (taxaValorizacaoMensal / 100), meses).toFixed(6)}`);
+  console.log(`Valor final: R$ ${valorFinal.toFixed(2)}`);
+  
+  return valorFinal;
+}
+
 export function calcularValorCorrigidoSupabase(
   valorBase: number,
   tipoCorrecao: TipoIndice,
@@ -119,19 +137,23 @@ export function calcularValorCorrigidoSupabase(
   valorManualCorrecao?: number,
   valorManualValorizacao?: number
 ): number {
-  const correcaoAcumulada = calcularCorrecaoAcumuladaSupabase(
-    tipoCorrecao, meses, mesInicial, valorManualCorrecao
-  );
+  // CORREÇÃO: Para valorização do imóvel, usar apenas a taxa de valorização
+  // sem aplicar correção monetária (que é para saldos devedores)
   
+  if (tipoValorizacao === 'MANUAL' && valorManualValorizacao) {
+    // Usar nova função que aplica apenas valorização
+    return calcularValorizacaoImovelSupabase(valorBase, valorManualValorizacao, meses);
+  }
+  
+  // Para índices econômicos na valorização, aplicar sem correção adicional
   const valorizacaoAcumulada = calcularCorrecaoAcumuladaSupabase(
     tipoValorizacao, meses, mesInicial, valorManualValorizacao
   );
 
-  const valorFinal = valorBase * correcaoAcumulada * valorizacaoAcumulada;
+  const valorFinal = valorBase * valorizacaoAcumulada;
   
   console.log(`=== VALOR CORRIGIDO MÊS ${meses} (SUPABASE) ===`);
   console.log(`Valor base: R$ ${valorBase.toFixed(2)}`);
-  console.log(`Correção ${tipoCorrecao}: ${((correcaoAcumulada - 1) * 100).toFixed(2)}%`);
   console.log(`Valorização ${tipoValorizacao}: ${((valorizacaoAcumulada - 1) * 100).toFixed(2)}%`);
   console.log(`Valor final: R$ ${valorFinal.toFixed(2)}`);
   
