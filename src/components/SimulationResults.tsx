@@ -32,6 +32,7 @@ import ResultsChart from "./ResultsChart";
 import FinancingSimulator from "./FinancingSimulator";
 import { exportScheduleToCSV, exportScheduleToExcel, exportScheduleToPDF } from "@/utils/scheduleExport";
 import { SimulationFormData } from "@/utils/types";
+import ResponsiveScheduleTable from './ResponsiveScheduleTable';
 
 interface SimulationResultsProps {
   schedule: PaymentType[];
@@ -755,76 +756,7 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
           </div>
         </CardHeader>
         <CardContent>
-          <div className="w-full">
-            <table className="w-full text-xs border-collapse">
-              <thead className="bg-slate-50">
-                <tr>
-                  <th className="px-1 py-2 text-left font-medium text-slate-500 uppercase tracking-wider border-r w-[12%]">
-                    Data
-                  </th>
-                  <th className="px-1 py-2 text-left font-medium text-slate-500 uppercase tracking-wider border-r w-[15%]">
-                    Tipo
-                  </th>
-                  <th className="px-1 py-2 text-left font-medium text-slate-500 uppercase tracking-wider border-r w-[13%]">
-                    Valor
-                  </th>
-                  <th className="px-1 py-2 text-left font-medium text-slate-500 uppercase tracking-wider border-r w-[13%]">
-                    Reforço
-                  </th>
-                  <th className="px-1 py-2 text-left font-medium text-slate-500 uppercase tracking-wider border-r w-[13%]">
-                    Saldo
-                  </th>
-                  <th className="px-1 py-2 text-left font-medium text-slate-500 uppercase tracking-wider border-r w-[13%]">
-                    Total Pago
-                  </th>
-                  <th className="px-1 py-2 text-left font-medium text-slate-500 uppercase tracking-wider w-[21%]">
-                    Valor do Imóvel
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white">
-                {schedule.map((payment, index) => (
-                  <tr key={index} className="border-b hover:bg-slate-50">
-                    <td className="px-1 py-2 border-r">
-                      <div className="truncate">
-                        {payment.date ? formatDateForDisplay(payment.date) : "-"}
-                      </div>
-                    </td>
-                    <td className="px-1 py-2 border-r">
-                      <div className="truncate" title={payment.description}>
-                        {payment.description}
-                      </div>
-                    </td>
-                    <td className="px-1 py-2 border-r text-right">
-                      <div className="truncate">
-                        {formatCurrency(payment.amount)}
-                      </div>
-                    </td>
-                    <td className="px-1 py-2 border-r text-right">
-                      <div className="truncate">
-                        {formatCurrency(payment.reinforcementValue || 0)}
-                      </div>
-                    </td>
-                    <td className="px-1 py-2 border-r text-right">
-                      <div className="truncate">
-                        {formatCurrency(payment.balance)}
-                      </div>
-                    </td>
-                    <td className="px-1 py-2 border-r text-right">
-                      <div className="truncate">
-                        {formatCurrency(payment.totalPaid)}
-                      </div>
-                    </td>
-                    <td className="px-1 py-2 text-right">
-                      <div className="truncate">
-                        {formatCurrency(payment.propertyValue)}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <ResponsiveScheduleTable schedule={schedule} />
         </CardContent>
       </Card>
 
