@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -91,18 +92,18 @@ const PaymentScheduleTable = ({ schedule }: { schedule: PaymentType[] }) => {
           <thead>
             <tr className="border-b">
               <th className="p-2 text-left">Mês</th>
-              <th className="p-2 text-left">Tipo</th>
+              <th className="p-2 text-left">Descrição</th>
               <th className="p-2 text-left">Valor</th>
-              <th className="p-2 text-left">Acumulado</th>
+              <th className="p-2 text-left">Total Pago</th>
             </tr>
           </thead>
           <tbody>
             {schedule.map((payment, index) => (
               <tr key={index} className="border-b">
                 <td className="p-2">{payment.month}</td>
-                <td className="p-2">{payment.type}</td>
-                <td className="p-2">{formatCurrency(payment.value)}</td>
-                <td className="p-2">{formatCurrency(payment.accumulatedInvestment)}</td>
+                <td className="p-2">{payment.description}</td>
+                <td className="p-2">{formatCurrency(payment.amount)}</td>
+                <td className="p-2">{formatCurrency(payment.totalPaid)}</td>
               </tr>
             ))}
           </tbody>
