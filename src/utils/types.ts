@@ -1,4 +1,3 @@
-
 import { TipoIndice } from "@/types/indices";
 
 export type CorrectionMode = TipoIndice;
@@ -19,7 +18,6 @@ export interface SimulationFormData {
   correctionMode: CorrectionMode;
   correctionIndex: number;
   appreciationIndex: number;
-  appreciationMode: CorrectionMode; // Added missing field
   resaleMonth: number;
   rentalPercentage: number;
   startDate?: Date;
@@ -38,3 +36,4 @@ export interface PaymentType {
   month?: number;
   reinforcementValue?: number; // Nova propriedade para o valor do reforço
 }
+
