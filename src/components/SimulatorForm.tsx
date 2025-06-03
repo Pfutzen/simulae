@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -635,9 +636,22 @@ const SimulatorForm: React.FC = () => {
     const paymentSchedule = await generatePaymentScheduleComIndicesSupabase(formData, configAtualizada);
     setSchedule(paymentSchedule);
     
-    const effectiveResaleMonth = customResaleEnabled 
-      ? formData.resaleMonth 
-      : formData.installmentsCount;
+    // Corrigir a lógica do mês de revenda
+    let effectiveResaleMonth: number;
+    
+    if (customResaleEnabled) {
+      // Se o usuário habilitou a opção customizada, usar o mês especificado
+      effectiveResaleMonth = formData.resaleMonth;
+    } else {
+      // Se não, usar o mês das chaves (último item do cronograma)
+      // O cronograma inclui: entrada (mês 0) + parcelas + chaves
+      // O mês das chaves é sempre installmentsCount + 1
+      effectiveResaleMonth = formData.installmentsCount + 1;
+    }
+    
+    console.log('Mês efetivo para revenda:', effectiveResaleMonth);
+    console.log('Custom resale habilitado:', customResaleEnabled);
+    console.log('Mês das chaves (calculado):', formData.installmentsCount + 1);
       
     const results = calculateResaleProfit(paymentSchedule, effectiveResaleMonth);
     
