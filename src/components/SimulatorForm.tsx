@@ -5,7 +5,6 @@ import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { SimulationFormData, PaymentType } from "@/utils/types";
-import { simulationFormSchema } from "@/utils/validationSchemas";
 import { useSimulationFlow } from "@/hooks/useSimulationFlow";
 import { generatePaymentScheduleComIndicesSupabase } from "@/utils/paymentScheduleSupabase";
 import { calculateResaleProfit, calculateBestResaleMonth } from "@/utils/resaleAnalysis";
@@ -17,17 +16,14 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
-import { DatePicker } from "@/components/ui/date-picker";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { InfoCircledIcon } from "@radix-ui/react-icons";
+import { Info, CalendarIcon } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatCurrency, formatPercentage } from "@/utils/formatters";
 import ResultsChart from "@/components/ResultsChart";
-import PaymentScheduleTable from "@/components/PaymentScheduleTable";
-import ResaleStrategiesTable from "@/components/ResaleStrategiesTable";
 import { useToast } from "@/components/ui/use-toast";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
@@ -36,7 +32,98 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
-import { CalendarIcon } from "lucide-react";
+
+// Simple validation schema for the component
+const simulationFormSchema = z.object({
+  propertyValue: z.number().min(1, "Valor do imóvel é obrigatório"),
+  downPaymentValue: z.number().min(0, "Valor da entrada deve ser positivo"),
+  installmentsCount: z.number().min(1, "Quantidade de parcelas é obrigatória"),
+  installmentsValue: z.number().min(1, "Valor da parcela é obrigatório"),
+  keysValue: z.number().min(0, "Valor das chaves deve ser positivo"),
+  reinforcementsValue: z.number().min(0, "Valor do reforço deve ser positivo"),
+  reinforcementFrequency: z.number().min(1, "Frequência de reforço é obrigatória"),
+  finalMonthsWithoutReinforcement: z.number().min(0, "Meses finais sem reforço deve ser positivo"),
+  appreciationIndex: z.number().min(0, "Taxa de valorização deve ser positiva"),
+  correctionIndex: z.number().min(0, "Taxa de correção deve ser positiva"),
+  rentalPercentage: z.number().min(0, "Percentual de aluguel deve ser positivo"),
+  resaleMonth: z.number().min(1, "Mês de revenda é obrigatório"),
+  valuationDate: z.date(),
+  startDate: z.date(),
+  deliveryDate: z.date(),
+  correctionMode: z.string(),
+  appreciationMode: z.string(),
+});
+
+// Simple DatePicker component
+const DatePicker = ({ id, date, onSelect }: { id: string; date: Date; onSelect: (date: Date | undefined) => void }) => {
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <Button
+          variant="outline"
+          className={cn(
+            "w-full justify-start text-left font-normal",
+            !date && "text-muted-foreground"
+          )}
+        >
+          <CalendarIcon className="mr-2 h-4 w-4" />
+          {date ? format(date, "PPP", { locale: ptBR }) : <span>Selecione uma data</span>}
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-auto p-0">
+        <Calendar
+          mode="single"
+          selected={date}
+          onSelect={onSelect}
+          initialFocus
+        />
+      </PopoverContent>
+    </Popover>
+  );
+};
+
+// Simple PaymentScheduleTable component
+const PaymentScheduleTable = ({ schedule }: { schedule: PaymentType[] }) => {
+  return (
+    <div className="w-full">
+      <div className="rounded-md border">
+        <table className="w-full">
+          <thead>
+            <tr className="border-b">
+              <th className="p-2 text-left">Mês</th>
+              <th className="p-2 text-left">Tipo</th>
+              <th className="p-2 text-left">Valor</th>
+              <th className="p-2 text-left">Acumulado</th>
+            </tr>
+          </thead>
+          <tbody>
+            {schedule.map((payment, index) => (
+              <tr key={index} className="border-b">
+                <td className="p-2">{payment.month}</td>
+                <td className="p-2">{payment.type}</td>
+                <td className="p-2">{formatCurrency(payment.value)}</td>
+                <td className="p-2">{formatCurrency(payment.accumulatedInvestment)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+};
+
+// Simple ResaleStrategiesTable component
+const ResaleStrategiesTable = ({ bestResaleInfo }: { bestResaleInfo: any }) => {
+  return (
+    <div className="w-full">
+      <div className="rounded-md border p-4">
+        <h3 className="text-lg font-semibold mb-2">Melhor Estratégia de Revenda</h3>
+        <p>Mês: {bestResaleInfo?.bestMonth || 'N/A'}</p>
+        <p>Lucro: {bestResaleInfo?.bestProfit ? formatCurrency(bestResaleInfo.bestProfit) : 'N/A'}</p>
+      </div>
+    </div>
+  );
+};
 
 export default function SimulatorForm() {
   const { toast } = useToast();
@@ -118,11 +205,11 @@ export default function SimulatorForm() {
       // Configurar índices
       const configAtualizada: ConfiguracaoIndices = {
         correcaoMonetaria: {
-          tipo: formData.correctionMode,
+          tipo: formData.correctionMode as TipoIndice,
           valorManual: formData.correctionIndex / 100
         },
         valorizacao: {
-          tipo: formData.appreciationMode,
+          tipo: formData.appreciationMode as TipoIndice,
           valorManual: formData.appreciationIndex / 100
         },
         mesInicial: 0
@@ -220,7 +307,7 @@ export default function SimulatorForm() {
                       Valor do Imóvel
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <InfoCircledIcon className="h-4 w-4 inline-block ml-1 text-slate-500" />
+                          <Info className="h-4 w-4 inline-block ml-1 text-slate-500" />
                         </TooltipTrigger>
                         <TooltipContent>
                           <p className="max-w-xs">Valor total do imóvel na data de avaliação</p>
@@ -250,7 +337,7 @@ export default function SimulatorForm() {
                       Valor da Entrada
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <InfoCircledIcon className="h-4 w-4 inline-block ml-1 text-slate-500" />
+                          <Info className="h-4 w-4 inline-block ml-1 text-slate-500" />
                         </TooltipTrigger>
                         <TooltipContent>
                           <p className="max-w-xs">Valor pago como entrada</p>
@@ -280,7 +367,7 @@ export default function SimulatorForm() {
                       Valor das Chaves
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <InfoCircledIcon className="h-4 w-4 inline-block ml-1 text-slate-500" />
+                          <Info className="h-4 w-4 inline-block ml-1 text-slate-500" />
                         </TooltipTrigger>
                         <TooltipContent>
                           <p className="max-w-xs">Valor a ser pago na entrega das chaves</p>
@@ -319,7 +406,7 @@ export default function SimulatorForm() {
                       Quantidade de Parcelas
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <InfoCircledIcon className="h-4 w-4 inline-block ml-1 text-slate-500" />
+                          <Info className="h-4 w-4 inline-block ml-1 text-slate-500" />
                         </TooltipTrigger>
                         <TooltipContent>
                           <p className="max-w-xs">Número total de parcelas mensais</p>
@@ -349,7 +436,7 @@ export default function SimulatorForm() {
                       Valor da Parcela
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <InfoCircledIcon className="h-4 w-4 inline-block ml-1 text-slate-500" />
+                          <Info className="h-4 w-4 inline-block ml-1 text-slate-500" />
                         </TooltipTrigger>
                         <TooltipContent>
                           <p className="max-w-xs">Valor inicial da parcela mensal</p>
@@ -380,7 +467,7 @@ export default function SimulatorForm() {
                         Valor do Reforço
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <InfoCircledIcon className="h-4 w-4 inline-block ml-1 text-slate-500" />
+                            <Info className="h-4 w-4 inline-block ml-1 text-slate-500" />
                           </TooltipTrigger>
                           <TooltipContent>
                             <p className="max-w-xs">Valor inicial do reforço periódico</p>
@@ -422,7 +509,7 @@ export default function SimulatorForm() {
                           Frequência (meses)
                           <Tooltip>
                             <TooltipTrigger asChild>
-                              <InfoCircledIcon className="h-4 w-4 inline-block ml-1 text-slate-500" />
+                              <Info className="h-4 w-4 inline-block ml-1 text-slate-500" />
                             </TooltipTrigger>
                             <TooltipContent>
                               <p className="max-w-xs">A cada quantos meses ocorre um reforço</p>
@@ -449,7 +536,7 @@ export default function SimulatorForm() {
                           Meses finais sem reforço
                           <Tooltip>
                             <TooltipTrigger asChild>
-                              <InfoCircledIcon className="h-4 w-4 inline-block ml-1 text-slate-500" />
+                              <Info className="h-4 w-4 inline-block ml-1 text-slate-500" />
                             </TooltipTrigger>
                             <TooltipContent>
                               <p className="max-w-xs">Quantos meses finais não terão reforço</p>
@@ -540,7 +627,7 @@ export default function SimulatorForm() {
                       Data de Avaliação
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <InfoCircledIcon className="h-4 w-4 inline-block ml-1 text-slate-500" />
+                          <Info className="h-4 w-4 inline-block ml-1 text-slate-500" />
                         </TooltipTrigger>
                         <TooltipContent>
                           <p className="max-w-xs">Data em que o imóvel foi avaliado</p>
@@ -568,7 +655,7 @@ export default function SimulatorForm() {
                       Data de Início
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <InfoCircledIcon className="h-4 w-4 inline-block ml-1 text-slate-500" />
+                          <Info className="h-4 w-4 inline-block ml-1 text-slate-500" />
                         </TooltipTrigger>
                         <TooltipContent>
                           <p className="max-w-xs">Data de início dos pagamentos mensais</p>
@@ -596,7 +683,7 @@ export default function SimulatorForm() {
                       Data de Entrega
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <InfoCircledIcon className="h-4 w-4 inline-block ml-1 text-slate-500" />
+                          <Info className="h-4 w-4 inline-block ml-1 text-slate-500" />
                         </TooltipTrigger>
                         <TooltipContent>
                           <p className="max-w-xs">Data prevista para entrega das chaves</p>
@@ -633,7 +720,7 @@ export default function SimulatorForm() {
                       Índice de Correção
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <InfoCircledIcon className="h-4 w-4 inline-block ml-1 text-slate-500" />
+                          <Info className="h-4 w-4 inline-block ml-1 text-slate-500" />
                         </TooltipTrigger>
                         <TooltipContent>
                           <p className="max-w-xs">Índice usado para corrigir as parcelas</p>
@@ -668,7 +755,7 @@ export default function SimulatorForm() {
                         Taxa de Correção (% ao mês)
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <InfoCircledIcon className="h-4 w-4 inline-block ml-1 text-slate-500" />
+                            <Info className="h-4 w-4 inline-block ml-1 text-slate-500" />
                           </TooltipTrigger>
                           <TooltipContent>
                             <p className="max-w-xs">Taxa mensal para correção das parcelas</p>
@@ -700,7 +787,7 @@ export default function SimulatorForm() {
                       Índice de Valorização
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <InfoCircledIcon className="h-4 w-4 inline-block ml-1 text-slate-500" />
+                          <Info className="h-4 w-4 inline-block ml-1 text-slate-500" />
                         </TooltipTrigger>
                         <TooltipContent>
                           <p className="max-w-xs">Índice usado para valorizar o imóvel</p>
@@ -735,7 +822,7 @@ export default function SimulatorForm() {
                         Taxa de Valorização (% ao mês)
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <InfoCircledIcon className="h-4 w-4 inline-block ml-1 text-slate-500" />
+                            <Info className="h-4 w-4 inline-block ml-1 text-slate-500" />
                           </TooltipTrigger>
                           <TooltipContent>
                             <p className="max-w-xs">Taxa mensal para valorização do imóvel</p>
@@ -767,7 +854,7 @@ export default function SimulatorForm() {
                       Percentual de Aluguel (% ao ano)
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <InfoCircledIcon className="h-4 w-4 inline-block ml-1 text-slate-500" />
+                          <Info className="h-4 w-4 inline-block ml-1 text-slate-500" />
                         </TooltipTrigger>
                         <TooltipContent>
                           <p className="max-w-xs">Percentual anual do valor do imóvel como aluguel</p>
@@ -817,7 +904,7 @@ export default function SimulatorForm() {
                         Mês de Revenda
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <InfoCircledIcon className="h-4 w-4 inline-block ml-1 text-slate-500" />
+                            <Info className="h-4 w-4 inline-block ml-1 text-slate-500" />
                           </TooltipTrigger>
                           <TooltipContent>
                             <p className="max-w-xs">Em qual mês você pretende revender o imóvel</p>
@@ -857,7 +944,7 @@ export default function SimulatorForm() {
                   {showAdvancedOptions && (
                     <div className="space-y-4 pt-2">
                       <Alert>
-                        <InfoCircledIcon className="h-4 w-4" />
+                        <Info className="h-4 w-4" />
                         <AlertTitle>Opções avançadas</AlertTitle>
                         <AlertDescription>
                           Estas configurações são para usuários experientes e podem afetar significativamente os resultados da simulação.
