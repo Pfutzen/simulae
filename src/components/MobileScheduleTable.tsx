@@ -1,10 +1,8 @@
 
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { formatCurrency } from '@/utils/formatters';
 import { formatDateForDisplay } from '@/utils/dateUtils';
 import { PaymentType } from '@/utils/types';
-import { Calendar, DollarSign, CreditCard, TrendingUp } from 'lucide-react';
 
 interface MobileScheduleTableProps {
   schedule: PaymentType[];
@@ -12,73 +10,59 @@ interface MobileScheduleTableProps {
 
 const MobileScheduleTable: React.FC<MobileScheduleTableProps> = ({ schedule }) => {
   return (
-    <div className="space-y-3">
-      {schedule.map((payment, index) => (
-        <Card key={index} className="shadow-sm">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Calendar className="h-4 w-4 text-blue-600" />
-                <span>{payment.date ? formatDateForDisplay(payment.date) : '-'}</span>
+    <div className="space-y-2">
+      {schedule.map((payment, index) => {
+        // Determinar o tipo de parcela
+        let parcelaLabel = '';
+        if (payment.description.includes('Entrada')) {
+          parcelaLabel = 'Entrada';
+        } else if (payment.description.includes('Chaves')) {
+          parcelaLabel = 'Chaves';
+        } else {
+          const parcelaNumber = index; // Ajustar conforme necessário
+          const hasReinforcement = payment.reinforcementValue && payment.reinforcementValue > 0;
+          parcelaLabel = hasReinforcement ? `Parcela ${parcelaNumber} + R${Math.ceil(index / 6)}` : `Parcela ${parcelaNumber}`;
+        }
+
+        return (
+          <div key={index} className="bg-white border border-slate-200 rounded-lg p-3 shadow-sm">
+            {/* Primeira linha: Data + Parcela + Valor */}
+            <div className="flex items-center justify-between mb-1">
+              <div className="flex items-center gap-2 text-sm">
+                <span className="font-medium text-slate-700">
+                  {payment.date ? formatDateForDisplay(payment.date) : '-'}
+                </span>
+                <span className="text-slate-600">{parcelaLabel}</span>
               </div>
-              <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
-                {payment.description}
-              </span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="pt-0 space-y-3">
-            {/* Valor principal */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <DollarSign className="h-4 w-4 text-green-600" />
-                <span className="text-sm text-slate-600">Valor</span>
-              </div>
-              <span className="text-sm font-semibold text-green-600">
+              <span className="font-semibold text-green-600 text-sm">
                 {formatCurrency(payment.amount)}
               </span>
             </div>
 
-            {/* Reforço (se existir) */}
-            {payment.reinforcementValue && payment.reinforcementValue > 0 && (
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <TrendingUp className="h-4 w-4 text-orange-600" />
-                  <span className="text-sm text-slate-600">Reforço</span>
-                </div>
-                <span className="text-sm font-semibold text-orange-600">
-                  {formatCurrency(payment.reinforcementValue)}
+            {/* Segunda linha: Reforço | Saldo | Imóvel */}
+            <div className="text-xs text-slate-600 flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <span>
+                  Reforço: <span className="font-medium text-orange-600">
+                    {formatCurrency(payment.reinforcementValue || 0)}
+                  </span>
+                </span>
+                <span className="text-slate-300">|</span>
+                <span>
+                  Saldo: <span className="font-medium text-slate-700">
+                    {formatCurrency(payment.balance)}
+                  </span>
                 </span>
               </div>
-            )}
-
-            {/* Grid de informações adicionais */}
-            <div className="grid grid-cols-2 gap-3 pt-2 border-t border-slate-100">
-              <div>
-                <p className="text-xs text-slate-500 mb-1">Saldo Devedor</p>
-                <p className="text-sm font-medium text-slate-800">
-                  {formatCurrency(payment.balance)}
-                </p>
-              </div>
-              <div>
-                <p className="text-xs text-slate-500 mb-1">Total Pago</p>
-                <p className="text-sm font-medium text-slate-800">
-                  {formatCurrency(payment.totalPaid)}
-                </p>
-              </div>
-            </div>
-
-            {/* Valor do imóvel */}
-            <div className="bg-slate-50 p-3 rounded-lg">
-              <div className="flex items-center justify-between">
-                <span className="text-xs text-slate-500">Valor do Imóvel</span>
-                <span className="text-sm font-semibold text-blue-600">
+              <span>
+                Imóvel: <span className="font-medium text-blue-600">
                   {formatCurrency(payment.propertyValue)}
                 </span>
-              </div>
+              </span>
             </div>
-          </CardContent>
-        </Card>
-      ))}
+          </div>
+        );
+      })}
     </div>
   );
 };
